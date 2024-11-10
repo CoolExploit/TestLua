@@ -1,0 +1,327 @@
+---- PabloScripter Is Pro and dont skid i gave you my source so pls i worked hard😭😢
+---- Pls Give Credit if Upload Game Script Climb 1000 Stairs
+
+
+local correctGameId = 5702593762
+
+
+local function rightgame()
+    print("Right Game Place Checker by Pablo😎🤑🧐")
+    
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "SettingsUI"
+screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+
+
+local uiFrame = Instance.new("Frame")
+uiFrame.Name = "Frame"
+uiFrame.Size = UDim2.new(0, 300, 0, 350)  
+uiFrame.Position = UDim2.new(0.5, -150, 0.5, -175)  
+uiFrame.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+uiFrame.BackgroundTransparency = 0.2
+uiFrame.Parent = screenGui
+
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Name = "TitleLabel"
+titleLabel.Size = UDim2.new(0, 280, 0, 40)
+titleLabel.Position = UDim2.new(0, 10, 0, 10)
+titleLabel.Text = "Climb 1000 Stairs FarmSettings"
+titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+titleLabel.Font = Enum.Font.GothamBold
+titleLabel.TextSize = 24
+titleLabel.BackgroundTransparency = 1
+titleLabel.TextScaled = true
+titleLabel.Parent = uiFrame
+
+local statusLabel = Instance.new("TextLabel")
+statusLabel.Name = "StatusLabel"
+statusLabel.Size = UDim2.new(0, 280, 0, 40)
+statusLabel.Position = UDim2.new(0, 10, 0, 60)
+statusLabel.Text = "Status: Off"
+statusLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+statusLabel.Font = Enum.Font.Gotham
+statusLabel.TextSize = 20
+statusLabel.BackgroundTransparency = 1
+statusLabel.TextScaled = true
+statusLabel.Parent = uiFrame
+
+
+local speedLabel = Instance.new("TextLabel")
+speedLabel.Name = "SpeedLabel"
+speedLabel.Size = UDim2.new(0, 280, 0, 30)
+speedLabel.Position = UDim2.new(0, 10, 0, 120)
+speedLabel.Text = "Tween Speed"
+speedLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+speedLabel.Font = Enum.Font.Gotham
+speedLabel.TextSize = 18
+speedLabel.BackgroundTransparency = 1
+speedLabel.TextScaled = true
+speedLabel.Parent = uiFrame
+
+
+local speedSlider = Instance.new("TextBox")
+speedSlider.Size = UDim2.new(0, 280, 0, 40)
+speedSlider.Position = UDim2.new(0, 10, 0, 150)
+speedSlider.Text = "1"
+speedSlider.TextColor3 = Color3.fromRGB(255, 255, 255)
+speedSlider.Font = Enum.Font.Gotham
+speedSlider.TextSize = 18
+speedSlider.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+speedSlider.TextScaled = true
+speedSlider.Parent = uiFrame
+
+
+local batchLabel = Instance.new("TextLabel")
+batchLabel.Name = "BatchLabel"
+batchLabel.Size = UDim2.new(0, 280, 0, 30)
+batchLabel.Position = UDim2.new(0, 10, 0, 200)
+batchLabel.Text = "Max Batch Size"
+batchLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+batchLabel.Font = Enum.Font.Gotham
+batchLabel.TextSize = 18
+batchLabel.BackgroundTransparency = 1
+batchLabel.TextScaled = true
+batchLabel.Parent = uiFrame
+
+
+local batchSlider = Instance.new("TextBox")
+batchSlider.Size = UDim2.new(0, 280, 0, 40)
+batchSlider.Position = UDim2.new(0, 10, 0, 230)
+batchSlider.Text = "10"
+batchSlider.TextColor3 = Color3.fromRGB(255, 255, 255)
+batchSlider.Font = Enum.Font.Gotham
+batchSlider.TextSize = 18
+batchSlider.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+batchSlider.TextScaled = true
+batchSlider.Parent = uiFrame
+
+
+local madeByLabel = Instance.new("TextLabel")
+madeByLabel.Name = "MadeByLabel"
+madeByLabel.Size = UDim2.new(0, 280, 0, 40)
+madeByLabel.Position = UDim2.new(0, 10, 0, 270)
+madeByLabel.Text = "Made by PabloScripter 😎🤑"
+madeByLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+madeByLabel.Font = Enum.Font.Gotham
+madeByLabel.TextSize = 18
+madeByLabel.BackgroundTransparency = 1
+madeByLabel.TextScaled = true
+madeByLabel.Parent = uiFrame
+
+
+local startButton = Instance.new("TextButton")
+startButton.Size = UDim2.new(0, 120, 0, 40)
+startButton.Position = UDim2.new(0, 10, 0, 310)
+startButton.Text = "Start"
+startButton.TextColor3 = Color3.fromRGB(0, 0, 0)
+startButton.Font = Enum.Font.Gotham
+startButton.TextSize = 20
+startButton.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+startButton.Parent = uiFrame
+
+
+local stopButton = Instance.new("TextButton")
+stopButton.Size = UDim2.new(0, 120, 0, 40)
+stopButton.Position = UDim2.new(0, 160, 0, 310)
+stopButton.Text = "Stop"
+stopButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+stopButton.Font = Enum.Font.Gotham
+stopButton.TextSize = 20
+stopButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+stopButton.Parent = uiFrame
+
+
+local closeButton = Instance.new("TextButton")
+closeButton.Size = UDim2.new(0, 40, 0, 40)
+closeButton.Position = UDim2.new(0, 260, 0, 10)
+closeButton.Text = "X"
+closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+closeButton.Font = Enum.Font.Gotham
+closeButton.TextSize = 20
+closeButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+closeButton.Parent = uiFrame
+
+---- ui corner
+
+
+local uiCorner = Instance.new("UICorner")
+uiCorner.CornerRadius = UDim.new(0, 15) 
+uiCorner.Parent = uiFrame
+
+
+local titleLabelCorner = Instance.new("UICorner")
+titleLabelCorner.CornerRadius = UDim.new(0, 10)
+titleLabelCorner.Parent = titleLabel
+
+
+local statusLabelCorner = Instance.new("UICorner")
+statusLabelCorner.CornerRadius = UDim.new(0, 10)
+statusLabelCorner.Parent = statusLabel
+
+
+local speedSliderCorner = Instance.new("UICorner")
+speedSliderCorner.CornerRadius = UDim.new(0, 10)
+speedSliderCorner.Parent = speedSlider
+
+
+local batchSliderCorner = Instance.new("UICorner")
+batchSliderCorner.CornerRadius = UDim.new(0, 10)
+batchSliderCorner.Parent = batchSlider
+
+local madeByLabelCorner = Instance.new("UICorner")
+madeByLabelCorner.CornerRadius = UDim.new(0, 10)
+madeByLabelCorner.Parent = madeByLabel
+
+
+local startButtonCorner = Instance.new("UICorner")
+startButtonCorner.CornerRadius = UDim.new(0, 12)
+startButtonCorner.Parent = startButton
+
+
+local stopButtonCorner = Instance.new("UICorner")
+stopButtonCorner.CornerRadius = UDim.new(0, 12)
+stopButtonCorner.Parent = stopButton
+
+-- Add UICorner for the close button
+local closeButtonCorner = Instance.new("UICorner")
+closeButtonCorner.CornerRadius = UDim.new(0, 12)
+closeButtonCorner.Parent = closeButton
+
+
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+local stairsFolder = workspace:FindFirstChild("Stairs")
+local badgesFolder = workspace:WaitForChild("Badges")
+
+
+local tweenService = game:GetService("TweenService")
+local tweensInProgress = {}
+
+
+local function tweenToPlayer()
+
+    statusLabel.Text = "Status: Moving..."
+    statusLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+
+    local batchSize = tonumber(batchSlider.Text) or 10
+    local speed = tonumber(speedSlider.Text) or 1
+    local stairs = {}
+    local badges = {}
+
+
+    if stairsFolder then
+        for _, stairPart in ipairs(stairsFolder:GetChildren()) do
+            if stairPart:IsA("Part") then
+                table.insert(stairs, stairPart)
+            end
+        end
+    end
+
+    if badgesFolder then
+        for _, badgePart in ipairs(badgesFolder:GetChildren()) do
+            if badgePart:IsA("Part") then
+                table.insert(badges, badgePart)
+            end
+        end
+    end
+
+    local function tweenBatch(batch)
+        for _, part in ipairs(batch) do
+            part.CanCollide = false  -- Disable collision
+            local playerPosition = humanoidRootPart.Position
+            local tweenInfo = TweenInfo.new(
+                speed, 
+                Enum.EasingStyle.Linear,
+                Enum.EasingDirection.InOut,
+                -1,  
+                false,  
+                0  
+            )
+            local goal = {Position = playerPosition}
+            local tween = tweenService:Create(part, tweenInfo, goal)
+            tween:Play()
+
+            
+            table.insert(tweensInProgress, tween)
+        end
+    end
+
+    
+    local function startTweening()
+        for i = 1, #stairs, batchSize do
+            local stairBatch = {unpack(stairs, i, math.min(i + batchSize - 1, #stairs))}
+            tweenBatch(stairBatch)
+            wait(0.1) 
+        end
+
+        for i = 1, #badges, batchSize do
+            local badgeBatch = {unpack(badges, i, math.min(i + batchSize - 1, #badges))}
+            tweenBatch(badgeBatch)
+            wait(0.1)
+        end
+    end
+
+    startTweening()
+end
+
+
+startButton.MouseButton1Click:Connect(function()
+    tweenToPlayer()
+end)
+
+
+stopButton.MouseButton1Click:Connect(function()
+    for _, tween in ipairs(tweensInProgress) do
+        tween:Pause()  -- Stop tweening
+    end
+    statusLabel.Text = "Status: Stopped"
+    statusLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+end)
+
+-- Close Button functionality
+closeButton.MouseButton1Click:Connect(function()
+    screenGui:Destroy()
+end)
+
+
+local dragging = false
+local startPos, startMousePos
+
+uiFrame.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        startPos = uiFrame.Position
+        startMousePos = input.Position
+    end
+end)
+
+uiFrame.InputChanged:Connect(function(input)
+    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = input.Position - startMousePos
+        uiFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
+uiFrame.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+end)
+
+
+end
+
+
+local function checkGame()
+    local currentGameId = game.PlaceId
+
+    if currentGameId == correctGameId then
+        rightgame()
+    else
+        game.Players.LocalPlayer:Kick("You're not in the game Climb 1000 Stairs Bc Pablo Is Pro😎 ")
+    end
+end
+
+checkGame()
