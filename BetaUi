@@ -1,38 +1,32 @@
 -- UI Library Module
 local UI = {}
 
--- Function to create a new Frame
--- Params:
--- title: The title of the frame (optional)
--- size: A Vector2 representing the size of the frame
--- position: A Vector2 representing the position of the frame
--- content: The text/content inside the frame (optional)
-function UI:CreateFrame(title, size, position, content)
+-- Function to create a new Frame (Centered) with enhanced UI elements
+function UI:CreateFrame(title, size, content)
     local frame = Instance.new("Frame")
     frame.Size = UDim2.new(0, size.X, 0, size.Y)
-    -- Position the frame in the center of the screen
-    frame.Position = position or UDim2.new(0.5, -size.X / 2, 0.5, -size.Y / 2)
-    frame.BackgroundColor3 = Color3.fromRGB(34, 34, 34)  -- Dark gray background
+    frame.Position = UDim2.new(0.5, -size.X / 2, 0.5, -size.Y / 2)
+    frame.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
     frame.BorderSizePixel = 0
+    frame.AnchorPoint = Vector2.new(0.5, 0.5)
     frame.Visible = true
-    frame.AnchorPoint = Vector2.new(0.5, 0.5)  -- Anchor at center for better positioning
 
-    -- Adding rounded corners
+    -- Rounded corners for the frame
     local UICorner = Instance.new("UICorner")
-    UICorner.CornerRadius = UDim.new(0, 12)  -- Rounded corners with a radius of 12 pixels
+    UICorner.CornerRadius = UDim.new(0, 12)
     UICorner.Parent = frame
 
-    -- Adding a subtle shadow effect
+    -- Shadow effect for the frame
     local shadow = Instance.new("ImageLabel")
-    shadow.Size = UDim2.new(1, 6, 1, 6)  -- Slightly larger than the frame for shadow effect
+    shadow.Size = UDim2.new(1, 6, 1, 6)
     shadow.Position = UDim2.new(0, -3, 0, -3)
-    shadow.Image = "rbxassetid://301164276"  -- Predefined shadow image
+    shadow.Image = "rbxassetid://301164276"  -- Roblox shadow asset
     shadow.BackgroundTransparency = 1
-    shadow.ImageTransparency = 0.4  -- Slight transparency for shadow effect
-    shadow.ZIndex = -1  -- Placed behind the frame
+    shadow.ImageTransparency = 0.4
+    shadow.ZIndex = -1
     shadow.Parent = frame
 
-    -- Add a title if provided
+    -- Title of the frame
     if title then
         local titleLabel = Instance.new("TextLabel")
         titleLabel.Text = title
@@ -45,7 +39,7 @@ function UI:CreateFrame(title, size, position, content)
         titleLabel.Parent = frame
     end
 
-    -- Add content if provided
+    -- Content text for the frame
     if content then
         local contentLabel = Instance.new("TextLabel")
         contentLabel.Text = content
@@ -62,90 +56,83 @@ function UI:CreateFrame(title, size, position, content)
     return frame
 end
 
--- Function to create a Toggle button (e.g., On/Off switch)
--- Params:
--- parent: The frame to place the toggle in
--- label: The text label on the toggle
--- defaultState: The default state of the toggle (true/false)
--- callback: The function to call when the toggle state changes
-function UI:CreateToggle(parent, label, defaultState, callback)
-    local toggle = Instance.new("TextButton")
-    toggle.Size = UDim2.new(0, 200, 0, 50)
-    toggle.Text = label
-    toggle.TextColor3 = Color3.fromRGB(255, 255, 255)
-    toggle.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-    toggle.Parent = parent
-    toggle.AutoButtonColor = false
+-- Function to create tabs within the frame
+function UI:CreateTab(parent, tabNames)
+    local tabHolder = Instance.new("Frame")
+    tabHolder.Size = UDim2.new(0, parent.Size.X.Offset, 0, 50)
+    tabHolder.Position = UDim2.new(0, 0, 0, 30)
+    tabHolder.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    tabHolder.Parent = parent
 
-    -- Adding rounded corners to the button
-    local UICorner = Instance.new("UICorner")
-    UICorner.CornerRadius = UDim.new(0, 8)
-    UICorner.Parent = toggle
+    local tabButtons = {}
+    local contentFrame = Instance.new("Frame")
+    contentFrame.Size = UDim2.new(1, 0, 1, -50)
+    contentFrame.Position = UDim2.new(0, 0, 0, 50)
+    contentFrame.BackgroundTransparency = 1
+    contentFrame.Parent = parent
 
-    local isOn = defaultState or false
-    toggle.Text = label .. ": " .. (isOn and "On" or "Off")
+    -- Creating buttons for each tab
+    for i, tabName in ipairs(tabNames) do
+        local button = Instance.new("TextButton")
+        button.Size = UDim2.new(0, 100, 0, 40)
+        button.Position = UDim2.new(0, (i - 1) * 100, 0, 0)
+        button.Text = tabName
+        button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+        button.TextColor3 = Color3.fromRGB(255, 255, 255)
+        button.TextSize = 16
+        button.Font = Enum.Font.Gotham
+        button.Parent = tabHolder
 
-    toggle.MouseButton1Click:Connect(function()
-        isOn = not isOn
-        toggle.Text = label .. ": " .. (isOn and "On" or "Off")
-        callback(isOn)
-    end)
+        -- Adding tab button functionality
+        button.MouseButton1Click:Connect(function()
+            -- Hide all tabs
+            for _, frame in ipairs(contentFrame:GetChildren()) do
+                if frame:IsA("Frame") then
+                    frame.Visible = false
+                end
+            end
+            -- Show the selected tab content
+            contentFrame:FindFirstChild(tabName).Visible = true
+        end)
 
-    return toggle
+        -- Store button in tabButtons
+        table.insert(tabButtons, button)
+    end
+
+    -- Create content for each tab
+    for i, tabName in ipairs(tabNames) do
+        local tabContent = Instance.new("Frame")
+        tabContent.Size = UDim2.new(1, 0, 1, -50)
+        tabContent.Position = UDim2.new(0, 0, 0, 50)
+        tabContent.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+        tabContent.Visible = false
+        tabContent.Parent = contentFrame
+
+        -- Add a label for the tab content
+        local tabContentLabel = Instance.new("TextLabel")
+        tabContentLabel.Text = "Content for " .. tabName
+        tabContentLabel.Size = UDim2.new(1, 0, 1, 0)
+        tabContentLabel.BackgroundTransparency = 1
+        tabContentLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+        tabContentLabel.TextSize = 16
+        tabContentLabel.TextAlign = Enum.TextXAlignment.Center
+        tabContentLabel.Font = Enum.Font.Gotham
+        tabContentLabel.Parent = tabContent
+    end
+
+    return contentFrame
 end
 
--- Function to create a Slider
--- Params:
--- parent: The frame to place the slider in
--- minValue: The minimum value of the slider
--- maxValue: The maximum value of the slider
--- defaultValue: The default value (optional)
--- callback: The function to call with the slider value
-function UI:CreateSlider(parent, minValue, maxValue, defaultValue, callback)
-    local sliderFrame = Instance.new("Frame")
-    sliderFrame.Size = UDim2.new(0, 300, 0, 50)
-    sliderFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    sliderFrame.Parent = parent
-
-    -- Adding rounded corners to the slider frame
-    local UICorner = Instance.new("UICorner")
-    UICorner.CornerRadius = UDim.new(0, 8)
-    UICorner.Parent = sliderFrame
-
-    local sliderBar = Instance.new("Frame")
-    sliderBar.Size = UDim2.new(1, 0, 0, 5)
-    sliderBar.Position = UDim2.new(0, 0, 0, 22)
-    sliderBar.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
-    sliderBar.Parent = sliderFrame
-
-    local knob = Instance.new("Frame")
-    knob.Size = UDim2.new(0, 10, 0, 10)
-    knob.Position = UDim2.new(0, (defaultValue - minValue) / (maxValue - minValue) * 290, 0, -2)
-    knob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    knob.Parent = sliderBar
-
-    knob.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            local mouse = game:GetService("Players").LocalPlayer:GetMouse()
-            local function moveKnob()
-                local pos = mouse.X - sliderBar.AbsolutePosition.X
-                pos = math.clamp(pos, 0, 290)
-                knob.Position = UDim2.new(0, pos, 0, -2)
-
-                local value = math.floor((pos / 290) * (maxValue - minValue) + minValue)
-                callback(value)
-            end
-
-            game:GetService("UserInputService").InputChanged:Connect(moveKnob)
-        end
-    end)
-
-    return sliderFrame
+-- Function to add a UI stroke to any element
+function UI:AddStroke(element, thickness)
+    local stroke = Instance.new("UIStroke")
+    stroke.Thickness = thickness
+    stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    stroke.Color = Color3.fromRGB(255, 255, 255)
+    stroke.Parent = element
 end
 
 -- Function to enable draggable behavior for a frame
--- Params:
--- frame: The frame to make draggable
 function UI:EnableDraggable(frame)
     local dragging = false
     local dragInput, dragStart, startPos
