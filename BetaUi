@@ -1,162 +1,201 @@
--- Here is the simplified code for the UI module, ready for `loadstring`
+-- Beta UI Library for Roblox with extended features
 
-local UI = {}
+local BetaUI = {}
 
--- Function to create a new Frame (Centered) with enhanced UI elements
-function UI:CreateFrame(title, size, content)
+-- Create main frame for UI
+function BetaUI:createFrame(parent, size, position, transparency, draggable)
     local frame = Instance.new("Frame")
-    frame.Size = UDim2.new(0, size.X, 0, size.Y)
-    frame.Position = UDim2.new(0.5, -size.X / 2, 0.5, -size.Y / 2)
-    frame.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
-    frame.BorderSizePixel = 0
-    frame.AnchorPoint = Vector2.new(0.5, 0.5)
-    frame.Visible = true
+    frame.Size = size or UDim2.new(0, 500, 0, 300)
+    frame.Position = position or UDim2.new(0.5, -250, 0.5, -150)
+    frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)  -- Black background with a slight transparency
+    frame.BackgroundTransparency = transparency or 0.2
+    frame.Parent = parent
 
-    -- Rounded corners for the frame
-    local UICorner = Instance.new("UICorner")
-    UICorner.CornerRadius = UDim.new(0, 12)
-    UICorner.Parent = frame
+    -- Make the frame draggable
+    if draggable then
+        local dragging, dragInput, dragStart, startPos
+        local function update(input)
+            local delta = input.Position - dragStart
+            frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
 
-    -- Shadow effect for the frame
-    local shadow = Instance.new("ImageLabel")
-    shadow.Size = UDim2.new(1, 6, 1, 6)
-    shadow.Position = UDim2.new(0, -3, 0, -3)
-    shadow.Image = "rbxassetid://301164276"  -- Roblox shadow asset
-    shadow.BackgroundTransparency = 1
-    shadow.ImageTransparency = 0.4
-    shadow.ZIndex = -1
-    shadow.Parent = frame
+        frame.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                dragging = true
+                dragStart = input.Position
+                startPos = frame.Position
+                input.Changed:Connect(function()
+                    if not dragging then return end
+                    update(input)
+                end)
+            end
+        end)
 
-    -- Title of the frame
-    if title then
-        local titleLabel = Instance.new("TextLabel")
-        titleLabel.Text = title
-        titleLabel.Size = UDim2.new(1, 0, 0, 30)
-        titleLabel.BackgroundTransparency = 1
-        titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-        titleLabel.TextSize = 20
-        titleLabel.TextAlign = Enum.TextXAlignment.Center
-        titleLabel.Font = Enum.Font.GothamBold
-        titleLabel.Parent = frame
-    end
-
-    -- Content text for the frame
-    if content then
-        local contentLabel = Instance.new("TextLabel")
-        contentLabel.Text = content
-        contentLabel.Size = UDim2.new(1, 0, 0, 60)
-        contentLabel.Position = UDim2.new(0, 0, 0, 30)
-        contentLabel.BackgroundTransparency = 1
-        contentLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-        contentLabel.TextSize = 14
-        contentLabel.TextAlign = Enum.TextXAlignment.Center
-        contentLabel.Font = Enum.Font.Gotham
-        contentLabel.Parent = frame
+        frame.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                dragging = false
+            end
+        end)
     end
 
     return frame
 end
 
--- Function to create tabs within the frame
-function UI:CreateTab(parent, tabNames)
-    local tabHolder = Instance.new("Frame")
-    tabHolder.Size = UDim2.new(0, parent.Size.X.Offset, 0, 50)
-    tabHolder.Position = UDim2.new(0, 0, 0, 30)
-    tabHolder.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-    tabHolder.Parent = parent
+-- Advanced Button with Animation and Hover Effects
+function BetaUI:createButton(parent, text, size, position, onClick)
+    local button = Instance.new("TextButton")
+    button.Size = size or UDim2.new(0, 200, 0, 50)
+    button.Position = position or UDim2.new(0.5, -100, 0.5, -25)
+    button.Text = text
+    button.Font = Enum.Font.SourceSans
+    button.TextSize = 24
+    button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    button.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    button.BackgroundTransparency = 0.2
+    button.Parent = parent
 
-    local tabButtons = {}
-    local contentFrame = Instance.new("Frame")
-    contentFrame.Size = UDim2.new(1, 0, 1, -50)
-    contentFrame.Position = UDim2.new(0, 0, 0, 50)
-    contentFrame.BackgroundTransparency = 1
-    contentFrame.Parent = parent
-
-    -- Creating buttons for each tab
-    for i, tabName in ipairs(tabNames) do
-        local button = Instance.new("TextButton")
-        button.Size = UDim2.new(0, 100, 0, 40)
-        button.Position = UDim2.new(0, (i - 1) * 100, 0, 0)
-        button.Text = tabName
-        button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-        button.TextColor3 = Color3.fromRGB(255, 255, 255)
-        button.TextSize = 16
-        button.Font = Enum.Font.Gotham
-        button.Parent = tabHolder
-
-        -- Adding tab button functionality
-        button.MouseButton1Click:Connect(function()
-            -- Hide all tabs
-            for _, frame in ipairs(contentFrame:GetChildren()) do
-                if frame:IsA("Frame") then
-                    frame.Visible = false
-                end
-            end
-            -- Show the selected tab content
-            contentFrame:FindFirstChild(tabName).Visible = true
-        end)
-
-        -- Store button in tabButtons
-        table.insert(tabButtons, button)
+    -- Animation on hover
+    local function hoverAnimation()
+        button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)  -- Slightly darker when hovered
+        button.Size = UDim2.new(0, 210, 0, 55)
     end
 
-    -- Create content for each tab
-    for i, tabName in ipairs(tabNames) do
-        local tabContent = Instance.new("Frame")
-        tabContent.Size = UDim2.new(1, 0, 1, -50)
-        tabContent.Position = UDim2.new(0, 0, 0, 50)
-        tabContent.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-        tabContent.Visible = false
-        tabContent.Parent = contentFrame
-
-        -- Add a label for the tab content
-        local tabContentLabel = Instance.new("TextLabel")
-        tabContentLabel.Text = "Content for " .. tabName
-        tabContentLabel.Size = UDim2.new(1, 0, 1, 0)
-        tabContentLabel.BackgroundTransparency = 1
-        tabContentLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-        tabContentLabel.TextSize = 16
-        tabContentLabel.TextAlign = Enum.TextXAlignment.Center
-        tabContentLabel.Font = Enum.Font.Gotham
-        tabContentLabel.Parent = tabContent
+    local function resetAnimation()
+        button.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+        button.Size = UDim2.new(0, 200, 0, 50)
     end
 
-    return contentFrame
+    -- Hover events
+    button.MouseEnter:Connect(hoverAnimation)
+    button.MouseLeave:Connect(resetAnimation)
+
+    -- Click event
+    button.MouseButton1Click:Connect(onClick)
+
+    return button
 end
 
--- Function to add a UI stroke to any element
-function UI:AddStroke(element, thickness)
-    local stroke = Instance.new("UIStroke")
-    stroke.Thickness = thickness
-    stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-    stroke.Color = Color3.fromRGB(255, 255, 255)
-    stroke.Parent = element
+-- Advanced Text Label with Animations
+function BetaUI:createLabel(parent, text, size, position, transparency)
+    local label = Instance.new("TextLabel")
+    label.Size = size or UDim2.new(0, 300, 0, 50)
+    label.Position = position or UDim2.new(0.5, -150, 0.5, -25)
+    label.Text = text
+    label.Font = Enum.Font.SourceSans
+    label.TextSize = 24
+    label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    label.BackgroundTransparency = 1
+    label.Parent = parent
+    label.TextTransparency = transparency or 1  -- Start as transparent
+
+    -- Smooth text fade-in
+    local tweenInfo = TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+    local tween = game:GetService("TweenService"):Create(label, tweenInfo, {TextTransparency = 0})
+    tween:Play()
+
+    return label
 end
 
--- Function to enable draggable behavior for a frame
-function UI:EnableDraggable(frame)
+-- Smooth Fade-In and Fade-Out Effects
+function BetaUI:smoothFadeIn(element, duration)
+    local tweenInfo = TweenInfo.new(duration, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+    local tween = game:GetService("TweenService"):Create(element, tweenInfo, {BackgroundTransparency = 0})
+    tween:Play()
+end
+
+function BetaUI:smoothFadeOut(element, duration)
+    local tweenInfo = TweenInfo.new(duration, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+    local tween = game:GetService("TweenService"):Create(element, tweenInfo, {BackgroundTransparency = 1})
+    tween:Play()
+end
+
+-- Slider
+function BetaUI:createSlider(parent, size, position, min, max, default, onChanged)
+    local sliderFrame = Instance.new("Frame")
+    sliderFrame.Size = size or UDim2.new(0, 400, 0, 30)
+    sliderFrame.Position = position or UDim2.new(0.5, -200, 0.5, -15)
+    sliderFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    sliderFrame.Parent = parent
+
+    local slider = Instance.new("TextButton")
+    slider.Size = UDim2.new(0, 20, 1, 0)
+    slider.Position = UDim2.new(0, (default - min) / (max - min) * 380, 0, 0)
+    slider.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    slider.Parent = sliderFrame
+
+    -- Update the slider on dragging
     local dragging = false
-    local dragInput, dragStart, startPos
-
-    frame.InputBegan:Connect(function(input)
+    slider.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = true
-            dragStart = input.Position
-            startPos = frame.Position
-            input.Changed:Connect(function()
-                if dragging == false then return end
-                local delta = input.Position - dragStart
-                frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-            end)
         end
     end)
 
-    frame.InputEnded:Connect(function(input)
+    slider.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = false
         end
     end)
+
+    sliderFrame.InputChanged:Connect(function(input)
+        if dragging then
+            local newPos = input.Position.X - sliderFrame.AbsolutePosition.X
+            local newValue = math.clamp((newPos / 380) * (max - min) + min, min, max)
+            slider.Position = UDim2.new(0, newPos, 0, 0)
+            if onChanged then
+                onChanged(newValue)
+            end
+        end
+    end)
+
+    return slider
 end
 
--- Return the UI library for use
-return UI
+-- Progress Bar
+function BetaUI:createProgressBar(parent, size, position, maxValue)
+    local progressBarFrame = Instance.new("Frame")
+    progressBarFrame.Size = size or UDim2.new(0, 400, 0, 20)
+    progressBarFrame.Position = position or UDim2.new(0.5, -200, 0.7, 0)
+    progressBarFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    progressBarFrame.Parent = parent
+
+    local progressBar = Instance.new("Frame")
+    progressBar.Size = UDim2.new(0, 0, 1, 0)
+    progressBar.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+    progressBar.Parent = progressBarFrame
+
+    -- Update the progress bar
+    local function setProgress(value)
+        local progress = math.clamp(value / maxValue, 0, 1)
+        progressBar.Size = UDim2.new(progress, 0, 1, 0)
+    end
+
+    return setProgress
+end
+
+-- Example usage of the UI library
+local screenGui = Instance.new("ScreenGui")
+screenGui.Parent = game.Players.LocalPlayer.PlayerGui
+
+-- Create a draggable frame
+local mainFrame = BetaUI:createFrame(screenGui, UDim2.new(0, 500, 0, 300), UDim2.new(0.5, -250, 0.5, -150), 0.2, true)
+
+-- Add a button to the frame
+BetaUI:createButton(mainFrame, "Click Me", UDim2.new(0, 200, 0, 50), UDim2.new(0.5, -100, 0.5, 0), function()
+    print("Button clicked!")
+end)
+
+-- Add a label with fade-in effect
+BetaUI:createLabel(mainFrame, "Welcome to Beta UI!", UDim2.new(0, 300, 0, 50), UDim2.new(0.5, -150, 0.25, 0), 1)
+
+-- Add a slider
+BetaUI:createSlider(mainFrame, UDim2.new(0, 400, 0, 30), UDim2.new(0.5, -200, 0.6, 0), 0, 100, 50, function(value)
+    print("Slider value:", value)
+end)
+
+-- Add a progress bar
+local setProgress = BetaUI:createProgressBar(mainFrame, UDim2.new(0, 400, 0, 20), UDim2.new(0.5, -200, 0.75, 0), 100)
+for i = 1, 100 do
+    wait(0.1)
+    setProgress(i)
+end
