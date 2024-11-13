@@ -1,201 +1,107 @@
--- Beta UI Library for Roblox with extended features
+-- Load the library
+local BetaUILib = loadstring(game:HttpGet("https://yourlinkhere.com/BetaUILib"))()
 
-local BetaUI = {}
+-- Create the window with a custom name and settings
+local Window = BetaUILib:MakeWindow({
+    Name = "Welcome to My Enhanced UI",
+    HidePremium = false,
+    SaveConfig = true,
+    ConfigFolder = "EnhancedUIConfig"
+})
 
--- Create main frame for UI
-function BetaUI:createFrame(parent, size, position, transparency, draggable)
-    local frame = Instance.new("Frame")
-    frame.Size = size or UDim2.new(0, 500, 0, 300)
-    frame.Position = position or UDim2.new(0.5, -250, 0.5, -150)
-    frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)  -- Black background with a slight transparency
-    frame.BackgroundTransparency = transparency or 0.2
-    frame.Parent = parent
+-- Add an intro label to show at the top of the window
+local IntroTab = Window:MakeTab({
+    Name = "Introduction",
+    Icon = "rbxassetid://4483345998",  -- Replace with a valid icon asset
+    PremiumOnly = false
+})
 
-    -- Make the frame draggable
-    if draggable then
-        local dragging, dragInput, dragStart, startPos
-        local function update(input)
-            local delta = input.Position - dragStart
-            frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-        end
+IntroTab:AddLabel("Welcome to the enhanced UI! Here's a smooth experience with neat layout.")
+IntroTab:AddParagraph("How to use:", "Explore buttons below to interact with the UI!")
 
-        frame.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                dragging = true
-                dragStart = input.Position
-                startPos = frame.Position
-                input.Changed:Connect(function()
-                    if not dragging then return end
-                    update(input)
-                end)
-            end
-        end)
+-- Create another tab for interactive elements
+local InteractiveTab = Window:MakeTab({
+    Name = "Interactive Controls",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
 
-        frame.InputEnded:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                dragging = false
-            end
-        end)
+-- Adding a button with better placement and cleaner layout
+InteractiveTab:AddButton({
+    Name = "Click Me!",
+    Callback = function()
+        print("Button clicked!")
     end
+})
 
-    return frame
-end
-
--- Advanced Button with Animation and Hover Effects
-function BetaUI:createButton(parent, text, size, position, onClick)
-    local button = Instance.new("TextButton")
-    button.Size = size or UDim2.new(0, 200, 0, 50)
-    button.Position = position or UDim2.new(0.5, -100, 0.5, -25)
-    button.Text = text
-    button.Font = Enum.Font.SourceSans
-    button.TextSize = 24
-    button.TextColor3 = Color3.fromRGB(255, 255, 255)
-    button.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    button.BackgroundTransparency = 0.2
-    button.Parent = parent
-
-    -- Animation on hover
-    local function hoverAnimation()
-        button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)  -- Slightly darker when hovered
-        button.Size = UDim2.new(0, 210, 0, 55)
+-- Add a toggle switch with a callback
+InteractiveTab:AddToggle({
+    Name = "Enable Feature",
+    Default = false,
+    Callback = function(value)
+        print("Toggle is now " .. tostring(value))
     end
+})
 
-    local function resetAnimation()
-        button.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-        button.Size = UDim2.new(0, 200, 0, 50)
+-- Add a color picker with a default color
+InteractiveTab:AddColorpicker({
+    Name = "Pick a Color",
+    Default = Color3.fromRGB(255, 0, 0),
+    Callback = function(value)
+        print("Color picked: " .. tostring(value))
     end
+})
 
-    -- Hover events
-    button.MouseEnter:Connect(hoverAnimation)
-    button.MouseLeave:Connect(resetAnimation)
-
-    -- Click event
-    button.MouseButton1Click:Connect(onClick)
-
-    return button
-end
-
--- Advanced Text Label with Animations
-function BetaUI:createLabel(parent, text, size, position, transparency)
-    local label = Instance.new("TextLabel")
-    label.Size = size or UDim2.new(0, 300, 0, 50)
-    label.Position = position or UDim2.new(0.5, -150, 0.5, -25)
-    label.Text = text
-    label.Font = Enum.Font.SourceSans
-    label.TextSize = 24
-    label.TextColor3 = Color3.fromRGB(255, 255, 255)
-    label.BackgroundTransparency = 1
-    label.Parent = parent
-    label.TextTransparency = transparency or 1  -- Start as transparent
-
-    -- Smooth text fade-in
-    local tweenInfo = TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-    local tween = game:GetService("TweenService"):Create(label, tweenInfo, {TextTransparency = 0})
-    tween:Play()
-
-    return label
-end
-
--- Smooth Fade-In and Fade-Out Effects
-function BetaUI:smoothFadeIn(element, duration)
-    local tweenInfo = TweenInfo.new(duration, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-    local tween = game:GetService("TweenService"):Create(element, tweenInfo, {BackgroundTransparency = 0})
-    tween:Play()
-end
-
-function BetaUI:smoothFadeOut(element, duration)
-    local tweenInfo = TweenInfo.new(duration, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-    local tween = game:GetService("TweenService"):Create(element, tweenInfo, {BackgroundTransparency = 1})
-    tween:Play()
-end
-
--- Slider
-function BetaUI:createSlider(parent, size, position, min, max, default, onChanged)
-    local sliderFrame = Instance.new("Frame")
-    sliderFrame.Size = size or UDim2.new(0, 400, 0, 30)
-    sliderFrame.Position = position or UDim2.new(0.5, -200, 0.5, -15)
-    sliderFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-    sliderFrame.Parent = parent
-
-    local slider = Instance.new("TextButton")
-    slider.Size = UDim2.new(0, 20, 1, 0)
-    slider.Position = UDim2.new(0, (default - min) / (max - min) * 380, 0, 0)
-    slider.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    slider.Parent = sliderFrame
-
-    -- Update the slider on dragging
-    local dragging = false
-    slider.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = true
-        end
-    end)
-
-    slider.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = false
-        end
-    end)
-
-    sliderFrame.InputChanged:Connect(function(input)
-        if dragging then
-            local newPos = input.Position.X - sliderFrame.AbsolutePosition.X
-            local newValue = math.clamp((newPos / 380) * (max - min) + min, min, max)
-            slider.Position = UDim2.new(0, newPos, 0, 0)
-            if onChanged then
-                onChanged(newValue)
-            end
-        end
-    end)
-
-    return slider
-end
-
--- Progress Bar
-function BetaUI:createProgressBar(parent, size, position, maxValue)
-    local progressBarFrame = Instance.new("Frame")
-    progressBarFrame.Size = size or UDim2.new(0, 400, 0, 20)
-    progressBarFrame.Position = position or UDim2.new(0.5, -200, 0.7, 0)
-    progressBarFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-    progressBarFrame.Parent = parent
-
-    local progressBar = Instance.new("Frame")
-    progressBar.Size = UDim2.new(0, 0, 1, 0)
-    progressBar.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
-    progressBar.Parent = progressBarFrame
-
-    -- Update the progress bar
-    local function setProgress(value)
-        local progress = math.clamp(value / maxValue, 0, 1)
-        progressBar.Size = UDim2.new(progress, 0, 1, 0)
+-- Add a slider for number input with a label
+InteractiveTab:AddSlider({
+    Name = "Set Value",
+    Min = 0,
+    Max = 100,
+    Default = 50,
+    Color = Color3.fromRGB(255, 255, 255),
+    Increment = 1,
+    ValueName = "units",
+    Callback = function(value)
+        print("Slider Value: " .. tostring(value))
     end
+})
 
-    return setProgress
-end
+-- Add a TextBox with default input value
+InteractiveTab:AddTextbox({
+    Name = "Enter Text",
+    Default = "Type something here...",
+    TextDisappear = true,
+    Callback = function(value)
+        print("Textbox Input: " .. value)
+    end
+})
 
--- Example usage of the UI library
-local screenGui = Instance.new("ScreenGui")
-screenGui.Parent = game.Players.LocalPlayer.PlayerGui
+-- Add a UI List that shows dynamic items (can be used for lists of options or objects)
+local ListTab = Window:MakeTab({
+    Name = "UI List",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
 
--- Create a draggable frame
-local mainFrame = BetaUI:createFrame(screenGui, UDim2.new(0, 500, 0, 300), UDim2.new(0.5, -250, 0.5, -150), 0.2, true)
+-- Create a scrolling list with dynamic content
+local listContainer = ListTab:AddList({
+    Name = "Dynamic UI List",
+    ListSize = UDim2.new(0, 300, 0, 500),
+    ItemHeight = 40,
+    Callback = function(value)
+        print("Selected Item: " .. value)
+    end
+})
 
--- Add a button to the frame
-BetaUI:createButton(mainFrame, "Click Me", UDim2.new(0, 200, 0, 50), UDim2.new(0.5, -100, 0.5, 0), function()
-    print("Button clicked!")
-end)
+-- Add items to the list dynamically
+listContainer:AddItem("Item 1")
+listContainer:AddItem("Item 2")
+listContainer:AddItem("Item 3")
+listContainer:AddItem("Item 4")
+listContainer:AddItem("Item 5")
 
--- Add a label with fade-in effect
-BetaUI:createLabel(mainFrame, "Welcome to Beta UI!", UDim2.new(0, 300, 0, 50), UDim2.new(0.5, -150, 0.25, 0), 1)
+-- Initialize the library
+BetaUILib:Init()
 
--- Add a slider
-BetaUI:createSlider(mainFrame, UDim2.new(0, 400, 0, 30), UDim2.new(0.5, -200, 0.6, 0), 0, 100, 50, function(value)
-    print("Slider value:", value)
-end)
-
--- Add a progress bar
-local setProgress = BetaUI:createProgressBar(mainFrame, UDim2.new(0, 400, 0, 20), UDim2.new(0.5, -200, 0.75, 0), 100)
-for i = 1, 100 do
-    wait(0.1)
-    setProgress(i)
-end
+-- Optionally, you can destroy the UI with:
+-- BetaUILib:Destroy()
