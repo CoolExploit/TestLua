@@ -69,6 +69,7 @@ function BetaUILib:MakeWindow(config)
     minimizeButton.BorderSizePixel = 0
     minimizeButton.Name = "MinimizeButton"
 
+    -- Minimize functionality
     minimizeButton.MouseButton1Click:Connect(function()
         -- Animate minimize button and title bar disappearing
         local tweenService = game:GetService("TweenService")
@@ -94,7 +95,7 @@ function BetaUILib:MakeWindow(config)
     titleLabel.TextYAlignment = Enum.TextYAlignment.Center
     titleLabel.PaddingLeft = 10
 
-    -- Draggable functionality (Fix for Draggable)
+    -- Draggable functionality
     local dragging = false
     local dragInput, dragStart, startPos
 
@@ -176,7 +177,6 @@ function BetaUILib:AddButton(config)
     button.Text = config.Name
     button.BorderSizePixel = 0
     button.Name = "Button"
-    button.TextButtonStyle = Enum.ButtonStyle.RobloxButton
 
     -- Hover animation
     button.MouseEnter:Connect(function()
@@ -197,30 +197,9 @@ function BetaUILib:AddButton(config)
     button.MouseButton1Click:Connect(config.Callback)
 end
 
--- Keybind functionality (can be toggled on or off)
-function BetaUILib:SetKeybind(enable, keyCode)
-    self.KeybindEnabled = enable
-    if keyCode then
-        self.Keybind = keyCode
-    end
-end
-
--- Keybind toggle for showing/hiding window
-game:GetService("UserInputService").InputBegan:Connect(function(input, isProcessed)
-    if isProcessed then return end
-
-    if BetaUILib.KeybindEnabled and input.KeyCode == BetaUILib.Keybind then
-        for _, window in pairs(BetaUILib.UIElements) do
-            if window:IsA("ScreenGui") then
-                window.Enabled = not window.Enabled
-            end
-        end
-    end
-end)
-
 -- Initialize the library
 function BetaUILib:Init()
-    -- Add additional setup features if necessary
+    -- Additional setup can be done here
 end
 
 return BetaUILib
