@@ -1,186 +1,178 @@
--- Advanced UI Library with Smooth Animations, Smart Design, and Modern Color Scheme
-local UILibrary = {}
+local UI = {}
 
--- Function to create a modern, sleek frame with smooth animations
-function UILibrary:CreateFrame(title, size, position)
+-- Function to create a frame with a title and optional intro
+function UI:CreateFrame(title, size, pos, introText)
     local frame = Instance.new("Frame")
     frame.Size = UDim2.new(0, size.X, 0, size.Y)
-    frame.Position = UDim2.new(0, position.X, 0, position.Y)
+    frame.Position = UDim2.new(0, pos.X, 0, pos.Y)
     frame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
     frame.BorderSizePixel = 0
-    frame.AnchorPoint = Vector2.new(0.5, 0.5)
-    frame.Name = title
-    frame.ClipsDescendants = true
 
-    -- Title bar with gradient effect and custom styling
-    local titleBar = Instance.new("Frame")
-    titleBar.Parent = frame
-    titleBar.Size = UDim2.new(1, 0, 0, 40)
-    titleBar.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-    titleBar.BorderSizePixel = 0
-    titleBar.BackgroundTransparency = 0.2
-    
-    -- Gradient background effect for title bar
-    local gradient = Instance.new("UIGradient")
-    gradient.Parent = titleBar
-    gradient.Color = ColorSequence.new(Color3.fromRGB(0, 122, 255), Color3.fromRGB(255, 0, 255))
-    gradient.Rotation = 45
+    -- Title label
+    local label = Instance.new("TextLabel")
+    label.Parent = frame
+    label.Size = UDim2.new(1, 0, 0, 40)
+    label.BackgroundColor3 = Color3.fromRGB(55, 55, 55)
+    label.Text = title
+    label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    label.Font = Enum.Font.GothamBold
+    label.TextSize = 20
+    label.TextAlign = Enum.TextXAlignment.Center
+    label.TextYAlignment = Enum.TextYAlignment.Center
 
-    -- Title label with improved font and color
-    local titleLabel = Instance.new("TextLabel")
-    titleLabel.Parent = titleBar
-    titleLabel.Size = UDim2.new(1, 0, 1, 0)
-    titleLabel.Text = title
-    titleLabel.BackgroundTransparency = 1
-    titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    titleLabel.Font = Enum.Font.GothamBold
-    titleLabel.TextSize = 22
-    titleLabel.TextAlign = Enum.TextAlign.Center
-    titleLabel.TextStrokeTransparency = 0.7
-    
-    -- Close button with modern style and hover animation
-    local closeButton = Instance.new("TextButton")
-    closeButton.Parent = titleBar
-    closeButton.Size = UDim2.new(0, 40, 0, 40)
-    closeButton.Position = UDim2.new(1, -40, 0, 0)
-    closeButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-    closeButton.Text = "X"
-    closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    closeButton.Font = Enum.Font.GothamBold
-    closeButton.TextSize = 16
-    closeButton.TextButton.MouseButton1Click:Connect(function()
-        frame:TweenSize(UDim2.new(0, 0, 0, 0), Enum.EasingStyle.Cubic, Enum.EasingDirection.Out, 0.3, true)
-        wait(0.3)
-        frame:Destroy()
-    end)
+    -- Intro Text
+    if introText then
+        local introLabel = Instance.new("TextLabel")
+        introLabel.Parent = frame
+        introLabel.Size = UDim2.new(1, 0, 0, 100)
+        introLabel.Position = UDim2.new(0, 0, 0, 40)
+        introLabel.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+        introLabel.Text = introText
+        introLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+        introLabel.Font = Enum.Font.Gotham
+        introLabel.TextSize = 16
+        introLabel.TextAlign = Enum.TextXAlignment.Center
+        introLabel.TextYAlignment = Enum.TextYAlignment.Top
+        introLabel.TextWrapped = true
+    end
 
-    -- Adding frame shadow for more modern feel
-    local shadow = Instance.new("Frame")
-    shadow.Parent = frame
-    shadow.Size = UDim2.new(1, 10, 1, 10)
-    shadow.Position = UDim2.new(0, 5, 0, 5)
-    shadow.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    shadow.BorderSizePixel = 0
-    shadow.BackgroundTransparency = 0.6
-    shadow.ZIndex = -1
-
-    frame.Parent = game.CoreGui
     return frame
 end
 
--- Creating a more advanced button with hover effects and smooth animations
-function UILibrary:CreateButton(parent, text, callback)
+-- Button
+function UI:CreateButton(parent, text, callback)
     local button = Instance.new("TextButton")
     button.Parent = parent
-    button.Size = UDim2.new(0, 250, 0, 50)
-    button.Position = UDim2.new(0.5, -125, 0.5, 60)
-    button.BackgroundColor3 = Color3.fromRGB(0, 122, 255)
+    button.Size = UDim2.new(0, 200, 0, 50)
+    button.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     button.Text = text
     button.TextColor3 = Color3.fromRGB(255, 255, 255)
-    button.Font = Enum.Font.Gotham
+    button.Font = Enum.Font.GothamSemibold
     button.TextSize = 18
-    button.TextStrokeTransparency = 0.8
-    button.TextAlign = Enum.TextAlign.Center
-
-    -- Button Hover Effect
-    button.MouseEnter:Connect(function()
-        button:TweenSize(UDim2.new(0, 270, 0, 50), Enum.EasingStyle.Bounce, Enum.EasingDirection.Out, 0.3, true)
-        button.BackgroundColor3 = Color3.fromRGB(0, 150, 255) -- Lighter shade on hover
-    end)
-
-    button.MouseLeave:Connect(function()
-        button:TweenSize(UDim2.new(0, 250, 0, 50), Enum.EasingStyle.Bounce, Enum.EasingDirection.Out, 0.3, true)
-        button.BackgroundColor3 = Color3.fromRGB(0, 122, 255)
-    end)
-
-    button.MouseButton1Click:Connect(function()
-        callback()
-    end)
+    button.MouseButton1Click:Connect(callback)
 
     return button
 end
 
--- Smarter toggle with transition and enhanced design
-function UILibrary:CreateToggle(parent, text, defaultState, callback)
-    local toggleFrame = Instance.new("Frame")
-    toggleFrame.Parent = parent
-    toggleFrame.Size = UDim2.new(0, 250, 0, 50)
-    toggleFrame.Position = UDim2.new(0.5, -125, 0.5, 120)
-    toggleFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-    toggleFrame.BorderSizePixel = 0
-    toggleFrame.ClipsDescendants = true
-
-    local toggleLabel = Instance.new("TextLabel")
-    toggleLabel.Parent = toggleFrame
-    toggleLabel.Size = UDim2.new(0, 200, 0, 50)
-    toggleLabel.Position = UDim2.new(0, 10, 0, 0)
-    toggleLabel.BackgroundTransparency = 1
-    toggleLabel.Text = text
-    toggleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    toggleLabel.Font = Enum.Font.Gotham
-    toggleLabel.TextSize = 18
-    toggleLabel.TextStrokeTransparency = 0.8
-
-    -- Creating a custom switch for the toggle
-    local switch = Instance.new("TextButton")
-    switch.Parent = toggleFrame
-    switch.Size = UDim2.new(0, 40, 0, 40)
-    switch.Position = UDim2.new(1, -50, 0, 0)
-    switch.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
-    switch.Text = ""
-
-    -- Toggle functionality with smooth transitions
-    switch.MouseButton1Click:Connect(function()
-        defaultState = not defaultState
-        callback(defaultState)
-        switch.BackgroundColor3 = defaultState and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
-        switch:TweenPosition(UDim2.new(0, defaultState and 200 or 0, 0, 0), Enum.EasingStyle.Cubic, Enum.EasingDirection.Out, 0.3, true)
+-- Toggle
+function UI:CreateToggle(parent, text, default, callback)
+    local toggle = Instance.new("TextButton")
+    toggle.Parent = parent
+    toggle.Size = UDim2.new(0, 200, 0, 50)
+    toggle.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    toggle.Text = text .. ": " .. (default and "On" or "Off")
+    toggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+    toggle.Font = Enum.Font.GothamSemibold
+    toggle.TextSize = 18
+    toggle.MouseButton1Click:Connect(function()
+        default = not default
+        toggle.Text = text .. ": " .. (default and "On" or "Off")
+        callback(default)
     end)
 
-    return toggleFrame
+    return toggle
 end
 
--- Create a smooth slider with modern design
-function UILibrary:CreateSlider(parent, min, max, default, callback)
-    local sliderFrame = Instance.new("Frame")
-    sliderFrame.Parent = parent
-    sliderFrame.Size = UDim2.new(0, 250, 0, 50)
-    sliderFrame.Position = UDim2.new(0.5, -125, 0.5, 180)
-    sliderFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-    sliderFrame.BorderSizePixel = 0
+-- Slider
+function UI:CreateSlider(parent, min, max, default, callback)
+    local slider = Instance.new("Frame")
+    slider.Parent = parent
+    slider.Size = UDim2.new(0, 200, 0, 50)
+    slider.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
 
-    local sliderTrack = Instance.new("Frame")
-    sliderTrack.Parent = sliderFrame
-    sliderTrack.Size = UDim2.new(1, 0, 0, 10)
-    sliderTrack.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    local bar = Instance.new("Frame")
+    bar.Parent = slider
+    bar.Size = UDim2.new(0, 180, 0, 5)
+    bar.Position = UDim2.new(0, 10, 0.5, -2)
+    bar.BackgroundColor3 = Color3.fromRGB(55, 55, 55)
 
-    local sliderHandle = Instance.new("Frame")
-    sliderHandle.Parent = sliderTrack
-    sliderHandle.Size = UDim2.new(0, 10, 0, 10)
-    sliderHandle.BackgroundColor3 = Color3.fromRGB(0, 122, 255)
+    local handle = Instance.new("Frame")
+    handle.Parent = bar
+    handle.Size = UDim2.new(0, 20, 0, 20)
+    handle.Position = UDim2.new(0, (default / max) * 180, 0, -7)
+    handle.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
 
-    -- Slider functionality with smoother interactions
-    sliderTrack.InputBegan:Connect(function(input)
+    handle.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             local mousePos = input.Position.X
-            local newPos = math.clamp(mousePos - sliderTrack.AbsolutePosition.X, 0, 230)
-            local value = min + (newPos / 230) * (max - min)
-            sliderHandle.Position = UDim2.new(0, newPos, 0, 0)
+            local newPos = math.clamp(mousePos - bar.AbsolutePosition.X, 0, 180)
+            local value = (newPos / 180) * (max - min) + min
+            handle.Position = UDim2.new(0, newPos, 0, -7)
             callback(value)
         end
     end)
 
-    return sliderFrame
+    return slider
 end
 
--- Enable draggable functionality for the frame
-function UILibrary:EnableDraggable(frame)
-    local dragStart, startPos
-    local function update(input)
-        local delta = input.Position - dragStart
-        frame.Position = UDim2.new(0, startPos.X + delta.X, 0, startPos.Y + delta.Y)
+-- Key System (Enable/Disable features)
+function UI:CreateKeySystem(parent, key, featureName, callback)
+    local keyButton = Instance.new("TextButton")
+    keyButton.Parent = parent
+    keyButton.Size = UDim2.new(0, 200, 0, 50)
+    keyButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    keyButton.Text = "Press Key to Toggle " .. featureName
+    keyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    keyButton.Font = Enum.Font.GothamSemibold
+    keyButton.TextSize = 18
+
+    local enabled = false
+    local function toggleFeature(input)
+        if input.KeyCode == key then
+            enabled = not enabled
+            callback(enabled)
+            keyButton.Text = featureName .. ": " .. (enabled and "Enabled" or "Disabled")
+        end
     end
 
+    game:GetService("UserInputService").InputBegan:Connect(toggleFeature)
+
+    return keyButton
+end
+
+-- Tab system (Organize UI into tabs)
+function UI:CreateTabBar(parent)
+    local tabBar = Instance.new("Frame")
+    tabBar.Parent = parent
+    tabBar.Size = UDim2.new(1, 0, 0, 40)
+    tabBar.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+
+    return tabBar
+end
+
+function UI:CreateTab(tabBar, title)
+    local tabButton = Instance.new("TextButton")
+    tabButton.Parent = tabBar
+    tabButton.Size = UDim2.new(0, 100, 1, 0)
+    tabButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    tabButton.Text = title
+    tabButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    tabButton.Font = Enum.Font.GothamSemibold
+    tabButton.TextSize = 18
+
+    return tabButton
+end
+
+-- Paragraph (Simple Text content)
+function UI:CreateParagraph(parent, text)
+    local paragraph = Instance.new("TextLabel")
+    paragraph.Parent = parent
+    paragraph.Size = UDim2.new(1, 0, 0, 100)
+    paragraph.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    paragraph.Text = text
+    paragraph.TextColor3 = Color3.fromRGB(255, 255, 255)
+    paragraph.Font = Enum.Font.Gotham
+    paragraph.TextSize = 16
+    paragraph.TextAlign = Enum.TextXAlignment.Center
+    paragraph.TextYAlignment = Enum.TextYAlignment.Top
+    paragraph.TextWrapped = true
+
+    return paragraph
+end
+
+-- Draggable functionality
+function UI:EnableDraggable(frame)
+    local dragStart, startPos
     frame.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragStart = input.Position
@@ -190,9 +182,15 @@ function UILibrary:EnableDraggable(frame)
                     frame.InputChanged:Disconnect(update)
                 end
             end)
-            frame.InputChanged:Connect(update)
         end
     end)
+
+    local function update(input)
+        local delta = input.Position - dragStart
+        frame.Position = UDim2.new(0, startPos.X + delta.X, 0, startPos.Y + delta.Y)
+    end
+
+    frame.InputChanged:Connect(update)
 end
 
-return UILibrary
+return UI
