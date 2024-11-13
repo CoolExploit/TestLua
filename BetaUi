@@ -1,0 +1,182 @@
+-- UI Library
+local UILibrary = {}
+
+-- Dependencies
+local TweenService = game:GetService("TweenService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+-- Helper function to create UI objects
+local function createInstance(className, properties)
+    local instance = Instance.new(className)
+    for property, value in pairs(properties) do
+        instance[property] = value
+    end
+    return instance
+end
+
+-- Initialize the library and main ScreenGui
+function UILibrary:Init()
+    self.gui = createInstance("ScreenGui", {
+        Parent = PlayerGui,
+        Name = "UILibrary",
+        ResetOnSpawn = false
+    })
+end
+
+-- Function for smooth tween animations
+function UILibrary:TweenObject(object, properties, duration, easingStyle)
+    local tweenInfo = TweenInfo.new(duration, easingStyle or Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+    local tween = TweenService:Create(object, tweenInfo, properties)
+    tween:Play()
+    return tween
+end
+
+-- Create a frame with animations
+function UILibrary:CreateFrame(title, size, position)
+    local frame = createInstance("Frame", {
+        Size = UDim2.new(0, size.X, 0, size.Y),
+        Position = UDim2.new(0, position.X, 0, position.Y),
+        BackgroundColor3 = Color3.fromRGB(35, 35, 35),
+        BorderSizePixel = 0,
+        Parent = self.gui
+    })
+
+    local titleLabel = createInstance("TextLabel", {
+        Size = UDim2.new(1, 0, 0, 30),
+        BackgroundTransparency = 1,
+        Text = title,
+        Font = Enum.Font.GothamBold,
+        TextSize = 14,
+        TextColor3 = Color3.fromRGB(255, 255, 255),
+        Parent = frame
+    })
+
+    -- Smooth fade-in animation
+    frame.BackgroundTransparency = 1
+    titleLabel.TextTransparency = 1
+    self:TweenObject(frame, {BackgroundTransparency = 0}, 0.5)
+    self:TweenObject(titleLabel, {TextTransparency = 0}, 0.5)
+
+    return frame
+end
+
+-- Create a button with hover effects
+function UILibrary:CreateButton(parent, text, callback)
+    local button = createInstance("TextButton", {
+        Size = UDim2.new(0, 100, 0, 30),
+        BackgroundColor3 = Color3.fromRGB(50, 50, 50),
+        BorderSizePixel = 0,
+        Text = text,
+        Font = Enum.Font.Gotham,
+        TextSize = 14,
+        TextColor3 = Color3.fromRGB(255, 255, 255),
+        Parent = parent
+    })
+
+    button.MouseButton1Click:Connect(callback)
+
+    -- Hover effect
+    button.MouseEnter:Connect(function()
+        self:TweenObject(button, {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}, 0.2)
+    end)
+
+    button.MouseLeave:Connect(function()
+        self:TweenObject(button, {BackgroundColor3 = Color3.fromRGB(50, 50, 50)}, 0.2)
+    end)
+
+    return button
+end
+
+-- Create a toggle switch
+function UILibrary:CreateToggle(parent, text, defaultState, callback)
+    local toggle = createInstance("TextButton", {
+        Size = UDim2.new(0, 100, 0, 30),
+        BackgroundColor3 = Color3.fromRGB(50, 50, 50),
+        BorderSizePixel = 0,
+        Text = text .. ": " .. (defaultState and "ON" or "OFF"),
+        Font = Enum.Font.Gotham,
+        TextSize = 14,
+        TextColor3 = Color3.fromRGB(255, 255, 255),
+        Parent = parent
+    })
+
+    local state = defaultState
+
+    toggle.MouseButton1Click:Connect(function()
+        state = not state
+        toggle.Text = text .. ": " .. (state and "ON" or "OFF")
+        callback(state)
+    end)
+
+    return toggle
+end
+
+-- Create a slider
+function UILibrary:CreateSlider(parent, min, max, defaultValue, callback)
+    local slider = createInstance("Frame", {
+        Size = UDim2.new(0, 200, 0, 30),
+        BackgroundColor3 = Color3.fromRGB(50, 50, 50),
+        BorderSizePixel = 0,
+        Parent = parent
+    })
+
+    local handle = createInstance("Frame", {
+        Size = UDim2.new((defaultValue - min) / (max - min), 0, 1, 0),
+        BackgroundColor3 = Color3.fromRGB(100, 100, 255),
+        BorderSizePixel = 0,
+        Parent = slider
+    })
+
+    local function updateSlider(input)
+        local newValue = math.clamp((input.Position.X - slider.AbsolutePosition.X) / slider.AbsoluteSize.X, 0, 1)
+        handle.Size = UDim2.new(newValue, 0, 1, 0)
+        callback(min + (max - min) * newValue)
+    end
+
+    slider.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            updateSlider(input)
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    updateSlider(input)
+                end
+            end)
+        end
+    end)
+
+    return slider
+end
+
+-- Add more UI components (e.g., checkboxes, dropdowns, progress bars, notifications)
+-- Each component should include smooth tween effects for UI consistency.
+
+-- Sample Notification
+function UILibrary:CreateNotification(text, duration)
+    local notification = createInstance("TextLabel", {
+        Size = UDim2.new(0, 200, 0, 50),
+        Position = UDim2.new(0.5, -100, 0.1, 0),
+        BackgroundColor3 = Color3.fromRGB(50, 50, 50),
+        Text = text,
+        Font = Enum.Font.Gotham,
+        TextSize = 14,
+        TextColor3 = Color3.fromRGB(255, 255, 255),
+        BorderSizePixel = 0,
+        Parent = self.gui
+    })
+
+    notification.BackgroundTransparency = 1
+    notification.TextTransparency = 1
+    self:TweenObject(notification, {BackgroundTransparency = 0, TextTransparency = 0}, 0.5)
+
+    -- Fade out after duration
+    task.delay(duration, function()
+        self:TweenObject(notification, {BackgroundTransparency = 1, TextTransparency = 1}, 0.5)
+        task.delay(0.5, function()
+            notification:Destroy()
+        end)
+    end)
+end
+
+return UILibrary
