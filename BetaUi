@@ -1,189 +1,198 @@
--- UI Library Module
+-- Advanced UI Library with Smooth Animations, Smart Design, and Modern Color Scheme
 local UILibrary = {}
-UILibrary.__index = UILibrary
 
--- Services
-local TweenService = game:GetService("TweenService")
-local UserInputService = game:GetService("UserInputService")
-
--- Initialization Function
-function UILibrary:Init()
-    -- This function can be used to initialize global settings if needed
-end
-
--- Utility Function to Create Tween
-local function tween(obj, properties, duration)
-    local tweenInfo = TweenInfo.new(duration, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-    local tween = TweenService:Create(obj, tweenInfo, properties)
-    tween:Play()
-    return tween
-end
-
--- Create Main Frame
+-- Function to create a modern, sleek frame with smooth animations
 function UILibrary:CreateFrame(title, size, position)
-    local screenGui = Instance.new("ScreenGui", game.CoreGui)
-    screenGui.Name = "CustomUILibrary"
-    
-    local frame = Instance.new("Frame", screenGui)
-    frame.Size = UDim2.fromOffset(size.X, size.Y)
-    frame.Position = UDim2.fromOffset(position.X, position.Y)
-    frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0, size.X, 0, size.Y)
+    frame.Position = UDim2.new(0, position.X, 0, position.Y)
+    frame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
     frame.BorderSizePixel = 0
-    frame.BackgroundTransparency = 0.1
+    frame.AnchorPoint = Vector2.new(0.5, 0.5)
+    frame.Name = title
+    frame.ClipsDescendants = true
+
+    -- Title bar with gradient effect and custom styling
+    local titleBar = Instance.new("Frame")
+    titleBar.Parent = frame
+    titleBar.Size = UDim2.new(1, 0, 0, 40)
+    titleBar.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    titleBar.BorderSizePixel = 0
+    titleBar.BackgroundTransparency = 0.2
     
-    local titleLabel = Instance.new("TextLabel", frame)
-    titleLabel.Size = UDim2.new(1, 0, 0, 30)
+    -- Gradient background effect for title bar
+    local gradient = Instance.new("UIGradient")
+    gradient.Parent = titleBar
+    gradient.Color = ColorSequence.new(Color3.fromRGB(0, 122, 255), Color3.fromRGB(255, 0, 255))
+    gradient.Rotation = 45
+
+    -- Title label with improved font and color
+    local titleLabel = Instance.new("TextLabel")
+    titleLabel.Parent = titleBar
+    titleLabel.Size = UDim2.new(1, 0, 1, 0)
     titleLabel.Text = title
-    titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
     titleLabel.BackgroundTransparency = 1
-    titleLabel.Font = Enum.Font.SourceSansBold
-    titleLabel.TextSize = 18
+    titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    titleLabel.Font = Enum.Font.GothamBold
+    titleLabel.TextSize = 22
+    titleLabel.TextAlign = Enum.TextAlign.Center
+    titleLabel.TextStrokeTransparency = 0.7
     
-    -- Draggable Feature
-    local dragging, dragStart, startPos
+    -- Close button with modern style and hover animation
+    local closeButton = Instance.new("TextButton")
+    closeButton.Parent = titleBar
+    closeButton.Size = UDim2.new(0, 40, 0, 40)
+    closeButton.Position = UDim2.new(1, -40, 0, 0)
+    closeButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+    closeButton.Text = "X"
+    closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    closeButton.Font = Enum.Font.GothamBold
+    closeButton.TextSize = 16
+    closeButton.TextButton.MouseButton1Click:Connect(function()
+        frame:TweenSize(UDim2.new(0, 0, 0, 0), Enum.EasingStyle.Cubic, Enum.EasingDirection.Out, 0.3, true)
+        wait(0.3)
+        frame:Destroy()
+    end)
+
+    -- Adding frame shadow for more modern feel
+    local shadow = Instance.new("Frame")
+    shadow.Parent = frame
+    shadow.Size = UDim2.new(1, 10, 1, 10)
+    shadow.Position = UDim2.new(0, 5, 0, 5)
+    shadow.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    shadow.BorderSizePixel = 0
+    shadow.BackgroundTransparency = 0.6
+    shadow.ZIndex = -1
+
+    frame.Parent = game.CoreGui
+    return frame
+end
+
+-- Creating a more advanced button with hover effects and smooth animations
+function UILibrary:CreateButton(parent, text, callback)
+    local button = Instance.new("TextButton")
+    button.Parent = parent
+    button.Size = UDim2.new(0, 250, 0, 50)
+    button.Position = UDim2.new(0.5, -125, 0.5, 60)
+    button.BackgroundColor3 = Color3.fromRGB(0, 122, 255)
+    button.Text = text
+    button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    button.Font = Enum.Font.Gotham
+    button.TextSize = 18
+    button.TextStrokeTransparency = 0.8
+    button.TextAlign = Enum.TextAlign.Center
+
+    -- Button Hover Effect
+    button.MouseEnter:Connect(function()
+        button:TweenSize(UDim2.new(0, 270, 0, 50), Enum.EasingStyle.Bounce, Enum.EasingDirection.Out, 0.3, true)
+        button.BackgroundColor3 = Color3.fromRGB(0, 150, 255) -- Lighter shade on hover
+    end)
+
+    button.MouseLeave:Connect(function()
+        button:TweenSize(UDim2.new(0, 250, 0, 50), Enum.EasingStyle.Bounce, Enum.EasingDirection.Out, 0.3, true)
+        button.BackgroundColor3 = Color3.fromRGB(0, 122, 255)
+    end)
+
+    button.MouseButton1Click:Connect(function()
+        callback()
+    end)
+
+    return button
+end
+
+-- Smarter toggle with transition and enhanced design
+function UILibrary:CreateToggle(parent, text, defaultState, callback)
+    local toggleFrame = Instance.new("Frame")
+    toggleFrame.Parent = parent
+    toggleFrame.Size = UDim2.new(0, 250, 0, 50)
+    toggleFrame.Position = UDim2.new(0.5, -125, 0.5, 120)
+    toggleFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    toggleFrame.BorderSizePixel = 0
+    toggleFrame.ClipsDescendants = true
+
+    local toggleLabel = Instance.new("TextLabel")
+    toggleLabel.Parent = toggleFrame
+    toggleLabel.Size = UDim2.new(0, 200, 0, 50)
+    toggleLabel.Position = UDim2.new(0, 10, 0, 0)
+    toggleLabel.BackgroundTransparency = 1
+    toggleLabel.Text = text
+    toggleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    toggleLabel.Font = Enum.Font.Gotham
+    toggleLabel.TextSize = 18
+    toggleLabel.TextStrokeTransparency = 0.8
+
+    -- Creating a custom switch for the toggle
+    local switch = Instance.new("TextButton")
+    switch.Parent = toggleFrame
+    switch.Size = UDim2.new(0, 40, 0, 40)
+    switch.Position = UDim2.new(1, -50, 0, 0)
+    switch.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+    switch.Text = ""
+
+    -- Toggle functionality with smooth transitions
+    switch.MouseButton1Click:Connect(function()
+        defaultState = not defaultState
+        callback(defaultState)
+        switch.BackgroundColor3 = defaultState and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
+        switch:TweenPosition(UDim2.new(0, defaultState and 200 or 0, 0, 0), Enum.EasingStyle.Cubic, Enum.EasingDirection.Out, 0.3, true)
+    end)
+
+    return toggleFrame
+end
+
+-- Create a smooth slider with modern design
+function UILibrary:CreateSlider(parent, min, max, default, callback)
+    local sliderFrame = Instance.new("Frame")
+    sliderFrame.Parent = parent
+    sliderFrame.Size = UDim2.new(0, 250, 0, 50)
+    sliderFrame.Position = UDim2.new(0.5, -125, 0.5, 180)
+    sliderFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    sliderFrame.BorderSizePixel = 0
+
+    local sliderTrack = Instance.new("Frame")
+    sliderTrack.Parent = sliderFrame
+    sliderTrack.Size = UDim2.new(1, 0, 0, 10)
+    sliderTrack.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+
+    local sliderHandle = Instance.new("Frame")
+    sliderHandle.Parent = sliderTrack
+    sliderHandle.Size = UDim2.new(0, 10, 0, 10)
+    sliderHandle.BackgroundColor3 = Color3.fromRGB(0, 122, 255)
+
+    -- Slider functionality with smoother interactions
+    sliderTrack.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            local mousePos = input.Position.X
+            local newPos = math.clamp(mousePos - sliderTrack.AbsolutePosition.X, 0, 230)
+            local value = min + (newPos / 230) * (max - min)
+            sliderHandle.Position = UDim2.new(0, newPos, 0, 0)
+            callback(value)
+        end
+    end)
+
+    return sliderFrame
+end
+
+-- Enable draggable functionality for the frame
+function UILibrary:EnableDraggable(frame)
+    local dragStart, startPos
+    local function update(input)
+        local delta = input.Position - dragStart
+        frame.Position = UDim2.new(0, startPos.X + delta.X, 0, startPos.Y + delta.Y)
+    end
+
     frame.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = true
             dragStart = input.Position
             startPos = frame.Position
             input.Changed:Connect(function()
                 if input.UserInputState == Enum.UserInputState.End then
-                    dragging = false
+                    frame.InputChanged:Disconnect(update)
                 end
             end)
+            frame.InputChanged:Connect(update)
         end
     end)
-    UserInputService.InputChanged:Connect(function(input)
-        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-            local delta = input.Position - dragStart
-            frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-        end
-    end)
-    
-    return frame
-end
-
--- Create Button
-function UILibrary:CreateButton(parent, text, callback)
-    local button = Instance.new("TextButton", parent)
-    button.Size = UDim2.new(1, -20, 0, 30)
-    button.Position = UDim2.new(0, 10, 0, 40)
-    button.Text = text
-    button.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-    button.TextColor3 = Color3.fromRGB(255, 255, 255)
-    button.Font = Enum.Font.SourceSans
-    button.TextSize = 16
-    button.BorderSizePixel = 0
-    
-    -- Smooth hover effect
-    button.MouseEnter:Connect(function()
-        tween(button, {BackgroundColor3 = Color3.fromRGB(50, 50, 50)}, 0.2)
-    end)
-    button.MouseLeave:Connect(function()
-        tween(button, {BackgroundColor3 = Color3.fromRGB(40, 40, 40)}, 0.2)
-    end)
-    
-    button.MouseButton1Click:Connect(callback)
-    return button
-end
-
--- Create Toggle
-function UILibrary:CreateToggle(parent, text, defaultState, callback)
-    local toggleFrame = Instance.new("Frame", parent)
-    toggleFrame.Size = UDim2.new(1, -20, 0, 30)
-    toggleFrame.Position = UDim2.new(0, 10, 0, 80)
-    toggleFrame.BackgroundTransparency = 1
-    
-    local toggleLabel = Instance.new("TextLabel", toggleFrame)
-    toggleLabel.Size = UDim2.new(0.8, 0, 1, 0)
-    toggleLabel.Text = text
-    toggleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    toggleLabel.BackgroundTransparency = 1
-    toggleLabel.Font = Enum.Font.SourceSans
-    toggleLabel.TextSize = 16
-    
-    local toggleButton = Instance.new("TextButton", toggleFrame)
-    toggleButton.Size = UDim2.new(0, 50, 0, 25)
-    toggleButton.Position = UDim2.new(0.8, 10, 0.5, -12)
-    toggleButton.BackgroundColor3 = defaultState and Color3.fromRGB(0, 200, 0) or Color3.fromRGB(200, 0, 0)
-    toggleButton.Text = defaultState and "ON" or "OFF"
-    toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    toggleButton.Font = Enum.Font.SourceSansBold
-    toggleButton.TextSize = 14
-    toggleButton.BorderSizePixel = 0
-    
-    local state = defaultState
-    toggleButton.MouseButton1Click:Connect(function()
-        state = not state
-        toggleButton.Text = state and "ON" or "OFF"
-        toggleButton.BackgroundColor3 = state and Color3.fromRGB(0, 200, 0) or Color3.fromRGB(200, 0, 0)
-        callback(state)
-    end)
-    
-    return toggleFrame
-end
-
--- Create Slider
-function UILibrary:CreateSlider(parent, min, max, default, callback)
-    local sliderFrame = Instance.new("Frame", parent)
-    sliderFrame.Size = UDim2.new(1, -20, 0, 50)
-    sliderFrame.Position = UDim2.new(0, 10, 0, 120)
-    sliderFrame.BackgroundTransparency = 1
-    
-    local sliderLabel = Instance.new("TextLabel", sliderFrame)
-    sliderLabel.Size = UDim2.new(0.8, 0, 0, 30)
-    sliderLabel.Text = "Value: " .. default
-    sliderLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    sliderLabel.BackgroundTransparency = 1
-    sliderLabel.Font = Enum.Font.SourceSans
-    sliderLabel.TextSize = 16
-    
-    local sliderButton = Instance.new("TextButton", sliderFrame)
-    sliderButton.Size = UDim2.new(0.8, 0, 0, 10)
-    sliderButton.Position = UDim2.new(0.1, 0, 0.75, 0)
-    sliderButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-    sliderButton.BorderSizePixel = 0
-    
-    sliderButton.MouseButton1Down:Connect(function()
-        local function update(input)
-            local scale = (input.Position.X - sliderButton.AbsolutePosition.X) / sliderButton.AbsoluteSize.X
-            scale = math.clamp(scale, 0, 1)
-            local value = math.floor(min + (max - min) * scale)
-            sliderLabel.Text = "Value: " .. value
-            callback(value)
-        end
-        update(UserInputService:GetMouseLocation())
-        local conn = UserInputService.InputChanged:Connect(update)
-        UserInputService.InputEnded:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                conn:Disconnect()
-            end
-        end)
-    end)
-    
-    return sliderFrame
-end
-
--- Create Notification
-function UILibrary:CreateNotification(text, duration)
-    local screenGui = Instance.new("ScreenGui", game.CoreGui)
-    local notification = Instance.new("TextLabel", screenGui)
-    notification.Size = UDim2.new(0, 300, 0, 50)
-    notification.Position = UDim2.new(0.5, -150, 0.1, 0)
-    notification.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    notification.Text = text
-    notification.TextColor3 = Color3.fromRGB(255, 255, 255)
-    notification.Font = Enum.Font.SourceSans
-    notification.TextSize = 18
-    notification.BackgroundTransparency = 0.1
-    notification.BorderSizePixel = 0
-
-    -- Tween in and out for smoother appearance
-    tween(notification, {Position = UDim2.new(0.5, -150, 0.15, 0)}, 0.5)
-    task.wait(duration)
-    tween(notification, {Position = UDim2.new(0.5, -150, 0, -50)}, 0.5)
-    task.wait(0.5)
-    notification:Destroy()
 end
 
 return UILibrary
