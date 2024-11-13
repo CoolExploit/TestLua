@@ -1,39 +1,44 @@
+-- Beta UI Library Script
+
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+
+-- Window library definition
 local BetaUILib = {}
 BetaUILib.__index = BetaUILib
 
--- Helper function to create new instances
 function BetaUILib.new()
     local self = setmetatable({}, BetaUILib)
-    self.UIElements = {}
-    self.KeybindEnabled = false  -- Flag for keybind feature
-    self.Keybind = Enum.KeyCode.Space  -- Default keybind (can be changed)
+    self.KeybindEnabled = false  -- Default Keybind feature is off
+    self.IsMinimized = false  -- Track minimize state
     return self
 end
 
--- Function to create a window with customized intro and styles
+-- Create Window with title and options
 function BetaUILib:MakeWindow(config)
+    -- Creating window
     local window = Instance.new("ScreenGui")
     window.Name = config.Name or "BetaWindow"
-    window.DisplayOrder = 1
-    window.ResetOnSpawn = false
     window.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+    window.ResetOnSpawn = false
+    window.DisplayOrder = 1
 
-    -- Window background
+    -- Create frame for window
     local frame = Instance.new("Frame")
     frame.Parent = window
-    frame.Size = UDim2.new(0, 600, 0, 400)  -- Medium window size
+    frame.Size = UDim2.new(0, 600, 0, 400)  -- Medium size
     frame.Position = UDim2.new(0.5, -300, 0.5, -200)  -- Centered
     frame.BackgroundColor3 = Color3.fromRGB(36, 36, 36)
     frame.BorderSizePixel = 0
     frame.ClipsDescendants = true
     frame.Name = "MainFrame"
 
-    -- Corner radius for rounded edges
+    -- Rounded corners
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, 20)
     corner.Parent = frame
 
-    -- Title bar for the window (with Minimize and Close buttons)
+    -- Create Title Bar with Minimize/Close Buttons
     local titleBar = Instance.new("Frame")
     titleBar.Parent = frame
     titleBar.Size = UDim2.new(1, 0, 0, 40)
@@ -53,104 +58,53 @@ function BetaUILib:MakeWindow(config)
     closeButton.BorderSizePixel = 0
     closeButton.Name = "CloseButton"
 
-    closeButton.MouseButton1Click:Connect(function()
-        window:Destroy()
-    end)
-
     -- Minimize Button
     local minimizeButton = Instance.new("TextButton")
     minimizeButton.Parent = titleBar
     minimizeButton.Size = UDim2.new(0, 40, 0, 40)
     minimizeButton.Position = UDim2.new(1, -80, 0, 0)
-    minimizeButton.BackgroundColor3 = Color3.fromRGB(50, 50, 255)
-    minimizeButton.Text = "-"
+    minimizeButton.BackgroundColor3 = Color3.fromRGB(255, 255, 50)
+    minimizeButton.Text = "_"
     minimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
     minimizeButton.TextSize = 18
     minimizeButton.BorderSizePixel = 0
     minimizeButton.Name = "MinimizeButton"
 
-    -- Minimize functionality
-    local isMinimized = false
+    -- Minimize Button Functionality
     minimizeButton.MouseButton1Click:Connect(function()
-        if not isMinimized then
-            -- Minimize the window
-            local tweenService = game:GetService("TweenService")
-            local goal = { Size = UDim2.new(1, 0, 0, 40) }
-            local tween = tweenService:Create(frame, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), goal)
-            tween:Play()
-
-            -- Hide content and only show title bar
-            local contentGoal = { Size = UDim2.new(1, 0, 0, 0) }
-            local contentTween = tweenService:Create(frame:WaitForChild("Content"), TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), contentGoal)
-            contentTween:Play()
-
-            isMinimized = true
+        if not self.IsMinimized then
+            -- Tween to minimize (hide frame)
+            TweenService:Create(frame, TweenInfo.new(0.5), {Size = UDim2.new(0, 600, 0, 40)}):Play()
+            self.IsMinimized = true
         else
-            -- Maximize the window back
-            local tweenService = game:GetService("TweenService")
-            local goal = { Size = UDim2.new(0, 600, 0, 400) }
-            local tween = tweenService:Create(frame, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), goal)
-            tween:Play()
-
-            -- Show content again
-            local contentGoal = { Size = UDim2.new(1, 0, 1, -40) }
-            local contentTween = tweenService:Create(frame:WaitForChild("Content"), TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), contentGoal)
-            contentTween:Play()
-
-            isMinimized = false
+            -- Tween to restore original size
+            TweenService:Create(frame, TweenInfo.new(0.5), {Size = UDim2.new(0, 600, 0, 400)}):Play()
+            self.IsMinimized = false
         end
     end)
 
-    -- Title Label
-    local titleLabel = Instance.new("TextLabel")
-    titleLabel.Parent = titleBar
-    titleLabel.Size = UDim2.new(1, -80, 1, 0)
-    titleLabel.BackgroundTransparency = 1
-    titleLabel.Text = config.Name or "Beta Library"
-    titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    titleLabel.TextSize = 20
-    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-    titleLabel.TextYAlignment = Enum.TextYAlignment.Center
-    titleLabel.PaddingLeft = 10
-
-    -- Intro Text Animation
-    local introLabel = Instance.new("TextLabel")
-    introLabel.Parent = window
-    introLabel.Size = UDim2.new(0, 600, 0, 100)
-    introLabel.Position = UDim2.new(0.5, -300, 0.5, -150)
-    introLabel.BackgroundTransparency = 1
-    introLabel.Text = "Beta Library - Loading..."
-    introLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    introLabel.TextSize = 30
-    introLabel.TextStrokeTransparency = 0.5
-    introLabel.TextXAlignment = Enum.TextXAlignment.Center
-    introLabel.TextYAlignment = Enum.TextYAlignment.Center
-
-    -- Tween the intro
-    local tweenService = game:GetService("TweenService")
-    local goal = { TextTransparency = 1 }
-    local tween = tweenService:Create(introLabel, TweenInfo.new(2, Enum.EasingStyle.Linear, Enum.EasingDirection.Out), goal)
-    tween:Play()
-    tween.Completed:Connect(function()
-        introLabel:Destroy()
+    -- Close Button Functionality
+    closeButton.MouseButton1Click:Connect(function()
+        window:Destroy()
     end)
 
-    -- Draggable functionality
+    -- Draggable Window Logic
     local dragging = false
-    local dragInput, dragStart, startPos
+    local dragInput, mousePos, framePos
 
     titleBar.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = true
-            dragStart = input.Position
-            startPos = frame.Position
+            dragInput = input
+            mousePos = input.Position
+            framePos = frame.Position
         end
     end)
 
     titleBar.InputChanged:Connect(function(input)
         if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-            local delta = input.Position - dragStart
-            frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+            local delta = input.Position - mousePos
+            frame.Position = UDim2.new(framePos.X.Scale, framePos.X.Offset + delta.X, framePos.Y.Scale, framePos.Y.Offset + delta.Y)
         end
     end)
 
@@ -160,34 +114,78 @@ function BetaUILib:MakeWindow(config)
         end
     end)
 
-    -- Add to the UI elements table
-    table.insert(self.UIElements, window)
-    
-    -- Add a content frame
-    local contentFrame = Instance.new("Frame")
-    contentFrame.Parent = frame
-    contentFrame.Size = UDim2.new(1, 0, 1, -40)  -- Below title bar
-    contentFrame.Position = UDim2.new(0, 0, 0, 40)
-    contentFrame.BackgroundTransparency = 1
-    contentFrame.Name = "Content"
+    -- Function for Notifications with Tweens
+    function self:MakeNotification(config)
+        local notification = Instance.new("Frame")
+        notification.Parent = window
+        notification.Size = UDim2.new(0, 300, 0, 50)
+        notification.Position = UDim2.new(0.5, -150, 0, 20)
+        notification.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+        notification.BorderSizePixel = 0
+        notification.Visible = true
+        notification.Name = "NotificationFrame"
 
-    -- Add content to the contentFrame (can be customized later)
-    local scriptSection = Instance.new("TextBox")
-    scriptSection.Parent = contentFrame
-    scriptSection.Size = UDim2.new(1, 0, 0, 200)
-    scriptSection.Position = UDim2.new(0, 0, 0, 20)
-    scriptSection.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    scriptSection.Text = "Script Section"
-    scriptSection.TextColor3 = Color3.fromRGB(0, 0, 0)
-    scriptSection.TextSize = 16
-    scriptSection.Multiline = true
-    scriptSection.TextWrapped = true
-    scriptSection.TextXAlignment = Enum.TextXAlignment.Left
-    scriptSection.TextYAlignment = Enum.TextYAlignment.Top
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(0, 12)
+        corner.Parent = notification
 
-    return window
+        local title = Instance.new("TextLabel")
+        title.Parent = notification
+        title.Size = UDim2.new(1, 0, 0.5, 0)
+        title.Text = config.Name or "Notification"
+        title.TextColor3 = Color3.fromRGB(255, 255, 255)
+        title.TextSize = 18
+        title.BackgroundTransparency = 1
+
+        local content = Instance.new("TextLabel")
+        content.Parent = notification
+        content.Size = UDim2.new(1, 0, 0.5, 0)
+        content.Text = config.Content or "Your message here."
+        content.TextColor3 = Color3.fromRGB(200, 200, 200)
+        content.TextSize = 14
+        content.BackgroundTransparency = 1
+
+        -- Tween in and out for notification
+        TweenService:Create(notification, TweenInfo.new(0.5), {Position = UDim2.new(0.5, -150, 0, 100)}):Play()
+        wait(config.Time or 5)
+        TweenService:Create(notification, TweenInfo.new(0.5), {Position = UDim2.new(0.5, -150, 0, 20)}):Play()
+
+        wait(0.5)
+        notification:Destroy()
+    end
+
+    -- Example of adding a Tab with Options (Add buttons, toggles, etc.)
+    local tabFrame = Instance.new("Frame")
+    tabFrame.Parent = frame
+    tabFrame.Size = UDim2.new(0, 600, 0, 360)
+    tabFrame.Position = UDim2.new(0, 0, 0, 40)
+    tabFrame.BackgroundColor3 = Color3.fromRGB(26, 26, 26)
+    tabFrame.Name = "TabFrame"
+
+    local tabLabel = Instance.new("TextLabel")
+    tabLabel.Parent = tabFrame
+    tabLabel.Size = UDim2.new(0, 600, 0, 40)
+    tabLabel.Text = "This is a Tab"
+    tabLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    tabLabel.TextSize = 20
+    tabLabel.BackgroundTransparency = 1
+
+    -- Add more UI elements or interactive buttons to the tab as needed
+
+    return self
 end
 
--- Example usage:
-local ui = BetaUILib.new()
-local window = ui:MakeWindow({ Name = "Beta Library UI" })
+-- Instantiate and Use the UI
+local BetaLib = BetaUILib.new()
+local Window = BetaLib:MakeWindow({
+    Name = "Beta UI Library"
+})
+
+-- Notification Example
+BetaLib:MakeNotification({
+    Name = "Welcome",
+    Content = "This is the first notification!",
+    Time = 5
+})
+
+-- Finished setup
