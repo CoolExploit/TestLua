@@ -70,7 +70,16 @@ function BetaUILib:MakeWindow(config)
     minimizeButton.Name = "MinimizeButton"
 
     minimizeButton.MouseButton1Click:Connect(function()
-        frame.Visible = not frame.Visible
+        -- Animate minimize button and title bar disappearing
+        local tweenService = game:GetService("TweenService")
+        local goal = { Size = UDim2.new(1, 0, 0, 0) }
+        local tween = tweenService:Create(titleBar, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), goal)
+        tween:Play()
+
+        -- Optionally, make the frame itself disappear for a more complete minimize effect
+        local frameGoal = { Size = UDim2.new(0, 400, 0, 50) }  -- Smaller size, shows the rest of the UI
+        local frameTween = tweenService:Create(frame, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), frameGoal)
+        frameTween:Play()
     end)
 
     -- Title Label
@@ -155,7 +164,7 @@ function BetaUILib:MakeTab(config)
     return contentFrame
 end
 
--- Function to add buttons to the UI
+-- Function to add buttons to the UI with tweens
 function BetaUILib:AddButton(config)
     local button = Instance.new("TextButton")
     button.Parent = config.Parent
@@ -169,51 +178,38 @@ function BetaUILib:AddButton(config)
     button.Name = "Button"
     button.TextButtonStyle = Enum.ButtonStyle.RobloxButton
 
-    -- Button click event
-    button.MouseButton1Click:Connect(function()
-        config.Callback()
+    -- Hover animation
+    button.MouseEnter:Connect(function()
+        local tweenService = game:GetService("TweenService")
+        local goal = { BackgroundColor3 = Color3.fromRGB(100, 100, 100) }
+        local tween = tweenService:Create(button, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), goal)
+        tween:Play()
     end)
 
-    -- Return the button so it can be modified
-    return button
-end
-
--- Function to add a toggle
-function BetaUILib:AddToggle(config)
-    local toggle = Instance.new("TextButton")
-    toggle.Parent = config.Parent
-    toggle.Size = UDim2.new(0, 150, 0, 40)
-    toggle.Position = UDim2.new(0.5, -75, 0, 10)
-    toggle.BackgroundColor3 = Color3.fromRGB(64, 64, 64)
-    toggle.TextColor3 = Color3.fromRGB(255, 255, 255)
-    toggle.TextSize = 18
-    toggle.Text = config.Name
-    toggle.BorderSizePixel = 0
-    toggle.Name = "Toggle"
-    
-    local isToggled = config.Default
-
-    toggle.MouseButton1Click:Connect(function()
-        isToggled = not isToggled
-        config.Callback(isToggled)
-        toggle.BackgroundColor3 = isToggled and Color3.fromRGB(50, 255, 50) or Color3.fromRGB(255, 50, 50)
+    button.MouseLeave:Connect(function()
+        local tweenService = game:GetService("TweenService")
+        local goal = { BackgroundColor3 = Color3.fromRGB(64, 64, 64) }
+        local tween = tweenService:Create(button, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), goal)
+        tween:Play()
     end)
 
-    return toggle
+    -- Button Click functionality
+    button.MouseButton1Click:Connect(config.Callback)
 end
 
--- Function to enable/disable keybinds
-function BetaUILib:SetKeybind(enabled, key)
-    self.KeybindEnabled = enabled
-    self.Keybind = key or Enum.KeyCode.Space  -- Default keybind is space if not provided
+-- Keybind functionality (can be toggled on or off)
+function BetaUILib:SetKeybind(enable, keyCode)
+    self.KeybindEnabled = enable
+    if keyCode then
+        self.Keybind = keyCode
+    end
 end
 
--- Keybind functionality
+-- Keybind toggle for showing/hiding window
 game:GetService("UserInputService").InputBegan:Connect(function(input, isProcessed)
     if isProcessed then return end
 
     if BetaUILib.KeybindEnabled and input.KeyCode == BetaUILib.Keybind then
-        -- Toggle window visibility (Hide/Show)
         for _, window in pairs(BetaUILib.UIElements) do
             if window:IsA("ScreenGui") then
                 window.Enabled = not window.Enabled
@@ -224,7 +220,7 @@ end)
 
 -- Initialize the library
 function BetaUILib:Init()
-    -- Optionally add more features or setup after initialization
+    -- Add additional setup features if necessary
 end
 
 return BetaUILib
