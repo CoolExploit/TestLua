@@ -83,7 +83,7 @@ function BetaUILib:MakeWindow(config)
     titleLabel.TextYAlignment = Enum.TextYAlignment.Center
     titleLabel.PaddingLeft = 10
 
-    -- Draggable functionality
+    -- Draggable functionality (Fix for Draggable)
     local dragging = false
     local dragInput, dragStart, startPos
 
@@ -207,7 +207,7 @@ function BetaUILib:Init()
     end
 end
 
--- Function to destroy the library and its elements
+-- Function to destroy the library and all windows
 function BetaUILib:Destroy()
     for _, element in pairs(self.UIElements) do
         element:Destroy()
