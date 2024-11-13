@@ -1,196 +1,174 @@
+-- UI Library Module
 local UI = {}
 
--- Function to create a frame with a title and optional intro
-function UI:CreateFrame(title, size, pos, introText)
+-- Function to create a new Frame
+-- Params:
+-- title: The title of the frame (optional)
+-- size: A Vector2 representing the size of the frame
+-- position: A Vector2 representing the position of the frame
+-- content: The text/content inside the frame (optional)
+function UI:CreateFrame(title, size, position, content)
     local frame = Instance.new("Frame")
     frame.Size = UDim2.new(0, size.X, 0, size.Y)
-    frame.Position = UDim2.new(0, pos.X, 0, pos.Y)
-    frame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    -- Position the frame in the center of the screen
+    frame.Position = position or UDim2.new(0.5, -size.X / 2, 0.5, -size.Y / 2)
+    frame.BackgroundColor3 = Color3.fromRGB(34, 34, 34)  -- Dark gray background
     frame.BorderSizePixel = 0
+    frame.Visible = true
+    frame.AnchorPoint = Vector2.new(0.5, 0.5)  -- Anchor at center for better positioning
 
-    -- Title label
-    local label = Instance.new("TextLabel")
-    label.Parent = frame
-    label.Size = UDim2.new(1, 0, 0, 40)
-    label.BackgroundColor3 = Color3.fromRGB(55, 55, 55)
-    label.Text = title
-    label.TextColor3 = Color3.fromRGB(255, 255, 255)
-    label.Font = Enum.Font.GothamBold
-    label.TextSize = 20
-    label.TextAlign = Enum.TextXAlignment.Center
-    label.TextYAlignment = Enum.TextYAlignment.Center
+    -- Adding rounded corners
+    local UICorner = Instance.new("UICorner")
+    UICorner.CornerRadius = UDim.new(0, 12)  -- Rounded corners with a radius of 12 pixels
+    UICorner.Parent = frame
 
-    -- Intro Text
-    if introText then
-        local introLabel = Instance.new("TextLabel")
-        introLabel.Parent = frame
-        introLabel.Size = UDim2.new(1, 0, 0, 100)
-        introLabel.Position = UDim2.new(0, 0, 0, 40)
-        introLabel.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-        introLabel.Text = introText
-        introLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-        introLabel.Font = Enum.Font.Gotham
-        introLabel.TextSize = 16
-        introLabel.TextAlign = Enum.TextXAlignment.Center
-        introLabel.TextYAlignment = Enum.TextYAlignment.Top
-        introLabel.TextWrapped = true
+    -- Adding a subtle shadow effect
+    local shadow = Instance.new("ImageLabel")
+    shadow.Size = UDim2.new(1, 6, 1, 6)  -- Slightly larger than the frame for shadow effect
+    shadow.Position = UDim2.new(0, -3, 0, -3)
+    shadow.Image = "rbxassetid://301164276"  -- Predefined shadow image
+    shadow.BackgroundTransparency = 1
+    shadow.ImageTransparency = 0.4  -- Slight transparency for shadow effect
+    shadow.ZIndex = -1  -- Placed behind the frame
+    shadow.Parent = frame
+
+    -- Add a title if provided
+    if title then
+        local titleLabel = Instance.new("TextLabel")
+        titleLabel.Text = title
+        titleLabel.Size = UDim2.new(1, 0, 0, 30)
+        titleLabel.BackgroundTransparency = 1
+        titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+        titleLabel.TextSize = 20
+        titleLabel.TextAlign = Enum.TextXAlignment.Center
+        titleLabel.Font = Enum.Font.GothamBold
+        titleLabel.Parent = frame
+    end
+
+    -- Add content if provided
+    if content then
+        local contentLabel = Instance.new("TextLabel")
+        contentLabel.Text = content
+        contentLabel.Size = UDim2.new(1, 0, 0, 60)
+        contentLabel.Position = UDim2.new(0, 0, 0, 30)
+        contentLabel.BackgroundTransparency = 1
+        contentLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+        contentLabel.TextSize = 14
+        contentLabel.TextAlign = Enum.TextXAlignment.Center
+        contentLabel.Font = Enum.Font.Gotham
+        contentLabel.Parent = frame
     end
 
     return frame
 end
 
--- Button
-function UI:CreateButton(parent, text, callback)
-    local button = Instance.new("TextButton")
-    button.Parent = parent
-    button.Size = UDim2.new(0, 200, 0, 50)
-    button.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    button.Text = text
-    button.TextColor3 = Color3.fromRGB(255, 255, 255)
-    button.Font = Enum.Font.GothamSemibold
-    button.TextSize = 18
-    button.MouseButton1Click:Connect(callback)
-
-    return button
-end
-
--- Toggle
-function UI:CreateToggle(parent, text, default, callback)
+-- Function to create a Toggle button (e.g., On/Off switch)
+-- Params:
+-- parent: The frame to place the toggle in
+-- label: The text label on the toggle
+-- defaultState: The default state of the toggle (true/false)
+-- callback: The function to call when the toggle state changes
+function UI:CreateToggle(parent, label, defaultState, callback)
     local toggle = Instance.new("TextButton")
-    toggle.Parent = parent
     toggle.Size = UDim2.new(0, 200, 0, 50)
-    toggle.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-    toggle.Text = text .. ": " .. (default and "On" or "Off")
+    toggle.Text = label
     toggle.TextColor3 = Color3.fromRGB(255, 255, 255)
-    toggle.Font = Enum.Font.GothamSemibold
-    toggle.TextSize = 18
+    toggle.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    toggle.Parent = parent
+    toggle.AutoButtonColor = false
+
+    -- Adding rounded corners to the button
+    local UICorner = Instance.new("UICorner")
+    UICorner.CornerRadius = UDim.new(0, 8)
+    UICorner.Parent = toggle
+
+    local isOn = defaultState or false
+    toggle.Text = label .. ": " .. (isOn and "On" or "Off")
+
     toggle.MouseButton1Click:Connect(function()
-        default = not default
-        toggle.Text = text .. ": " .. (default and "On" or "Off")
-        callback(default)
+        isOn = not isOn
+        toggle.Text = label .. ": " .. (isOn and "On" or "Off")
+        callback(isOn)
     end)
 
     return toggle
 end
 
--- Slider
-function UI:CreateSlider(parent, min, max, default, callback)
-    local slider = Instance.new("Frame")
-    slider.Parent = parent
-    slider.Size = UDim2.new(0, 200, 0, 50)
-    slider.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+-- Function to create a Slider
+-- Params:
+-- parent: The frame to place the slider in
+-- minValue: The minimum value of the slider
+-- maxValue: The maximum value of the slider
+-- defaultValue: The default value (optional)
+-- callback: The function to call with the slider value
+function UI:CreateSlider(parent, minValue, maxValue, defaultValue, callback)
+    local sliderFrame = Instance.new("Frame")
+    sliderFrame.Size = UDim2.new(0, 300, 0, 50)
+    sliderFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    sliderFrame.Parent = parent
 
-    local bar = Instance.new("Frame")
-    bar.Parent = slider
-    bar.Size = UDim2.new(0, 180, 0, 5)
-    bar.Position = UDim2.new(0, 10, 0.5, -2)
-    bar.BackgroundColor3 = Color3.fromRGB(55, 55, 55)
+    -- Adding rounded corners to the slider frame
+    local UICorner = Instance.new("UICorner")
+    UICorner.CornerRadius = UDim.new(0, 8)
+    UICorner.Parent = sliderFrame
 
-    local handle = Instance.new("Frame")
-    handle.Parent = bar
-    handle.Size = UDim2.new(0, 20, 0, 20)
-    handle.Position = UDim2.new(0, (default / max) * 180, 0, -7)
-    handle.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+    local sliderBar = Instance.new("Frame")
+    sliderBar.Size = UDim2.new(1, 0, 0, 5)
+    sliderBar.Position = UDim2.new(0, 0, 0, 22)
+    sliderBar.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+    sliderBar.Parent = sliderFrame
 
-    handle.InputBegan:Connect(function(input)
+    local knob = Instance.new("Frame")
+    knob.Size = UDim2.new(0, 10, 0, 10)
+    knob.Position = UDim2.new(0, (defaultValue - minValue) / (maxValue - minValue) * 290, 0, -2)
+    knob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    knob.Parent = sliderBar
+
+    knob.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            local mousePos = input.Position.X
-            local newPos = math.clamp(mousePos - bar.AbsolutePosition.X, 0, 180)
-            local value = (newPos / 180) * (max - min) + min
-            handle.Position = UDim2.new(0, newPos, 0, -7)
-            callback(value)
+            local mouse = game:GetService("Players").LocalPlayer:GetMouse()
+            local function moveKnob()
+                local pos = mouse.X - sliderBar.AbsolutePosition.X
+                pos = math.clamp(pos, 0, 290)
+                knob.Position = UDim2.new(0, pos, 0, -2)
+
+                local value = math.floor((pos / 290) * (maxValue - minValue) + minValue)
+                callback(value)
+            end
+
+            game:GetService("UserInputService").InputChanged:Connect(moveKnob)
         end
     end)
 
-    return slider
+    return sliderFrame
 end
 
--- Key System (Enable/Disable features)
-function UI:CreateKeySystem(parent, key, featureName, callback)
-    local keyButton = Instance.new("TextButton")
-    keyButton.Parent = parent
-    keyButton.Size = UDim2.new(0, 200, 0, 50)
-    keyButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    keyButton.Text = "Press Key to Toggle " .. featureName
-    keyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    keyButton.Font = Enum.Font.GothamSemibold
-    keyButton.TextSize = 18
-
-    local enabled = false
-    local function toggleFeature(input)
-        if input.KeyCode == key then
-            enabled = not enabled
-            callback(enabled)
-            keyButton.Text = featureName .. ": " .. (enabled and "Enabled" or "Disabled")
-        end
-    end
-
-    game:GetService("UserInputService").InputBegan:Connect(toggleFeature)
-
-    return keyButton
-end
-
--- Tab system (Organize UI into tabs)
-function UI:CreateTabBar(parent)
-    local tabBar = Instance.new("Frame")
-    tabBar.Parent = parent
-    tabBar.Size = UDim2.new(1, 0, 0, 40)
-    tabBar.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-
-    return tabBar
-end
-
-function UI:CreateTab(tabBar, title)
-    local tabButton = Instance.new("TextButton")
-    tabButton.Parent = tabBar
-    tabButton.Size = UDim2.new(0, 100, 1, 0)
-    tabButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-    tabButton.Text = title
-    tabButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    tabButton.Font = Enum.Font.GothamSemibold
-    tabButton.TextSize = 18
-
-    return tabButton
-end
-
--- Paragraph (Simple Text content)
-function UI:CreateParagraph(parent, text)
-    local paragraph = Instance.new("TextLabel")
-    paragraph.Parent = parent
-    paragraph.Size = UDim2.new(1, 0, 0, 100)
-    paragraph.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-    paragraph.Text = text
-    paragraph.TextColor3 = Color3.fromRGB(255, 255, 255)
-    paragraph.Font = Enum.Font.Gotham
-    paragraph.TextSize = 16
-    paragraph.TextAlign = Enum.TextXAlignment.Center
-    paragraph.TextYAlignment = Enum.TextYAlignment.Top
-    paragraph.TextWrapped = true
-
-    return paragraph
-end
-
--- Draggable functionality
+-- Function to enable draggable behavior for a frame
+-- Params:
+-- frame: The frame to make draggable
 function UI:EnableDraggable(frame)
-    local dragStart, startPos
+    local dragging = false
+    local dragInput, dragStart, startPos
+
     frame.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
             dragStart = input.Position
             startPos = frame.Position
             input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    frame.InputChanged:Disconnect(update)
-                end
+                if dragging == false then return end
+                local delta = input.Position - dragStart
+                frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
             end)
         end
     end)
 
-    local function update(input)
-        local delta = input.Position - dragStart
-        frame.Position = UDim2.new(0, startPos.X + delta.X, 0, startPos.Y + delta.Y)
-    end
-
-    frame.InputChanged:Connect(update)
+    frame.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = false
+        end
+    end)
 end
 
+-- Return the UI library for use
 return UI
