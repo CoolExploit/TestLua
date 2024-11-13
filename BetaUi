@@ -31,7 +31,7 @@ function BetaUILib:MakeWindow(config)
     corner.CornerRadius = UDim.new(0, 15)  -- Rounded corners
     corner.Parent = frame
 
-    -- Title bar for the window
+    -- Title bar for the window (with Minimize and Close buttons)
     local titleBar = Instance.new("Frame")
     titleBar.Parent = frame
     titleBar.Size = UDim2.new(1, 0, 0, 30)
@@ -39,9 +39,42 @@ function BetaUILib:MakeWindow(config)
     titleBar.BorderSizePixel = 0
     titleBar.Name = "TitleBar"
 
+    -- Close Button (X)
+    local closeButton = Instance.new("TextButton")
+    closeButton.Parent = titleBar
+    closeButton.Size = UDim2.new(0, 40, 0, 30)
+    closeButton.Position = UDim2.new(1, -40, 0, 0)
+    closeButton.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+    closeButton.Text = "X"
+    closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    closeButton.TextSize = 18
+    closeButton.BorderSizePixel = 0
+    closeButton.Name = "CloseButton"
+
+    closeButton.MouseButton1Click:Connect(function()
+        window:Destroy()
+    end)
+
+    -- Minimize Button
+    local minimizeButton = Instance.new("TextButton")
+    minimizeButton.Parent = titleBar
+    minimizeButton.Size = UDim2.new(0, 40, 0, 30)
+    minimizeButton.Position = UDim2.new(1, -80, 0, 0)
+    minimizeButton.BackgroundColor3 = Color3.fromRGB(50, 50, 255)
+    minimizeButton.Text = "-"
+    minimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    minimizeButton.TextSize = 18
+    minimizeButton.BorderSizePixel = 0
+    minimizeButton.Name = "MinimizeButton"
+
+    minimizeButton.MouseButton1Click:Connect(function()
+        frame.Visible = not frame.Visible
+    end)
+
+    -- Title Label
     local titleLabel = Instance.new("TextLabel")
     titleLabel.Parent = titleBar
-    titleLabel.Size = UDim2.new(1, 0, 1, 0)
+    titleLabel.Size = UDim2.new(1, -80, 1, 0)
     titleLabel.BackgroundTransparency = 1
     titleLabel.Text = config.Name or "Window Title"
     titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -49,6 +82,31 @@ function BetaUILib:MakeWindow(config)
     titleLabel.TextXAlignment = Enum.TextXAlignment.Left
     titleLabel.TextYAlignment = Enum.TextYAlignment.Center
     titleLabel.PaddingLeft = 10
+
+    -- Draggable functionality
+    local dragging = false
+    local dragInput, dragStart, startPos
+
+    titleBar.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            dragStart = input.Position
+            startPos = frame.Position
+        end
+    end)
+
+    titleBar.InputChanged:Connect(function(input)
+        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+            local delta = input.Position - dragStart
+            frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+
+    titleBar.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = false
+        end
+    end)
 
     -- Add to the UI elements table
     table.insert(self.UIElements, window)
