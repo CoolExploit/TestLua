@@ -1,107 +1,159 @@
--- Load the library
-local BetaUILib = loadstring(game:HttpGet("https://yourlinkhere.com/BetaUILib"))()
+local BetaUILib = {}
+BetaUILib.__index = BetaUILib
 
--- Create the window with a custom name and settings
-local Window = BetaUILib:MakeWindow({
-    Name = "Welcome to My Enhanced UI",
-    HidePremium = false,
-    SaveConfig = true,
-    ConfigFolder = "EnhancedUIConfig"
-})
+-- Helper function to create new instances
+function BetaUILib.new()
+    local self = setmetatable({}, BetaUILib)
+    self.UIElements = {}
+    return self
+end
 
--- Add an intro label to show at the top of the window
-local IntroTab = Window:MakeTab({
-    Name = "Introduction",
-    Icon = "rbxassetid://4483345998",  -- Replace with a valid icon asset
-    PremiumOnly = false
-})
+-- Function to create a window
+function BetaUILib:MakeWindow(config)
+    local window = Instance.new("ScreenGui")
+    window.Name = config.Name or "BetaWindow"
+    window.DisplayOrder = 1
+    window.ResetOnSpawn = false
+    window.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
 
-IntroTab:AddLabel("Welcome to the enhanced UI! Here's a smooth experience with neat layout.")
-IntroTab:AddParagraph("How to use:", "Explore buttons below to interact with the UI!")
+    -- Window background
+    local frame = Instance.new("Frame")
+    frame.Parent = window
+    frame.Size = UDim2.new(0, 400, 0, 300)  -- Default size (can be customized)
+    frame.Position = UDim2.new(0.5, -200, 0.5, -150)  -- Centered on the screen
+    frame.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+    frame.BorderSizePixel = 0
+    frame.ClipsDescendants = true
+    frame.Name = "MainFrame"
 
--- Create another tab for interactive elements
-local InteractiveTab = Window:MakeTab({
-    Name = "Interactive Controls",
-    Icon = "rbxassetid://4483345998",
-    PremiumOnly = false
-})
+    -- Corner radius for rounded edges
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 15)  -- Rounded corners
+    corner.Parent = frame
 
--- Adding a button with better placement and cleaner layout
-InteractiveTab:AddButton({
-    Name = "Click Me!",
-    Callback = function()
-        print("Button clicked!")
+    -- Title bar for the window
+    local titleBar = Instance.new("Frame")
+    titleBar.Parent = frame
+    titleBar.Size = UDim2.new(1, 0, 0, 30)
+    titleBar.BackgroundColor3 = Color3.fromRGB(58, 58, 58)
+    titleBar.BorderSizePixel = 0
+    titleBar.Name = "TitleBar"
+
+    local titleLabel = Instance.new("TextLabel")
+    titleLabel.Parent = titleBar
+    titleLabel.Size = UDim2.new(1, 0, 1, 0)
+    titleLabel.BackgroundTransparency = 1
+    titleLabel.Text = config.Name or "Window Title"
+    titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    titleLabel.TextSize = 20
+    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    titleLabel.TextYAlignment = Enum.TextYAlignment.Center
+    titleLabel.PaddingLeft = 10
+
+    -- Add to the UI elements table
+    table.insert(self.UIElements, window)
+    
+    return window
+end
+
+-- Function to create tabs
+function BetaUILib:MakeTab(config)
+    local tab = Instance.new("Frame")
+    tab.Parent = config.Parent
+    tab.Size = UDim2.new(0, 380, 0, 260)
+    tab.Position = UDim2.new(0, 10, 0, 40)
+    tab.BackgroundColor3 = Color3.fromRGB(44, 44, 44)
+    tab.BorderSizePixel = 0
+    tab.Name = "Tab"
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 10)
+    corner.Parent = tab
+
+    local tabTitle = Instance.new("TextLabel")
+    tabTitle.Parent = tab
+    tabTitle.Size = UDim2.new(1, 0, 0, 30)
+    tabTitle.BackgroundTransparency = 1
+    tabTitle.Text = config.Name or "Tab"
+    tabTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+    tabTitle.TextSize = 20
+    tabTitle.TextXAlignment = Enum.TextXAlignment.Left
+    tabTitle.TextYAlignment = Enum.TextYAlignment.Center
+    tabTitle.PaddingLeft = 10
+
+    -- Placeholder for tab content
+    local contentFrame = Instance.new("Frame")
+    contentFrame.Parent = tab
+    contentFrame.Size = UDim2.new(1, 0, 1, -40)
+    contentFrame.Position = UDim2.new(0, 0, 0, 30)
+    contentFrame.BackgroundTransparency = 1
+    contentFrame.Name = "ContentFrame"
+
+    -- Add to UI elements
+    table.insert(self.UIElements, tab)
+
+    return contentFrame
+end
+
+-- Function to add buttons to the UI
+function BetaUILib:AddButton(config)
+    local button = Instance.new("TextButton")
+    button.Parent = config.Parent
+    button.Size = UDim2.new(0, 150, 0, 40)
+    button.Position = UDim2.new(0.5, -75, 0, 10)
+    button.BackgroundColor3 = Color3.fromRGB(64, 64, 64)
+    button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    button.TextSize = 18
+    button.Text = config.Name
+    button.BorderSizePixel = 0
+    button.Name = "Button"
+    button.TextButtonStyle = Enum.ButtonStyle.RobloxButton
+
+    -- Button click event
+    button.MouseButton1Click:Connect(function()
+        config.Callback()
+    end)
+
+    -- Return the button so it can be modified
+    return button
+end
+
+-- Function to add a toggle
+function BetaUILib:AddToggle(config)
+    local toggle = Instance.new("TextButton")
+    toggle.Parent = config.Parent
+    toggle.Size = UDim2.new(0, 150, 0, 40)
+    toggle.Position = UDim2.new(0.5, -75, 0, 10)
+    toggle.BackgroundColor3 = Color3.fromRGB(64, 64, 64)
+    toggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+    toggle.TextSize = 18
+    toggle.Text = config.Name
+    toggle.BorderSizePixel = 0
+    toggle.Name = "Toggle"
+    
+    local isToggled = config.Default
+
+    toggle.MouseButton1Click:Connect(function()
+        isToggled = not isToggled
+        config.Callback(isToggled)
+        toggle.BackgroundColor3 = isToggled and Color3.fromRGB(50, 255, 50) or Color3.fromRGB(255, 50, 50)
+    end)
+
+    return toggle
+end
+
+-- Function to initialize the library (called after everything is set up)
+function BetaUILib:Init()
+    for _, element in pairs(self.UIElements) do
+        element.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
     end
-})
+end
 
--- Add a toggle switch with a callback
-InteractiveTab:AddToggle({
-    Name = "Enable Feature",
-    Default = false,
-    Callback = function(value)
-        print("Toggle is now " .. tostring(value))
+-- Function to destroy the library and its elements
+function BetaUILib:Destroy()
+    for _, element in pairs(self.UIElements) do
+        element:Destroy()
     end
-})
+end
 
--- Add a color picker with a default color
-InteractiveTab:AddColorpicker({
-    Name = "Pick a Color",
-    Default = Color3.fromRGB(255, 0, 0),
-    Callback = function(value)
-        print("Color picked: " .. tostring(value))
-    end
-})
-
--- Add a slider for number input with a label
-InteractiveTab:AddSlider({
-    Name = "Set Value",
-    Min = 0,
-    Max = 100,
-    Default = 50,
-    Color = Color3.fromRGB(255, 255, 255),
-    Increment = 1,
-    ValueName = "units",
-    Callback = function(value)
-        print("Slider Value: " .. tostring(value))
-    end
-})
-
--- Add a TextBox with default input value
-InteractiveTab:AddTextbox({
-    Name = "Enter Text",
-    Default = "Type something here...",
-    TextDisappear = true,
-    Callback = function(value)
-        print("Textbox Input: " .. value)
-    end
-})
-
--- Add a UI List that shows dynamic items (can be used for lists of options or objects)
-local ListTab = Window:MakeTab({
-    Name = "UI List",
-    Icon = "rbxassetid://4483345998",
-    PremiumOnly = false
-})
-
--- Create a scrolling list with dynamic content
-local listContainer = ListTab:AddList({
-    Name = "Dynamic UI List",
-    ListSize = UDim2.new(0, 300, 0, 500),
-    ItemHeight = 40,
-    Callback = function(value)
-        print("Selected Item: " .. value)
-    end
-})
-
--- Add items to the list dynamically
-listContainer:AddItem("Item 1")
-listContainer:AddItem("Item 2")
-listContainer:AddItem("Item 3")
-listContainer:AddItem("Item 4")
-listContainer:AddItem("Item 5")
-
--- Initialize the library
-BetaUILib:Init()
-
--- Optionally, you can destroy the UI with:
--- BetaUILib:Destroy()
+return BetaUILib
