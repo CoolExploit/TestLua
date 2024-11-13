@@ -1,4 +1,5 @@
--- UI Library Module
+-- Here is the simplified code for the UI module, ready for `loadstring`
+
 local UI = {}
 
 -- Function to create a new Frame (Centered) with enhanced UI elements
