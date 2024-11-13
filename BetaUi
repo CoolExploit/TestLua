@@ -5,6 +5,8 @@ BetaUILib.__index = BetaUILib
 function BetaUILib.new()
     local self = setmetatable({}, BetaUILib)
     self.UIElements = {}
+    self.KeybindEnabled = false  -- Flag for keybind feature
+    self.Keybind = Enum.KeyCode.Space  -- Default keybind (can be changed)
     return self
 end
 
@@ -200,18 +202,29 @@ function BetaUILib:AddToggle(config)
     return toggle
 end
 
--- Function to initialize the library (called after everything is set up)
-function BetaUILib:Init()
-    for _, element in pairs(self.UIElements) do
-        element.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
-    end
+-- Function to enable/disable keybinds
+function BetaUILib:SetKeybind(enabled, key)
+    self.KeybindEnabled = enabled
+    self.Keybind = key or Enum.KeyCode.Space  -- Default keybind is space if not provided
 end
 
--- Function to destroy the library and all windows
-function BetaUILib:Destroy()
-    for _, element in pairs(self.UIElements) do
-        element:Destroy()
+-- Keybind functionality
+game:GetService("UserInputService").InputBegan:Connect(function(input, isProcessed)
+    if isProcessed then return end
+
+    if BetaUILib.KeybindEnabled and input.KeyCode == BetaUILib.Keybind then
+        -- Toggle window visibility (Hide/Show)
+        for _, window in pairs(BetaUILib.UIElements) do
+            if window:IsA("ScreenGui") then
+                window.Enabled = not window.Enabled
+            end
+        end
     end
+end)
+
+-- Initialize the library
+function BetaUILib:Init()
+    -- Optionally add more features or setup after initialization
 end
 
 return BetaUILib
