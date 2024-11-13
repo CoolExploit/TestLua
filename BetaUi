@@ -10,7 +10,7 @@ function BetaUILib.new()
     return self
 end
 
--- Function to create a window
+-- Function to create a window with customized intro and styles
 function BetaUILib:MakeWindow(config)
     local window = Instance.new("ScreenGui")
     window.Name = config.Name or "BetaWindow"
@@ -21,30 +21,30 @@ function BetaUILib:MakeWindow(config)
     -- Window background
     local frame = Instance.new("Frame")
     frame.Parent = window
-    frame.Size = UDim2.new(0, 400, 0, 300)  -- Default size (can be customized)
-    frame.Position = UDim2.new(0.5, -200, 0.5, -150)  -- Centered on the screen
-    frame.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+    frame.Size = UDim2.new(0, 600, 0, 400)  -- Medium window size
+    frame.Position = UDim2.new(0.5, -300, 0.5, -200)  -- Centered
+    frame.BackgroundColor3 = Color3.fromRGB(36, 36, 36)
     frame.BorderSizePixel = 0
     frame.ClipsDescendants = true
     frame.Name = "MainFrame"
 
     -- Corner radius for rounded edges
     local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 15)  -- Rounded corners
+    corner.CornerRadius = UDim.new(0, 20)
     corner.Parent = frame
 
     -- Title bar for the window (with Minimize and Close buttons)
     local titleBar = Instance.new("Frame")
     titleBar.Parent = frame
-    titleBar.Size = UDim2.new(1, 0, 0, 30)
-    titleBar.BackgroundColor3 = Color3.fromRGB(58, 58, 58)
+    titleBar.Size = UDim2.new(1, 0, 0, 40)
+    titleBar.BackgroundColor3 = Color3.fromRGB(48, 48, 48)
     titleBar.BorderSizePixel = 0
     titleBar.Name = "TitleBar"
 
     -- Close Button (X)
     local closeButton = Instance.new("TextButton")
     closeButton.Parent = titleBar
-    closeButton.Size = UDim2.new(0, 40, 0, 30)
+    closeButton.Size = UDim2.new(0, 40, 0, 40)
     closeButton.Position = UDim2.new(1, -40, 0, 0)
     closeButton.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
     closeButton.Text = "X"
@@ -60,7 +60,7 @@ function BetaUILib:MakeWindow(config)
     -- Minimize Button
     local minimizeButton = Instance.new("TextButton")
     minimizeButton.Parent = titleBar
-    minimizeButton.Size = UDim2.new(0, 40, 0, 30)
+    minimizeButton.Size = UDim2.new(0, 40, 0, 40)
     minimizeButton.Position = UDim2.new(1, -80, 0, 0)
     minimizeButton.BackgroundColor3 = Color3.fromRGB(50, 50, 255)
     minimizeButton.Text = "-"
@@ -70,17 +70,35 @@ function BetaUILib:MakeWindow(config)
     minimizeButton.Name = "MinimizeButton"
 
     -- Minimize functionality
+    local isMinimized = false
     minimizeButton.MouseButton1Click:Connect(function()
-        -- Animate minimize button and title bar disappearing
-        local tweenService = game:GetService("TweenService")
-        local goal = { Size = UDim2.new(1, 0, 0, 0) }
-        local tween = tweenService:Create(titleBar, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), goal)
-        tween:Play()
+        if not isMinimized then
+            -- Minimize the window
+            local tweenService = game:GetService("TweenService")
+            local goal = { Size = UDim2.new(1, 0, 0, 40) }
+            local tween = tweenService:Create(frame, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), goal)
+            tween:Play()
 
-        -- Optionally, make the frame itself disappear for a more complete minimize effect
-        local frameGoal = { Size = UDim2.new(0, 400, 0, 50) }  -- Smaller size, shows the rest of the UI
-        local frameTween = tweenService:Create(frame, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), frameGoal)
-        frameTween:Play()
+            -- Hide content and only show title bar
+            local contentGoal = { Size = UDim2.new(1, 0, 0, 0) }
+            local contentTween = tweenService:Create(frame:WaitForChild("Content"), TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), contentGoal)
+            contentTween:Play()
+
+            isMinimized = true
+        else
+            -- Maximize the window back
+            local tweenService = game:GetService("TweenService")
+            local goal = { Size = UDim2.new(0, 600, 0, 400) }
+            local tween = tweenService:Create(frame, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), goal)
+            tween:Play()
+
+            -- Show content again
+            local contentGoal = { Size = UDim2.new(1, 0, 1, -40) }
+            local contentTween = tweenService:Create(frame:WaitForChild("Content"), TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), contentGoal)
+            contentTween:Play()
+
+            isMinimized = false
+        end
     end)
 
     -- Title Label
@@ -88,12 +106,34 @@ function BetaUILib:MakeWindow(config)
     titleLabel.Parent = titleBar
     titleLabel.Size = UDim2.new(1, -80, 1, 0)
     titleLabel.BackgroundTransparency = 1
-    titleLabel.Text = config.Name or "Window Title"
+    titleLabel.Text = config.Name or "Beta Library"
     titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
     titleLabel.TextSize = 20
     titleLabel.TextXAlignment = Enum.TextXAlignment.Left
     titleLabel.TextYAlignment = Enum.TextYAlignment.Center
     titleLabel.PaddingLeft = 10
+
+    -- Intro Text Animation
+    local introLabel = Instance.new("TextLabel")
+    introLabel.Parent = window
+    introLabel.Size = UDim2.new(0, 600, 0, 100)
+    introLabel.Position = UDim2.new(0.5, -300, 0.5, -150)
+    introLabel.BackgroundTransparency = 1
+    introLabel.Text = "Beta Library - Loading..."
+    introLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    introLabel.TextSize = 30
+    introLabel.TextStrokeTransparency = 0.5
+    introLabel.TextXAlignment = Enum.TextXAlignment.Center
+    introLabel.TextYAlignment = Enum.TextYAlignment.Center
+
+    -- Tween the intro
+    local tweenService = game:GetService("TweenService")
+    local goal = { TextTransparency = 1 }
+    local tween = tweenService:Create(introLabel, TweenInfo.new(2, Enum.EasingStyle.Linear, Enum.EasingDirection.Out), goal)
+    tween:Play()
+    tween.Completed:Connect(function()
+        introLabel:Destroy()
+    end)
 
     -- Draggable functionality
     local dragging = false
@@ -123,83 +163,31 @@ function BetaUILib:MakeWindow(config)
     -- Add to the UI elements table
     table.insert(self.UIElements, window)
     
+    -- Add a content frame
+    local contentFrame = Instance.new("Frame")
+    contentFrame.Parent = frame
+    contentFrame.Size = UDim2.new(1, 0, 1, -40)  -- Below title bar
+    contentFrame.Position = UDim2.new(0, 0, 0, 40)
+    contentFrame.BackgroundTransparency = 1
+    contentFrame.Name = "Content"
+
+    -- Add content to the contentFrame (can be customized later)
+    local scriptSection = Instance.new("TextBox")
+    scriptSection.Parent = contentFrame
+    scriptSection.Size = UDim2.new(1, 0, 0, 200)
+    scriptSection.Position = UDim2.new(0, 0, 0, 20)
+    scriptSection.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    scriptSection.Text = "Script Section"
+    scriptSection.TextColor3 = Color3.fromRGB(0, 0, 0)
+    scriptSection.TextSize = 16
+    scriptSection.Multiline = true
+    scriptSection.TextWrapped = true
+    scriptSection.TextXAlignment = Enum.TextXAlignment.Left
+    scriptSection.TextYAlignment = Enum.TextYAlignment.Top
+
     return window
 end
 
--- Function to create tabs
-function BetaUILib:MakeTab(config)
-    local tab = Instance.new("Frame")
-    tab.Parent = config.Parent
-    tab.Size = UDim2.new(0, 380, 0, 260)
-    tab.Position = UDim2.new(0, 10, 0, 40)
-    tab.BackgroundColor3 = Color3.fromRGB(44, 44, 44)
-    tab.BorderSizePixel = 0
-    tab.Name = "Tab"
-
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 10)
-    corner.Parent = tab
-
-    local tabTitle = Instance.new("TextLabel")
-    tabTitle.Parent = tab
-    tabTitle.Size = UDim2.new(1, 0, 0, 30)
-    tabTitle.BackgroundTransparency = 1
-    tabTitle.Text = config.Name or "Tab"
-    tabTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-    tabTitle.TextSize = 20
-    tabTitle.TextXAlignment = Enum.TextXAlignment.Left
-    tabTitle.TextYAlignment = Enum.TextYAlignment.Center
-    tabTitle.PaddingLeft = 10
-
-    -- Placeholder for tab content
-    local contentFrame = Instance.new("Frame")
-    contentFrame.Parent = tab
-    contentFrame.Size = UDim2.new(1, 0, 1, -40)
-    contentFrame.Position = UDim2.new(0, 0, 0, 30)
-    contentFrame.BackgroundTransparency = 1
-    contentFrame.Name = "ContentFrame"
-
-    -- Add to UI elements
-    table.insert(self.UIElements, tab)
-
-    return contentFrame
-end
-
--- Function to add buttons to the UI with tweens
-function BetaUILib:AddButton(config)
-    local button = Instance.new("TextButton")
-    button.Parent = config.Parent
-    button.Size = UDim2.new(0, 150, 0, 40)
-    button.Position = UDim2.new(0.5, -75, 0, 10)
-    button.BackgroundColor3 = Color3.fromRGB(64, 64, 64)
-    button.TextColor3 = Color3.fromRGB(255, 255, 255)
-    button.TextSize = 18
-    button.Text = config.Name
-    button.BorderSizePixel = 0
-    button.Name = "Button"
-
-    -- Hover animation
-    button.MouseEnter:Connect(function()
-        local tweenService = game:GetService("TweenService")
-        local goal = { BackgroundColor3 = Color3.fromRGB(100, 100, 100) }
-        local tween = tweenService:Create(button, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), goal)
-        tween:Play()
-    end)
-
-    button.MouseLeave:Connect(function()
-        local tweenService = game:GetService("TweenService")
-        local goal = { BackgroundColor3 = Color3.fromRGB(64, 64, 64) }
-        local tween = tweenService:Create(button, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), goal)
-        tween:Play()
-    end)
-
-    -- Button Click functionality
-    button.MouseButton1Click:Connect(config.Callback)
-end
-
--- Initialize the library
-function BetaUILib:Init()
-    -- Additional setup can be done here
-end
-
-return BetaUILib
+-- Example usage:
+local ui = BetaUILib.new()
+local window = ui:MakeWindow({ Name = "Beta Library UI" })
