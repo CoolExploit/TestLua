@@ -1,0 +1,203 @@
+ local ScreenGui = Instance.new("ScreenGui")
+local Frame = Instance.new("Frame")
+local UICorner = Instance.new("UICorner")
+local Gameid = Instance.new("TextBox")
+local UICorner_2 = Instance.new("UICorner")
+local TextLabel = Instance.new("TextLabel")
+local Jobid = Instance.new("TextBox")
+local UICorner_3 = Instance.new("UICorner")
+local TextLabel_2 = Instance.new("TextLabel")
+local TextButton = Instance.new("TextButton")
+local UICorner_4 = Instance.new("UICorner")
+local Paragraph = Instance.new("TextLabel")
+local FeedbackLabel = Instance.new("TextLabel")
+
+ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+Frame.Parent = ScreenGui
+Frame.BackgroundColor3 = Color3.fromRGB(59, 59, 59)
+Frame.BorderColor3 = Color3.fromRGB(0, 0, 0)
+Frame.BorderSizePixel = 0
+Frame.Position = UDim2.new(0.27192983, 0, 0.281094521, 0)
+Frame.Size = UDim2.new(0, 364, 0, 237)
+
+UICorner.Parent = Frame
+
+Gameid.Name = "Gameid"
+Gameid.Parent = Frame
+Gameid.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+Gameid.BorderColor3 = Color3.fromRGB(0, 0, 0)
+Gameid.BorderSizePixel = 0
+Gameid.Position = UDim2.new(0.0384439938, 0, 0.113924049, 0)
+Gameid.Size = UDim2.new(0, 200, 0, 25)
+Gameid.Font = Enum.Font.SourceSans
+Gameid.Text = ""
+Gameid.TextColor3 = Color3.fromRGB(0, 0, 0)
+Gameid.TextSize = 14.000
+
+UICorner_2.Parent = Gameid
+
+TextLabel.Parent = Frame
+TextLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+TextLabel.BackgroundTransparency = 1.000
+TextLabel.BorderColor3 = Color3.fromRGB(0, 0, 0)
+TextLabel.BorderSizePixel = 0
+TextLabel.Position = UDim2.new(0.935735703, 0, 0.0126582282, 0)
+TextLabel.Size = UDim2.new(0, -97, 0, 73)
+TextLabel.Font = Enum.Font.SourceSansBold
+TextLabel.Text = "Game id dont need if in the game or placeid"
+TextLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
+TextLabel.TextSize = 14.000
+TextLabel.TextWrapped = true
+
+Jobid.Name = "Jobid"
+Jobid.Parent = Frame
+Jobid.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+Jobid.BorderColor3 = Color3.fromRGB(0, 0, 0)
+Jobid.BorderSizePixel = 0
+Jobid.Position = UDim2.new(0.0384440161, 0, 0.345991552, 0)
+Jobid.Size = UDim2.new(0, 200, 0, 25)
+Jobid.Font = Enum.Font.SourceSans
+Jobid.Text = ""
+Jobid.TextColor3 = Color3.fromRGB(0, 0, 0)
+Jobid.TextSize = 14.000
+
+UICorner_3.Parent = Jobid
+
+TextLabel_2.Parent = Frame
+TextLabel_2.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+TextLabel_2.BackgroundTransparency = 1.000
+TextLabel_2.BorderColor3 = Color3.fromRGB(0, 0, 0)
+TextLabel_2.BorderSizePixel = 0
+TextLabel_2.Position = UDim2.new(0.935735703, 0, 0.345991552, 0)
+TextLabel_2.Size = UDim2.new(0, -97, 0, 25)
+TextLabel_2.Font = Enum.Font.SourceSansBold
+TextLabel_2.Text = "Job id"
+TextLabel_2.TextColor3 = Color3.fromRGB(0, 0, 0)
+TextLabel_2.TextSize = 14.000
+TextLabel_2.TextWrapped = true
+
+TextButton.Parent = Frame
+TextButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+TextButton.BorderColor3 = Color3.fromRGB(0, 0, 0)
+TextButton.BorderSizePixel = 0
+TextButton.Position = UDim2.new(0.0357142873, 0, 0.80590719, 0)
+TextButton.Size = UDim2.new(0, 200, 0, 28)
+TextButton.Font = Enum.Font.SourceSans
+TextButton.Text = "Join"
+TextButton.TextColor3 = Color3.fromRGB(0, 0, 0)
+TextButton.TextSize = 14.000
+
+UICorner_4.Parent = TextButton
+
+Paragraph.Name = "Paragraph"
+Paragraph.Parent = Frame
+Paragraph.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+Paragraph.BackgroundTransparency = 1.000
+Paragraph.BorderColor3 = Color3.fromRGB(0, 0, 0)
+Paragraph.BorderSizePixel = 0
+Paragraph.Position = UDim2.new(0.976944447, 0, 0.80590719, 0)
+Paragraph.Size = UDim2.new(0, -97, 0, 34)
+Paragraph.Font = Enum.Font.SourceSansBold
+Paragraph.Text = "By PabloScripter🤑"
+Paragraph.TextColor3 = Color3.fromRGB(0, 0, 0)
+Paragraph.TextSize = 14.000
+Paragraph.TextWrapped = true
+
+FeedbackLabel.Name = "FeedbackLabel"
+FeedbackLabel.Parent = Frame
+FeedbackLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+FeedbackLabel.BackgroundTransparency = 1.000
+FeedbackLabel.BorderColor3 = Color3.fromRGB(0, 0, 0)
+FeedbackLabel.BorderSizePixel = 0
+FeedbackLabel.Position = UDim2.new(0.493427992, 0, 0.535864949, 0)
+FeedbackLabel.Size = UDim2.new(0, -134, 0, 44)
+FeedbackLabel.Font = Enum.Font.SourceSansBold
+FeedbackLabel.Text = ""
+FeedbackLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
+FeedbackLabel.TextSize = 14.000
+FeedbackLabel.TextWrapped = true
+
+-- Draggable Frame Script
+local function BVMOO_fake_script()
+	local script = Instance.new('LocalScript', Frame)
+
+	local UserInputService = game:GetService("UserInputService")
+	
+	local gui = script.Parent
+	
+	local dragging
+	local dragInput
+	local dragStart
+	local startPos
+	
+	local function update(input)
+		local delta = input.Position - dragStart
+		gui.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+	end
+	
+	gui.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dragging = true
+			dragStart = input.Position
+			startPos = gui.Position
+	
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then
+					dragging = false
+				end
+			end)
+		end
+	end)
+	
+	gui.InputChanged:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+			dragInput = input
+		end
+	end)
+	
+	UserInputService.InputChanged:Connect(function(input)
+		if input == dragInput and dragging then
+			update(input)
+		end
+	end)
+end
+coroutine.wrap(BVMOO_fake_script)()
+
+-- Teleport Button Script
+local function KSNSDYG_fake_script()
+	local script = Instance.new('Script', TextButton)
+
+	local button = script.Parent 
+	local gameid = script.Parent.Parent:WaitForChild("Gameid") 
+	local jobid = script.Parent.Parent:WaitForChild("Jobid") 
+	local feedbackLabel = script.Parent.Parent:WaitForChild("FeedbackLabel") 
+	
+	local TeleportService = game:GetService("TeleportService")
+	local Players = game:GetService("Players")
+	
+	local function teleport()
+		local placeId = tonumber(gameid.Text)
+		local jobId = jobid.Text 
+		
+		if jobId == "" then
+			feedbackLabel.Text = "Please enter a valid Job ID!"
+			feedbackLabel.TextColor3 = Color3.fromRGB(255, 0, 0) 
+			return
+		end
+		
+		if placeId then
+			TeleportService:TeleportToPlaceInstance(placeId, jobId, Players.LocalPlayer)
+			feedbackLabel.Text = "Teleporting to Place ID: " .. placeId
+			feedbackLabel.TextColor3 = Color3.fromRGB(0, 255, 0) 
+		else
+			feedbackLabel.Text = "Teleporting to Job ID: " .. jobId
+			feedbackLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+			TeleportService:TeleportToPlaceInstance(game.PlaceId, jobId, Players.LocalPlayer)
+		end
+	end
+	
+	button.MouseButton1Click:Connect(teleport)
+end
+coroutine.wrap(KSNSDYG_fake_script)()
