@@ -1,0 +1,218 @@
+local ChaosTroll = Instance.new("ScreenGui")
+local ImageLabel = Instance.new("ImageLabel")
+local TextButton = Instance.new("TextButton")
+local TextLabel = Instance.new("TextLabel")
+local UICorner = Instance.new("UICorner")
+
+ChaosTroll.Name = "ChaosTroll"
+ChaosTroll.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+ChaosTroll.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+ChaosTroll.ResetOnSpawn = false
+
+ImageLabel.Parent = ChaosTroll
+ImageLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+ImageLabel.BorderColor3 = Color3.fromRGB(0, 0, 0)
+ImageLabel.BorderSizePixel = 0
+ImageLabel.Position = UDim2.new(0.144110277, 0, 0.186351702, 0)
+ImageLabel.Size = UDim2.new(0, 261, 0, 170)
+ImageLabel.Image = "http://www.roblox.com/asset/?id=6180316252"
+
+TextButton.Parent = ImageLabel
+TextButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+TextButton.BorderColor3 = Color3.fromRGB(0, 0, 0)
+TextButton.BorderSizePixel = 0
+TextButton.Position = UDim2.new(0.224896073, 0, 0.804461956, 0)
+TextButton.Size = UDim2.new(0, 142, 0, 22)
+TextButton.Font = Enum.Font.SourceSansBold
+TextButton.Text = "Demolish!!"
+TextButton.TextColor3 = Color3.fromRGB(0, 0, 0)
+TextButton.TextSize = 14.000
+
+TextLabel.Parent = ImageLabel
+TextLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+TextLabel.BackgroundTransparency = 1.000
+TextLabel.BorderColor3 = Color3.fromRGB(0, 0, 0)
+TextLabel.BorderSizePixel = 0
+TextLabel.Position = UDim2.new(0.0613026805, 0, 0.164705887, 0)
+TextLabel.Size = UDim2.new(0, 245, 0, 113)
+TextLabel.Font = Enum.Font.SourceSansBold
+TextLabel.Text = "Are you sure that you want to destroy the Server if you agree then just do it!     Made by PabloScripter"
+TextLabel.TextColor3 = Color3.fromRGB(186, 0, 0)
+TextLabel.TextSize = 17.000
+TextLabel.TextStrokeColor3 = Color3.fromRGB(255, 0, 0)
+TextLabel.TextWrapped = true
+TextLabel.TextXAlignment = Enum.TextXAlignment.Left
+TextLabel.TextYAlignment = Enum.TextYAlignment.Top
+
+UICorner.Parent = ImageLabel
+
+local function GICOXWT_fake_script()
+	local script = Instance.new('LocalScript', ImageLabel)
+
+	local UserInputService = game:GetService("UserInputService")
+	
+	local gui = script.Parent
+	
+	local dragging
+	local dragInput
+	local dragStart
+	local startPos
+	
+	local function update(input)
+		local delta = input.Position - dragStart
+		gui.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+	end
+	
+	gui.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dragging = true
+			dragStart = input.Position
+			startPos = gui.Position
+			
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then
+					dragging = false
+				end
+			end)
+		end
+	end)
+	
+	gui.InputChanged:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+			dragInput = input
+		end
+	end)
+	
+	UserInputService.InputChanged:Connect(function(input)
+		if input == dragInput and dragging then
+			if gui.Visible then
+				update(input)
+			end
+		end
+	end)
+end
+coroutine.wrap(GICOXWT_fake_script)()
+local function PVJHD_fake_script()
+	local script = Instance.new('LocalScript', TextButton)
+
+	local button = script.Parent
+	
+	button.MouseButton1Click:Connect(function()
+		local textures = {
+			"http://www.roblox.com/asset/?id=6180316252",
+			"http://www.roblox.com/asset/?id=17337974860",
+			"http://www.roblox.com/asset/?id=13773644950"
+		}
+	
+		local sounds = {
+			"rbxassetid://1843551722",
+		}
+	
+		local colors = {
+			Color3.fromRGB(255, 0, 0),
+			Color3.fromRGB(0, 255, 0),
+			Color3.fromRGB(0, 0, 255),
+			Color3.fromRGB(255, 255, 0),
+			Color3.fromRGB(255, 0, 255),
+			Color3.fromRGB(0, 255, 255),
+			Color3.fromRGB(255, 255, 255),
+			Color3.fromRGB(0, 0, 0)
+		}
+	
+		local materials = {
+			Enum.Material.Neon,
+			Enum.Material.Plastic,
+			Enum.Material.Foil,
+			Enum.Material.SmoothPlastic,
+			Enum.Material.Sand,
+			Enum.Material.CrackedLava
+		}
+	
+		local function applyChaos()
+			for _, obj in pairs(workspace:GetDescendants()) do
+				if obj:IsA("BasePart") then
+					obj.Color = colors[math.random(1, #colors)]
+					obj.Material = materials[math.random(1, #materials)]
+	
+					local texture = Instance.new("Texture")
+					texture.Texture = textures[math.random(1, #textures)]
+					texture.Face = Enum.NormalId:GetEnumItems()[math.random(1, 6)]
+					texture.Parent = obj
+	
+					local particles = Instance.new("ParticleEmitter")
+					particles.Texture = textures[math.random(1, #textures)]
+					particles.Speed = NumberRange.new(10, 20)
+					particles.Lifetime = NumberRange.new(0.5, 1.5)
+					particles.Rate = 100
+					particles.Parent = obj
+				end
+			end
+		end
+	
+		local function playLoudSounds()
+			for _, soundId in pairs(sounds) do
+				local sound = Instance.new("Sound")
+				sound.SoundId = soundId
+				sound.Volume = 10
+				sound.Looped = true
+				sound.Playing = true
+				local distortion = Instance.new("DistortionSoundEffect")
+				distortion.Level = 1
+				distortion.Parent = sound
+				sound.Parent = workspace
+			end
+		end
+	
+		local function cameraShake()
+			while true do
+				for _, player in pairs(game.Players:GetPlayers()) do
+					local character = player.Character
+					if character and character:FindFirstChild("HumanoidRootPart") then
+						local rootPart = character.HumanoidRootPart
+						rootPart.Position = rootPart.Position + Vector3.new(
+							math.random(-1, 1),
+							math.random(-1, 1),
+							math.random(-1, 1)
+						)
+					end
+				end
+				wait(0.1)
+			end
+		end
+	
+		local function changeSkybox()
+			local sky = game.Lighting:FindFirstChildOfClass("Sky")
+			if not sky then
+				sky = Instance.new("Sky")
+				sky.Parent = game.Lighting
+			end
+	
+			while true do
+				sky.SkyboxBk = textures[math.random(1, #textures)]
+				sky.SkyboxDn = textures[math.random(1, #textures)]
+				sky.SkyboxFt = textures[math.random(1, #textures)]
+				sky.SkyboxLf = textures[math.random(1, #textures)]
+				sky.SkyboxRt = textures[math.random(1, #textures)]
+				sky.SkyboxUp = textures[math.random(1, #textures)]
+				wait(0.2)
+			end
+		end
+	
+		local function startChaos()
+			playLoudSounds()
+	
+			coroutine.wrap(cameraShake)()
+			coroutine.wrap(changeSkybox)()
+	
+			while true do
+				applyChaos()
+				wait(0.1)
+			end
+		end
+	
+		startChaos()
+	
+	end)
+	
+end
+coroutine.wrap(PVJHD_fake_script)()
