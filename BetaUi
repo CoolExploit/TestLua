@@ -1,191 +1,191 @@
--- Beta UI Library Script
+-- Complete UI Library with Smooth Transitions, Tabs, Toggle, Notifications, and More
 
 local TweenService = game:GetService("TweenService")
-local UserInputService = game:GetService("UserInputService")
+local UIS = game:GetService("UserInputService")
+local Player = game.Players.LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
 
--- Window library definition
-local BetaUILib = {}
-BetaUILib.__index = BetaUILib
-
-function BetaUILib.new()
-    local self = setmetatable({}, BetaUILib)
-    self.KeybindEnabled = false  -- Default Keybind feature is off
-    self.IsMinimized = false  -- Track minimize state
-    return self
+-- Utility function for smooth tweening
+local function tweenElement(element, goal, duration, easingStyle, easingDirection)
+    local tweenInfo = TweenInfo.new(duration, easingStyle, easingDirection)
+    local tween = TweenService:Create(element, tweenInfo, goal)
+    tween:Play()
+    return tween
 end
 
--- Create Window with title and options
-function BetaUILib:MakeWindow(config)
-    -- Creating window
-    local window = Instance.new("ScreenGui")
-    window.Name = config.Name or "BetaWindow"
-    window.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
-    window.ResetOnSpawn = false
-    window.DisplayOrder = 1
-
-    -- Create frame for window
+-- Function to create rounded corners
+local function createRoundFrame(parent, size, position, bgColor, cornerRadius)
     local frame = Instance.new("Frame")
-    frame.Parent = window
-    frame.Size = UDim2.new(0, 600, 0, 400)  -- Medium size
-    frame.Position = UDim2.new(0.5, -300, 0.5, -200)  -- Centered
-    frame.BackgroundColor3 = Color3.fromRGB(36, 36, 36)
+    frame.Size = size
+    frame.Position = position
+    frame.BackgroundColor3 = bgColor
+    frame.BackgroundTransparency = 0.1
     frame.BorderSizePixel = 0
-    frame.ClipsDescendants = true
-    frame.Name = "MainFrame"
+    frame.Parent = parent
+    frame.AnchorPoint = Vector2.new(0.5, 0.5)
 
-    -- Rounded corners
+    -- Add rounded corners
     local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 20)
+    corner.CornerRadius = UDim.new(0, cornerRadius)
     corner.Parent = frame
 
-    -- Create Title Bar with Minimize/Close Buttons
-    local titleBar = Instance.new("Frame")
-    titleBar.Parent = frame
-    titleBar.Size = UDim2.new(1, 0, 0, 40)
-    titleBar.BackgroundColor3 = Color3.fromRGB(48, 48, 48)
-    titleBar.BorderSizePixel = 0
-    titleBar.Name = "TitleBar"
+    return frame
+end
 
-    -- Close Button (X)
-    local closeButton = Instance.new("TextButton")
-    closeButton.Parent = titleBar
-    closeButton.Size = UDim2.new(0, 40, 0, 40)
-    closeButton.Position = UDim2.new(1, -40, 0, 0)
-    closeButton.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
-    closeButton.Text = "X"
-    closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    closeButton.TextSize = 18
-    closeButton.BorderSizePixel = 0
-    closeButton.Name = "CloseButton"
+-- Create the main UI frame
+local function createMainFrame()
+    local frame = createRoundFrame(PlayerGui, UDim2.new(0.3, 0, 0.5, 0), UDim2.new(0.35, 0, 0.25, 0), Color3.fromRGB(40, 40, 40), 12)
+    makeDraggable(frame)
+    return frame
+end
 
-    -- Minimize Button
-    local minimizeButton = Instance.new("TextButton")
-    minimizeButton.Parent = titleBar
-    minimizeButton.Size = UDim2.new(0, 40, 0, 40)
-    minimizeButton.Position = UDim2.new(1, -80, 0, 0)
-    minimizeButton.BackgroundColor3 = Color3.fromRGB(255, 255, 50)
-    minimizeButton.Text = "_"
-    minimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    minimizeButton.TextSize = 18
-    minimizeButton.BorderSizePixel = 0
-    minimizeButton.Name = "MinimizeButton"
+-- Make any frame draggable
+local function makeDraggable(frame)
+    local dragging, dragInput, mousePos, framePos
+    local function updatePosition(input)
+        local delta = input.Position - mousePos
+        frame.Position = UDim2.new(framePos.X.Scale, framePos.X.Offset + delta.X, framePos.Y.Scale, framePos.Y.Offset + delta.Y)
+    end
 
-    -- Minimize Button Functionality
-    minimizeButton.MouseButton1Click:Connect(function()
-        if not self.IsMinimized then
-            -- Tween to minimize (hide frame)
-            TweenService:Create(frame, TweenInfo.new(0.5), {Size = UDim2.new(0, 600, 0, 40)}):Play()
-            self.IsMinimized = true
-        else
-            -- Tween to restore original size
-            TweenService:Create(frame, TweenInfo.new(0.5), {Size = UDim2.new(0, 600, 0, 400)}):Play()
-            self.IsMinimized = false
-        end
-    end)
-
-    -- Close Button Functionality
-    closeButton.MouseButton1Click:Connect(function()
-        window:Destroy()
-    end)
-
-    -- Draggable Window Logic
-    local dragging = false
-    local dragInput, mousePos, framePos
-
-    titleBar.InputBegan:Connect(function(input)
+    frame.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = true
-            dragInput = input
             mousePos = input.Position
             framePos = frame.Position
         end
     end)
 
-    titleBar.InputChanged:Connect(function(input)
-        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-            local delta = input.Position - mousePos
-            frame.Position = UDim2.new(framePos.X.Scale, framePos.X.Offset + delta.X, framePos.Y.Scale, framePos.Y.Offset + delta.Y)
-        end
-    end)
-
-    titleBar.InputEnded:Connect(function(input)
+    frame.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = false
         end
     end)
 
-    -- Function for Notifications with Tweens
-    function self:MakeNotification(config)
-        local notification = Instance.new("Frame")
-        notification.Parent = window
-        notification.Size = UDim2.new(0, 300, 0, 50)
-        notification.Position = UDim2.new(0.5, -150, 0, 20)
-        notification.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-        notification.BorderSizePixel = 0
-        notification.Visible = true
-        notification.Name = "NotificationFrame"
-
-        local corner = Instance.new("UICorner")
-        corner.CornerRadius = UDim.new(0, 12)
-        corner.Parent = notification
-
-        local title = Instance.new("TextLabel")
-        title.Parent = notification
-        title.Size = UDim2.new(1, 0, 0.5, 0)
-        title.Text = config.Name or "Notification"
-        title.TextColor3 = Color3.fromRGB(255, 255, 255)
-        title.TextSize = 18
-        title.BackgroundTransparency = 1
-
-        local content = Instance.new("TextLabel")
-        content.Parent = notification
-        content.Size = UDim2.new(1, 0, 0.5, 0)
-        content.Text = config.Content or "Your message here."
-        content.TextColor3 = Color3.fromRGB(200, 200, 200)
-        content.TextSize = 14
-        content.BackgroundTransparency = 1
-
-        -- Tween in and out for notification
-        TweenService:Create(notification, TweenInfo.new(0.5), {Position = UDim2.new(0.5, -150, 0, 100)}):Play()
-        wait(config.Time or 5)
-        TweenService:Create(notification, TweenInfo.new(0.5), {Position = UDim2.new(0.5, -150, 0, 20)}):Play()
-
-        wait(0.5)
-        notification:Destroy()
-    end
-
-    -- Example of adding a Tab with Options (Add buttons, toggles, etc.)
-    local tabFrame = Instance.new("Frame")
-    tabFrame.Parent = frame
-    tabFrame.Size = UDim2.new(0, 600, 0, 360)
-    tabFrame.Position = UDim2.new(0, 0, 0, 40)
-    tabFrame.BackgroundColor3 = Color3.fromRGB(26, 26, 26)
-    tabFrame.Name = "TabFrame"
-
-    local tabLabel = Instance.new("TextLabel")
-    tabLabel.Parent = tabFrame
-    tabLabel.Size = UDim2.new(0, 600, 0, 40)
-    tabLabel.Text = "This is a Tab"
-    tabLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    tabLabel.TextSize = 20
-    tabLabel.BackgroundTransparency = 1
-
-    -- Add more UI elements or interactive buttons to the tab as needed
-
-    return self
+    UIS.InputChanged:Connect(function(input)
+        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+            updatePosition(input)
+        end
+    end)
 end
 
--- Instantiate and Use the UI
-local BetaLib = BetaUILib.new()
-local Window = BetaLib:MakeWindow({
-    Name = "Beta UI Library"
-})
+-- Create a button
+local function createButton(parent, text, position, size, onClick)
+    local button = createRoundFrame(parent, size, position, Color3.fromRGB(60, 60, 60), 6)
+    local textLabel = Instance.new("TextLabel")
+    textLabel.Size = UDim2.new(1, 0, 1, 0)
+    textLabel.Text = text
+    textLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    textLabel.BackgroundTransparency = 1
+    textLabel.Font = Enum.Font.Gotham
+    textLabel.TextSize = 18
+    textLabel.Parent = button
 
--- Notification Example
-BetaLib:MakeNotification({
-    Name = "Welcome",
-    Content = "This is the first notification!",
-    Time = 5
-})
+    -- Hover effect
+    button.MouseEnter:Connect(function()
+        tweenElement(button, {BackgroundColor3 = Color3.fromRGB(100, 100, 100)}, 0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+    end)
 
--- Finished setup
+    button.MouseLeave:Connect(function()
+        tweenElement(button, {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}, 0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+    end)
+
+    button.MouseButton1Click:Connect(onClick)
+    return button
+end
+
+-- Create a toggle button
+local function createToggleButton(parent, text, position, size, initialState, onToggle)
+    local toggleButton = createRoundFrame(parent, size, position, initialState and Color3.fromRGB(70, 180, 70) or Color3.fromRGB(180, 70, 70), 6)
+    local textLabel = Instance.new("TextLabel")
+    textLabel.Size = UDim2.new(1, 0, 1, 0)
+    textLabel.Text = text
+    textLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    textLabel.BackgroundTransparency = 1
+    textLabel.Font = Enum.Font.Gotham
+    textLabel.TextSize = 18
+    textLabel.Parent = toggleButton
+
+    toggleButton.MouseButton1Click:Connect(function()
+        local newState = not initialState
+        initialState = newState
+        toggleButton.BackgroundColor3 = newState and Color3.fromRGB(70, 180, 70) or Color3.fromRGB(180, 70, 70)
+        onToggle(newState)
+    end)
+
+    return toggleButton
+end
+
+-- Create a label
+local function createLabel(parent, text, position, size)
+    local label = createRoundFrame(parent, size, position, Color3.fromRGB(40, 40, 40), 6)
+    local textLabel = Instance.new("TextLabel")
+    textLabel.Size = UDim2.new(1, 0, 1, 0)
+    textLabel.Text = text
+    textLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    textLabel.BackgroundTransparency = 1
+    textLabel.Font = Enum.Font.Gotham
+    textLabel.TextSize = 18
+    textLabel.TextXAlignment = Enum.TextXAlignment.Center
+    textLabel.TextYAlignment = Enum.TextYAlignment.Center
+    textLabel.Parent = label
+    return label
+end
+
+-- Create a notification
+local function createNotification(message, duration)
+    local notificationFrame = createRoundFrame(PlayerGui, UDim2.new(0.3, 0, 0.1, 0), UDim2.new(0.35, 0, 0.75, 0), Color3.fromRGB(50, 50, 50), 8)
+    local messageLabel = createLabel(notificationFrame, message, UDim2.new(0.5, 0, 0.5, 0), UDim2.new(1, 0, 1, 0))
+
+    tweenElement(notificationFrame, {Position = UDim2.new(0.35, 0, 0.65, 0)}, 0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
+    
+    wait(duration)
+    tweenElement(notificationFrame, {Position = UDim2.new(0.35, 0, 0.75, 0)}, 0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.In):Completed():Wait()
+    notificationFrame:Destroy()
+end
+
+-- Create tabs
+local function createTabs(parent, tabNames)
+    local tabFrame = createRoundFrame(parent, UDim2.new(1, 0, 0.1, 0), UDim2.new(0.5, 0, 0.1, 0), Color3.fromRGB(40, 40, 40), 8)
+    local tabButtons = {}
+
+    for i, tabName in ipairs(tabNames) do
+        local tabButton = createButton(tabFrame, tabName, UDim2.new(0.2 * (i - 1), 0, 0, 0), UDim2.new(0.2, 0, 1, 0), function()
+            print(tabName .. " clicked!")
+        end)
+        table.insert(tabButtons, tabButton)
+    end
+
+    return tabFrame
+end
+
+-- Main UI creation
+local function createLibrary()
+    local mainFrame = createMainFrame()
+
+    -- Create intro animation
+    tweenElement(mainFrame, {Size = UDim2.new(0.3, 0, 0.5, 0), Position = UDim2.new(0.35, 0, 0.25, 0)}, 1, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out)
+
+    -- Title label
+    createLabel(mainFrame, "Complete UI Library", UDim2.new(0.5, 0, 0, 10), UDim2.new(1, 0, 0, 40))
+
+    -- Tabs
+    createTabs(mainFrame, {"Home", "Settings", "About"})
+
+    -- Close button
+    createButton(mainFrame, "Close", UDim2.new(0.5, -50, 1, -40), UDim2.new(0.2, 0, 0.1, 0), function()
+        tweenElement(mainFrame, {Size = UDim2.new(0, 0, 0, 0)}, 0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out):Completed():Wait()
+        mainFrame:Destroy()
+    end)
+
+    -- Toggle button example
+    createToggleButton(mainFrame, "Enable Feature", UDim2.new(0.5, -70, 0.2, 0), UDim2.new(0.4, 0, 0.1, 0), false, function(state)
+        print("Feature enabled:", state)
+    end)
+
+    -- Notification example
+    wait(2)
+    createNotification("This is a notification!", 3)
+end
+
+-- Initialize the UI library
+createLibrary()
