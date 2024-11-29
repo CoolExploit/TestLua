@@ -1,4 +1,4 @@
--- Complete UI Library with Smooth Transitions, Tabs, Toggle, Notifications, and More
+-- Complete XenLibrary with Smooth Transitions, Tabs, Toggle, Notifications, and More
 
 local TweenService = game:GetService("TweenService")
 local UIS = game:GetService("UserInputService")
@@ -158,15 +158,15 @@ local function createTabs(parent, tabNames)
     return tabFrame
 end
 
--- Main UI creation
-local function createLibrary()
+-- Main XenLibrary creation
+local function createXenLibrary()
     local mainFrame = createMainFrame()
 
     -- Create intro animation
     tweenElement(mainFrame, {Size = UDim2.new(0.3, 0, 0.5, 0), Position = UDim2.new(0.35, 0, 0.25, 0)}, 1, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out)
 
     -- Title label
-    createLabel(mainFrame, "Complete UI Library", UDim2.new(0.5, 0, 0, 10), UDim2.new(1, 0, 0, 40))
+    createLabel(mainFrame, "XenLibrary", UDim2.new(0.5, 0, 0, 10), UDim2.new(1, 0, 0, 40))
 
     -- Tabs
     createTabs(mainFrame, {"Home", "Settings", "About"})
@@ -187,5 +187,5 @@ local function createLibrary()
     createNotification("This is a notification!", 3)
 end
 
--- Initialize the UI library
-createLibrary()
+-- Initialize XenLibrary
+createXenLibrary()
