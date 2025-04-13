@@ -1,0 +1,114 @@
+-- notifylib.lua
+-- this notifylib is inspired by orion liblary notification
+local TweenService = game:GetService("TweenService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local NotifyLib = {}
+local activeNotifications = {}
+
+function NotifyLib:Notify(settings)
+	local playerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+	local gui = Instance.new("ScreenGui")
+	gui.Name = "NotifyLibUI_" .. tostring(math.random(1, 999999))
+	gui.ResetOnSpawn = false
+	gui.IgnoreGuiInset = true
+	gui.Parent = playerGui
+
+	local padding = 10
+	local notifHeight = 100
+	local baseY = -120
+
+	-- Create the frame
+	local frame = Instance.new("Frame")
+	frame.Size = UDim2.new(0, 340, 0, 90)
+	frame.Position = UDim2.new(1, 360, 1, baseY - ((#activeNotifications) * (notifHeight + padding)))
+	frame.AnchorPoint = Vector2.new(1, 1)
+	frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+	frame.BorderSizePixel = 0
+	frame.ClipsDescendants = true
+	frame.Visible = false
+	frame.Parent = gui
+
+	local corner = Instance.new("UICorner", frame)
+	corner.CornerRadius = UDim.new(0, 12)
+
+	local icon = Instance.new("ImageLabel")
+	icon.Size = UDim2.new(0, 48, 0, 48)
+	icon.Position = UDim2.new(0, 15, 0.5, -24)
+	icon.BackgroundTransparency = 1
+	icon.Image = settings.Image or "rbxassetid://115523122240350"
+	icon.Parent = frame
+
+	local title = Instance.new("TextLabel")
+	title.Size = UDim2.new(1, -80, 0, 22)
+	title.Position = UDim2.new(0, 75, 0, 10)
+	title.BackgroundTransparency = 1
+	title.Text = settings.Title or "Notification"
+	title.TextColor3 = Color3.fromRGB(255, 255, 255)
+	title.TextSize = 18
+	title.Font = Enum.Font.GothamBold
+	title.TextXAlignment = Enum.TextXAlignment.Left
+	title.Parent = frame
+
+	local content = Instance.new("TextLabel")
+	content.Size = UDim2.new(1, -80, 0, 40)
+	content.Position = UDim2.new(0, 75, 0, 35)
+	content.BackgroundTransparency = 1
+	content.Text = settings.Content or "Notification content goes here."
+	content.TextColor3 = Color3.fromRGB(200, 200, 200)
+	content.TextSize = 14
+	content.Font = Enum.Font.Gotham
+	content.TextWrapped = true
+	content.TextXAlignment = Enum.TextXAlignment.Left
+	content.Parent = frame
+
+	local timerBar = Instance.new("Frame")
+	timerBar.Size = UDim2.new(1, 0, 0, 3)
+	timerBar.Position = UDim2.new(0, 0, 1, -3)
+	timerBar.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+	timerBar.BorderSizePixel = 0
+	timerBar.Parent = frame
+
+	local timerTween = TweenService:Create(timerBar, TweenInfo.new(settings.Time or 3, Enum.EasingStyle.Linear), {
+		Size = UDim2.new(0, 0, 0, 3)
+	})
+
+	-- Animate in
+	frame.Visible = true
+	local tweenIn = TweenService:Create(frame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+		Position = UDim2.new(1, -10, 1, baseY - ((#activeNotifications) * (notifHeight + padding)))
+	})
+
+	table.insert(activeNotifications, frame)
+
+	tweenIn:Play()
+	timerTween:Play()
+
+	task.delay(settings.Time or 3, function()
+		-- Animate out
+		local tweenOut = TweenService:Create(frame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+			Position = UDim2.new(1, 360, 1, frame.Position.Y.Offset)
+		})
+		tweenOut:Play()
+		tweenOut.Completed:Wait()
+
+		-- Remove from screen and active list
+		gui:Destroy()
+		for i, notif in ipairs(activeNotifications) do
+			if notif == frame then
+				table.remove(activeNotifications, i)
+				break
+			end
+		end
+
+		-- Slide remaining notifs up
+		for i, notif in ipairs(activeNotifications) do
+			local targetPos = UDim2.new(1, -10, 1, baseY - ((i - 1) * (notifHeight + padding)))
+			TweenService:Create(notif, TweenInfo.new(0.3), { Position = targetPos }):Play()
+		end
+	end)
+end
+
+return NotifyLib
