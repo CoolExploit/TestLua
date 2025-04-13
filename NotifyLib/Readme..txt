@@ -7,7 +7,7 @@ This is a simple, clean notification system with support for smooth animations, 
 lua
 Copy
 Edit
-local NotifyLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/CoolExploit/TestLua/refs/heads/main/NotificationLib"))()
+local NotifyLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/CoolExploit/TestLua/refs/heads/main/NotifyLib/NotificationLib.txt"))()
 🚀 Usage
 lua
 Copy
