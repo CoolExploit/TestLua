@@ -1,22 +1,29 @@
 -- notifylib.lua
--- this liblary is inspired by orion liblary notification
+-- this notifylib is inspired by orion liblary notification
 local TweenService = game:GetService("TweenService")
 local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
 
 local NotifyLib = {}
+local activeNotifications = {}
 
 function NotifyLib:Notify(settings)
-	local playerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
+	local playerGui = LocalPlayer:WaitForChild("PlayerGui")
 
 	local gui = Instance.new("ScreenGui")
-	gui.Name = "NotifyLibUI"
+	gui.Name = "NotifyLibUI_" .. tostring(math.random(1, 999999))
 	gui.ResetOnSpawn = false
 	gui.IgnoreGuiInset = true
 	gui.Parent = playerGui
 
+	local padding = 10
+	local notifHeight = 100
+	local baseY = -120
+
+	-- Create the frame
 	local frame = Instance.new("Frame")
 	frame.Size = UDim2.new(0, 340, 0, 90)
-	frame.Position = UDim2.new(1, 360, 1, -120)
+	frame.Position = UDim2.new(1, 360, 1, baseY - ((#activeNotifications) * (notifHeight + padding)))
 	frame.AnchorPoint = Vector2.new(1, 1)
 	frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 	frame.BorderSizePixel = 0
@@ -68,26 +75,40 @@ function NotifyLib:Notify(settings)
 		Size = UDim2.new(0, 0, 0, 3)
 	})
 
+	-- Animate in
 	frame.Visible = true
-
 	local tweenIn = TweenService:Create(frame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-		Position = UDim2.new(1, -10, 1, -120)
+		Position = UDim2.new(1, -10, 1, baseY - ((#activeNotifications) * (notifHeight + padding)))
 	})
 
-	local tweenOut = TweenService:Create(frame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-		Position = UDim2.new(1, 360, 1, -120)
-	})
+	table.insert(activeNotifications, frame)
 
 	tweenIn:Play()
 	timerTween:Play()
-	tweenIn.Completed:Wait()
 
-	task.wait(settings.Time or 3)
+	task.delay(settings.Time or 3, function()
+		-- Animate out
+		local tweenOut = TweenService:Create(frame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+			Position = UDim2.new(1, 360, 1, frame.Position.Y.Offset)
+		})
+		tweenOut:Play()
+		tweenOut.Completed:Wait()
 
-	tweenOut:Play()
-	tweenOut.Completed:Wait()
+		-- Remove from screen and active list
+		gui:Destroy()
+		for i, notif in ipairs(activeNotifications) do
+			if notif == frame then
+				table.remove(activeNotifications, i)
+				break
+			end
+		end
 
-	gui:Destroy()
+		-- Slide remaining notifs up
+		for i, notif in ipairs(activeNotifications) do
+			local targetPos = UDim2.new(1, -10, 1, baseY - ((i - 1) * (notifHeight + padding)))
+			TweenService:Create(notif, TweenInfo.new(0.3), { Position = targetPos }):Play()
+		end
+	end)
 end
 
 return NotifyLib
