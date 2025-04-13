@@ -1,1 +1,79 @@
+-- notifylib.lua
+local TweenService = game:GetService("TweenService")
+local Players = game:GetService("Players")
 
+local NotifyLib = {}
+
+function NotifyLib:Notify(settings)
+	local playerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
+	
+	local gui = Instance.new("ScreenGui")
+	gui.Name = "NotifyLibUI"
+	gui.ResetOnSpawn = false
+	gui.Parent = playerGui
+	
+	local frame = Instance.new("Frame")
+	frame.Size = UDim2.new(0, 320, 0, 80)
+	frame.Position = UDim2.new(1, 350, 1, -110)
+	frame.AnchorPoint = Vector2.new(1, 1)
+	frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+	frame.BorderSizePixel = 0
+	frame.ClipsDescendants = true
+	frame.Visible = false
+	frame.Parent = gui
+
+	local corner = Instance.new("UICorner", frame)
+	corner.CornerRadius = UDim.new(0, 10)
+
+	local icon = Instance.new("ImageLabel")
+	icon.Size = UDim2.new(0, 50, 0, 50)
+	icon.Position = UDim2.new(0, 15, 0.5, -25)
+	icon.BackgroundTransparency = 1
+	icon.Image = settings.Image or "rbxassetid://115523122240350"
+	icon.Parent = frame
+
+	local title = Instance.new("TextLabel")
+	title.Size = UDim2.new(1, -80, 0, 24)
+	title.Position = UDim2.new(0, 75, 0, 10)
+	title.BackgroundTransparency = 1
+	title.Text = settings.Title or "Notification"
+	title.TextColor3 = Color3.fromRGB(255, 255, 255)
+	title.TextSize = 18
+	title.Font = Enum.Font.GothamBold
+	title.TextXAlignment = Enum.TextXAlignment.Left
+	title.Parent = frame
+
+	local content = Instance.new("TextLabel")
+	content.Size = UDim2.new(1, -80, 0, 40)
+	content.Position = UDim2.new(0, 75, 0, 35)
+	content.BackgroundTransparency = 1
+	content.Text = settings.Content or "Notification content"
+	content.TextColor3 = Color3.fromRGB(200, 200, 200)
+	content.TextSize = 14
+	content.Font = Enum.Font.Gotham
+	content.TextXAlignment = Enum.TextXAlignment.Left
+	content.TextWrapped = true
+	content.Parent = frame
+
+	frame.Visible = true
+
+	local tweenIn = TweenService:Create(frame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+		Position = UDim2.new(1, -10, 1, -110)
+	})
+
+	local tweenOut = TweenService:Create(frame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+		Position = UDim2.new(1, 350, 1, -110)
+	})
+
+	tweenIn:Play()
+	tweenIn.Completed:Wait()
+
+	task.wait(settings.Time or 3)
+
+	tweenOut:Play()
+	tweenOut.Completed:Wait()
+
+	gui:Destroy()
+end
+
+return NotifyLib
