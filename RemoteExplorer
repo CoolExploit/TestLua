@@ -1,0 +1,631 @@
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local LocalPlayer = Players.LocalPlayer
+local UserInputService = game:GetService("UserInputService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+-- UI Setup
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "RemoteExplorer"
+ScreenGui.ResetOnSpawn = false
+if syn and syn.protect_gui then syn.protect_gui(ScreenGui) end
+ScreenGui.Parent = game:GetService("CoreGui")
+
+-- Main Frame
+local MainFrame = Instance.new("Frame", ScreenGui)
+MainFrame.Size = UDim2.new(0, 500, 0, 400)
+MainFrame.Position = UDim2.new(0.5, -250, 0.5, -200)
+MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+MainFrame.BackgroundColor3 = Color3.fromRGB(30, 0, 0)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+
+local corner = Instance.new("UICorner", MainFrame)
+corner.CornerRadius = UDim.new(0, 12)
+
+-- Detect Device and Adjust UI for PC or Mobile
+local function adjustForDevice()
+    local isMobile = UserInputService.TouchEnabled
+    if isMobile then
+        -- Adjust UI for Mobile
+        MainFrame.Size = UDim2.new(0, 300, 0, 400)  -- Smaller for mobile
+        MainFrame.Position = UDim2.new(0.5, -150, 0.5, -200)
+    else
+        -- Adjust UI for PC
+        MainFrame.Size = UDim2.new(0, 500, 0, 400)  -- Larger for PC
+        MainFrame.Position = UDim2.new(0.5, -250, 0.5, -200)
+    end
+end
+adjustForDevice()
+
+-- Top Bar
+local TopBar = Instance.new("Frame", MainFrame)
+TopBar.Size = UDim2.new(1, 0, 0, 30)
+TopBar.BackgroundColor3 = Color3.fromRGB(50, 0, 0)
+TopBar.BorderSizePixel = 0
+local topCorner = Instance.new("UICorner", TopBar)
+topCorner.CornerRadius = UDim.new(0, 12)
+
+local Title = Instance.new("TextLabel", TopBar)
+Title.Size = UDim2.new(1, -90, 1, 0)
+Title.Position = UDim2.new(0, 10, 0, 0)
+Title.BackgroundTransparency = 1
+Title.Text = "Remote Explorer"
+Title.TextColor3 = Color3.fromRGB(255, 50, 50)
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 16
+Title.TextXAlignment = Enum.TextXAlignment.Left
+
+-- Style Buttons
+local function styleButton(button)
+    button.BackgroundColor3 = Color3.fromRGB(60, 0, 0)
+    button.TextColor3 = Color3.fromRGB(255, 40, 40)
+    button.Font = Enum.Font.GothamBold
+    button.TextSize = 14
+
+    local corner = Instance.new("UICorner", button)
+    corner.CornerRadius = UDim.new(0, 6)
+
+    local hoverIn = TweenService:Create(button, TweenInfo.new(0.2), {
+        BackgroundColor3 = Color3.fromRGB(80, 0, 0)
+    })
+    local hoverOut = TweenService:Create(button, TweenInfo.new(0.2), {
+        BackgroundColor3 = Color3.fromRGB(60, 0, 0)
+    })
+
+    button.MouseEnter:Connect(function() hoverIn:Play() end)
+    button.MouseLeave:Connect(function() hoverOut:Play() end)
+end
+
+-- Close Button
+local Close = Instance.new("TextButton", TopBar)
+Close.Size = UDim2.new(0, 30, 1, 0)
+Close.Position = UDim2.new(1, -30, 0, 0)
+Close.Text = "X"
+styleButton(Close)
+Close.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
+end)
+
+-- Minimize Button
+local Minimize = Instance.new("TextButton", TopBar)
+Minimize.Size = UDim2.new(0, 30, 1, 0)
+Minimize.Position = UDim2.new(1, -60, 0, 0)
+Minimize.Text = "-"
+styleButton(Minimize)
+
+local isMinimized = false
+local minimizeTween
+Minimize.MouseButton1Click:Connect(function()
+    isMinimized = not isMinimized
+
+    if minimizeTween then
+        minimizeTween:Cancel()
+    end
+
+    local targetSize
+    if isMinimized then
+        if UserInputService.TouchEnabled then
+            targetSize = UDim2.new(0, 300, 0, 30)
+        else
+            targetSize = UDim2.new(0, 500, 0, 30)
+        end
+    else
+        if UserInputService.TouchEnabled then
+            targetSize = UDim2.new(0, 300, 0, 400)
+        else
+            targetSize = UDim2.new(0, 500, 0, 400)
+        end
+    end
+
+    minimizeTween = TweenService:Create(MainFrame, TweenInfo.new(0.3), {
+        Size = targetSize
+    })
+    minimizeTween:Play()
+
+    for _, child in ipairs(MainFrame:GetChildren()) do
+        if child ~= TopBar then
+            child.Visible = not isMinimized
+        end
+    end
+end)
+
+
+-- Parse Arguments Function
+local function parseArgs(argString)
+    -- Simple table argument parser
+    local args = {}
+
+    -- Remove outer braces if present
+    argString = argString:gsub("^%s*{%s*(.-)%s*}%s*$", "%1")
+
+    -- Split by commas not inside quotes
+    local index = 1
+    for arg in argString:gmatch("([^,]+)") do
+        arg = arg:match("^%s*(.-)%s*$") -- trim whitespace
+
+        -- Convert string arguments
+        if arg:match('^".*"$') or arg:match("^'.*'$") then
+            args[index] = arg:sub(2, -2)
+        -- Convert number arguments
+        elseif tonumber(arg) then
+            args[index] = tonumber(arg)
+        -- Handle boolean/nil values
+        elseif arg == "true" then
+            args[index] = true
+        elseif arg == "false" then
+            args[index] = false
+        elseif arg == "nil" then
+            args[index] = nil
+        -- Keep as string by default
+        else
+            args[index] = arg
+        end
+
+        index = index + 1
+    end
+
+    return args
+end
+
+-- Remote Spy Functionality
+local interceptedCalls = {}
+local remoteLog = {}
+
+-- Safe Implementation for Remote Interception
+local function setupRemoteInterception()
+    local success, result = pcall(function()
+        -- Try to use namecall method if available (higher level executors)
+        local oldNamecall
+        oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
+            local method = getnamecallmethod()
+            local args = {...}
+
+            if (method == "FireServer" or method == "InvokeServer") and (self:IsA("RemoteEvent") or self:IsA("RemoteFunction")) then
+                table.insert(remoteLog, {
+                    remote = self,
+                    method = method,
+                    args = args,
+                    time = os.time()
+                })
+            end
+
+            return oldNamecall(self, ...)
+        end)
+
+        return true
+    end)
+
+    if not success then
+        -- Lower level executor, use simplified approach
+        -- We'll rely on manual capturing when firing from our UI
+    end
+end
+
+-- Try to setup interception without causing errors
+pcall(setupRemoteInterception)
+
+-- Smart Argument Generator (Similar to Simple Spy)
+local function generateSmartArguments(remote)
+    -- First check if we have logged any calls to this remote
+    for i = #remoteLog, 1, -1 do
+        local log = remoteLog[i]
+        if log.remote == remote then
+            return log.args
+        end
+    end
+
+    -- If no logs found, generate appropriate defaults based on remote name patterns
+    local name = remote.Name:lower()
+    local args = {}
+
+    -- Common patterns in remote names to determine likely argument types
+    if name:match("teleport") or name:match("move") or name:match("position") then
+        -- Position-related remotes often take Vector3 or CFrame
+        return {workspace.CurrentCamera.CFrame.Position}
+    elseif name:match("buy") or name:match("purchase") or name:match("shop") then
+        -- Shop-related remotes often take item ID or name
+        return {"item1", 1}
+    elseif name:match("damage") or name:match("hit") or name:match("attack") then
+        -- Combat-related remotes often take player/character and damage amount
+        local players = Players:GetPlayers()
+        if #players > 1 then
+            return {players[2].Character, 10}
+        else
+            return {"Target", 10}
+        end
+    elseif name:match("equip") or name:match("select") then
+        -- Equipment remotes often take item name/id
+        return {"Tool1"}
+    elseif name:match("collect") or name:match("grab") or name:match("get") then
+        -- Collection remotes often take item id
+        return {"Item1"}
+    end
+
+    -- Default arguments based on remote type
+    if remote:IsA("RemoteEvent") then
+        return {"player", 1, true}
+    else  -- RemoteFunction
+        return {"getData", "param1"}
+    end
+end
+
+-- Format arguments as string
+local function formatArgs(args)
+    local result = "{"
+    for i, arg in ipairs(args) do
+        local formatted = ""
+
+        if type(arg) == "string" then
+            formatted = '"' .. arg .. '"'
+        elseif type(arg) == "number" then
+            formatted = tostring(arg)
+        elseif type(arg) == "boolean" then
+            formatted = tostring(arg)
+        elseif type(arg) == "nil" then
+            formatted = "nil"
+        elseif typeof(arg) == "Vector3" then
+            formatted = "Vector3.new(" .. arg.X .. ", " .. arg.Y .. ", " .. arg.Z .. ")"
+        elseif typeof(arg) == "CFrame" then
+            formatted = "CFrame.new(" .. arg.X .. ", " .. arg.Y .. ", " .. arg.Z .. ")"
+        elseif type(arg) == "table" then
+            formatted = "{...}" -- Simplified for tables
+        elseif typeof(arg) == "Instance" then
+            formatted = arg.Name -- Just use the name of the instance
+        else
+            formatted = tostring(arg)
+        end
+
+        result = result .. formatted
+        if i < #args then result = result .. ", " end
+    end
+    result = result .. "}"
+    return result
+end
+
+-- Tabs and Remote Management
+local LearnTab = Instance.new("TextButton", MainFrame)
+LearnTab.Position = UDim2.new(0, 10, 0, 40)
+LearnTab.Size = UDim2.new(0, 120, 0, 30)
+LearnTab.Text = "Learn"
+styleButton(LearnTab)
+
+local RemoteTab = Instance.new("TextButton", MainFrame)
+RemoteTab.Position = UDim2.new(0, 140, 0, 40)
+RemoteTab.Size = UDim2.new(0, 120, 0, 30)
+RemoteTab.Text = "Remotes"
+styleButton(RemoteTab)
+
+-- Remote List
+local RemoteList = Instance.new("ScrollingFrame", MainFrame)
+RemoteList.Position = UDim2.new(0, 10, 0, 80)
+RemoteList.Size = UDim2.new(1, -20, 1, -90)
+RemoteList.BackgroundColor3 = Color3.fromRGB(20, 0, 0)
+RemoteList.BorderSizePixel = 0
+RemoteList.CanvasSize = UDim2.new(0, 0, 0, 0)
+RemoteList.ScrollBarThickness = 4
+RemoteList.AutomaticCanvasSize = Enum.AutomaticSize.Y
+
+local listLayout = Instance.new("UIListLayout", RemoteList)
+listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+listLayout.Padding = UDim.new(0, 4)
+
+-- Learn Tab Panel
+local LearnPanel = Instance.new("Frame", MainFrame)
+LearnPanel.Position = RemoteList.Position
+LearnPanel.Size = RemoteList.Size
+LearnPanel.BackgroundColor3 = RemoteList.BackgroundColor3
+LearnPanel.Visible = true  -- Show Learn panel by default
+LearnPanel.BorderSizePixel = 0
+
+local LearnLabel = Instance.new("TextLabel", LearnPanel)
+LearnLabel.Size = UDim2.new(1, -10, 1, -10)
+LearnLabel.Position = UDim2.new(0, 5, 0, 5)
+LearnLabel.TextColor3 = Color3.fromRGB(255, 50, 50)
+LearnLabel.BackgroundTransparency = 1
+LearnLabel.TextXAlignment = Enum.TextXAlignment.Left
+LearnLabel.TextYAlignment = Enum.TextYAlignment.Top
+LearnLabel.Font = Enum.Font.Gotham
+LearnLabel.TextSize = 14
+LearnLabel.TextWrapped = true
+LearnLabel.Text = "\nWelcome to Remote Explorer!\n\n• Click 'Remotes' to scan and view RemoteEvents/RemoteFunctions.\n• Click any remote name to open the popup.\n• Enter Lua table-style args and fire/call the remote.\n• Explorer is styled in red & black for easy visibility.\n• Designed to be fully draggable, clean and responsive.\n• Smart argument generation based on remote name patterns."
+
+-- Status Label
+local StatusLabel = Instance.new("TextLabel", MainFrame)
+StatusLabel.Size = UDim2.new(1, -20, 0, 20)
+StatusLabel.Position = UDim2.new(0, 10, 1, -30)
+StatusLabel.BackgroundTransparency = 1
+StatusLabel.TextColor3 = Color3.fromRGB(200, 50, 50)
+StatusLabel.Text = "Ready"
+StatusLabel.Font = Enum.Font.Gotham
+StatusLabel.TextSize = 12
+StatusLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+-- Remote Popup
+local Popup = Instance.new("Frame", ScreenGui)
+Popup.Size = UDim2.new(0, 300, 0, 270) -- Increased size to accommodate new button
+Popup.Position = UDim2.new(0.5, -150, 0.5, -135) -- Adjusted position
+Popup.BackgroundColor3 = Color3.fromRGB(30, 0, 0)
+Popup.Visible = false
+Popup.Active = true
+Popup.Draggable = true
+Popup.BorderSizePixel = 0
+
+local popupCorner = Instance.new("UICorner", Popup)
+popupCorner.CornerRadius = UDim.new(0, 8)
+
+local popupClose = Instance.new("TextButton", Popup)
+popupClose.Size = UDim2.new(0, 30, 0, 30)
+popupClose.Position = UDim2.new(1, -30, 0, 0)
+popupClose.Text = "X"
+styleButton(popupClose)
+popupClose.MouseButton1Click:Connect(function()
+    Popup.Visible = false
+end)
+
+local popupTitle = Instance.new("TextLabel", Popup)
+popupTitle.Size = UDim2.new(1, -40, 0, 30)
+popupTitle.Position = UDim2.new(0, 10, 0, 0)
+popupTitle.BackgroundTransparency = 1
+popupTitle.TextColor3 = Color3.fromRGB(255, 50, 50)
+popupTitle.Text = "Remote Name"
+popupTitle.Font = Enum.Font.GothamBold
+popupTitle.TextSize = 16
+popupTitle.TextXAlignment = Enum.TextXAlignment.Left
+
+local ArgBox = Instance.new("TextBox", Popup)
+ArgBox.Size = UDim2.new(1, -20, 0, 60)
+ArgBox.Position = UDim2.new(0, 10, 0, 40)
+ArgBox.Text = "{}"
+ArgBox.TextXAlignment = Enum.TextXAlignment.Left
+ArgBox.Font = Enum.Font.Gotham
+ArgBox.TextSize = 14
+ArgBox.ClearTextOnFocus = false
+ArgBox.BackgroundTransparency = 0.2
+ArgBox.BackgroundColor3 = Color3.fromRGB(40, 0, 0)
+ArgBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+ArgBox.MultiLine = true
+
+local AutoGenButton = Instance.new("TextButton", Popup)
+AutoGenButton.Size = UDim2.new(1, -20, 0, 30)
+AutoGenButton.Position = UDim2.new(0, 10, 0, 110)
+AutoGenButton.Text = "Auto Generate Args"
+styleButton(AutoGenButton)
+
+local FireButton = Instance.new("TextButton", Popup)
+FireButton.Size = UDim2.new(1, -20, 0, 40)
+FireButton.Position = UDim2.new(0, 10, 0, 150)
+FireButton.Text = "Fire Remote"
+styleButton(FireButton)
+
+local PathLabel = Instance.new("TextLabel", Popup)
+PathLabel.Size = UDim2.new(1, -20, 0, 30)
+PathLabel.Position = UDim2.new(0, 10, 0, 230) -- Adjusted position
+PathLabel.BackgroundTransparency = 1
+PathLabel.TextColor3 = Color3.fromRGB(200, 50, 50)
+PathLabel.Text = "Path: "
+PathLabel.Font = Enum.Font.Gotham
+PathLabel.TextSize = 12
+PathLabel.TextXAlignment = Enum.TextXAlignment.Left
+PathLabel.TextWrapped = true
+
+-- Copy Code Button
+local CopyCodeButton = Instance.new("TextButton", Popup)
+CopyCodeButton.Size = UDim2.new(1, -20, 0, 30)
+CopyCodeButton.Position = UDim2.new(0, 10, 0, 190) -- Corrected position
+CopyCodeButton.Text = "Copy Fire Code"
+styleButton(CopyCodeButton)
+
+
+-- Manage remote selection and popup opening
+local selectedRemote
+local remoteCount = 0
+
+-- Function to get path of an instance
+local function getInstancePath(instance)
+    local path = instance.Name
+    local parent = instance.Parent
+
+    while parent and parent ~= game do
+        path = parent.Name .. "." .. path
+        parent = parent.Parent
+    end
+
+    return path
+end
+
+-- Create remote button function
+local function createRemoteButton(remote, path)
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(1, -10, 0, 30)
+    button.Text = remote.Name .. " (" .. remote.ClassName .. ")"
+    styleButton(button)
+
+    -- Set different color based on remote type
+    if remote:IsA("RemoteEvent") then
+        button.BackgroundColor3 = Color3.fromRGB(60, 0, 0)
+    else
+        button.BackgroundColor3 = Color3.fromRGB(60, 20, 0)
+    end
+
+    button.MouseButton1Click:Connect(function()
+        selectedRemote = remote
+        popupTitle.Text = remote.Name
+        PathLabel.Text = "Path: " .. path
+
+        -- Adjust fire button text based on remote type
+        if remote:IsA("RemoteEvent") then
+            FireButton.Text = "Fire Event"
+            CopyCodeButton.Visible = true
+        else
+            FireButton.Text = "Call Function"
+            CopyCodeButton.Visible = false
+        end
+
+        ArgBox.Text = "{}"
+        Popup.Visible = true
+    end)
+
+    button.Parent = RemoteList
+    return button
+end
+
+-- Enhanced scanning function
+local function scanForRemotes()
+    RemoteList:ClearAllChildren()
+    local listLayout = Instance.new("UIListLayout", RemoteList)
+    listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    listLayout.Padding = UDim.new(0, 4)
+
+    -- First scan services that commonly contain remotes
+    local servicesToScan = {
+        game:GetService("ReplicatedStorage"),
+        game:GetService("ReplicatedFirst"),
+        game:GetService("StarterGui"),
+        game:GetService("Workspace"),
+        game:GetService("Players")
+    }
+
+    remoteCount = 0
+    StatusLabel.Text = "Scanning for remotes..."
+    local scannedRemotes = {} -- Keep track of scanned remotes to avoid duplicates
+
+    for _, service in ipairs(servicesToScan) do
+        local remotes = {}
+
+        -- Find all remotes in this service
+        for _, descendant in ipairs(service:GetDescendants()) do
+            if (descendant:IsA("RemoteEvent") or descendant:IsA("RemoteFunction")) then
+                local remoteId = descendant:GetFullName() -- Use full name as unique ID
+                if not scannedRemotes[remoteId] then -- Check if already scanned
+                    table.insert(remotes, {
+                        remote = descendant,
+                        path = getInstancePath(descendant)
+                    })
+                    scannedRemotes[remoteId] = true
+                    remoteCount = remoteCount + 1
+                end
+            end
+        end
+
+        -- If we found remotes in this service, add a service label
+        if #remotes > 0 then
+            local serviceLabel = Instance.new("TextLabel")
+            serviceLabel.Size = UDim2.new(1, -10, 0, 25)
+            serviceLabel.BackgroundColor3 = Color3.fromRGB(40, 0, 0)
+            serviceLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+            serviceLabel.Font = Enum.Font.GothamBold
+            serviceLabel.TextSize = 14
+            serviceLabel.Text = "  " .. service.Name .. " (" .. #remotes .. ")"
+            serviceLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+            local corner = Instance.new("UICorner", serviceLabel)
+            corner.CornerRadius = UDim.new(0, 4)
+
+            serviceLabel.Parent = RemoteList
+
+            -- Add all remotes under this service
+            for _, data in ipairs(remotes) do
+                createRemoteButton(data.remote, data.path)
+            end
+        end
+    end
+
+    StatusLabel.Text = "Found " .. remoteCount .. " remotes"
+end
+
+-- Tab switching logic
+RemoteTab.MouseButton1Click:Connect(function()
+    LearnPanel.Visible = false
+    RemoteList.Visible = true
+    scanForRemotes()
+end)
+
+LearnTab.MouseButton1Click:Connect(function()
+    LearnPanel.Visible = true
+    RemoteList.Visible = false
+end)
+
+-- Auto arg generator button (works on any level executor)
+AutoGenButton.MouseButton1Click:Connect(function()
+    if selectedRemote then
+        local args = generateSmartArguments(selectedRemote)
+        ArgBox.Text = formatArgs(args)
+    end
+end)
+
+-- Fire/Call Button Logic
+FireButton.MouseButton1Click:Connect(function()
+    if not selectedRemote then return end
+
+    local success, parsedArgs = pcall(function()
+        return parseArgs(ArgBox.Text)
+    end)
+
+    if not success then
+        StatusLabel.Text = "Error parsing arguments"
+        return
+    end
+
+    -- Log this call for future reference
+    table.insert(remoteLog, {
+        remote = selectedRemote,
+        method = selectedRemote:IsA("RemoteEvent") and "FireServer" or "InvokeServer",
+        args = parsedArgs,
+        time = os.time()
+    })
+
+    -- Different logic based on remote type
+    if selectedRemote:IsA("RemoteEvent") then
+        local success, err = pcall(function()
+            selectedRemote:FireServer(unpack(parsedArgs))
+        end)
+
+        if success then
+            StatusLabel.Text = "Remote fired successfully!"
+        else
+            StatusLabel.Text = "Error: " .. tostring(err)
+        end
+    elseif selectedRemote:IsA("RemoteFunction") then
+        local success, result = pcall(function()
+            return selectedRemote:InvokeServer(unpack(parsedArgs))
+        end)
+
+        if success then
+            StatusLabel.Text = "Function called. Result: " .. tostring(result)
+        else
+            StatusLabel.Text = "Error: " .. tostring(result)
+        end
+    end
+end)
+
+-- Copy Code Button Logic
+CopyCodeButton.MouseButton1Click:Connect(function()
+    if selectedRemote then
+        local args = parseArgs(ArgBox.Text)
+        local codeToCopy = ""
+        if selectedRemote:IsA("RemoteEvent") then
+            codeToCopy = "game:GetService(\"ReplicatedStorage\"):WaitForChild(\"" .. selectedRemote.Name .. "\"):FireServer(" .. formatArgs(args) .. ")"
+        elseif selectedRemote:IsA("RemoteFunction") then
+            codeToCopy = "game:GetService(\"ReplicatedStorage\"):WaitForChild(\"" .. selectedRemote.Name .. "\"):InvokeServer(" .. formatArgs(args) .. ")"
+        end
+
+        -- Use SetClipboard if available
+        if UserInputService:CanSetClipboard() then
+            UserInputService:SetClipboard(codeToCopy)
+            StatusLabel.Text = "Code copied to clipboard!"
+        else
+            -- Fallback for environments where SetClipboard is not available
+            StatusLabel.Text = "Code: " .. codeToCopy
+        end
+    else
+        StatusLabel.Text = "No Remote selected"
+    end
+end)
+
+
+-- Initialize with Learn tab active
+RemoteList.Visible = false
+LearnPanel.Visible = true
+scanForRemotes()
