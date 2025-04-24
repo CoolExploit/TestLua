@@ -138,15 +138,14 @@ local function parseArgs(argString)
     local args = {}
 
     -- Remove outer braces if present
-    argString = argString:gsub("^%s*{%s*(.-)%s*}%s*$", "%1")
-
-    -- Split by commas not inside quotes
-    local index = 1
-    for arg in argString:gmatch("([^,]+)") do
-        arg = arg:match("^%s*(.-)%s*$") -- trim whitespace
+    argString = argString:gsub("^%s*{%s*(.-)%s*}%s*<span class="math-inline">", "%1"\)
+\-\- Split by commas not inside quotes
+local index \= 1
+for arg in argString\:gmatch\("\(\[^,\]\+\)"\) do
+arg \= arg\:match\("^%s\*\(\.\-\)%s\*</span>") -- trim whitespace
 
         -- Convert string arguments
-        if arg:match('^".*"$') or arg:match("^'.*'$") then
+        if arg:match('^".*"<span class="math-inline">'\) or arg\:match\("^'\.\*'</span>") then
             args[index] = arg:sub(2, -2)
         -- Convert number arguments
         elseif tonumber(arg) then
@@ -175,31 +174,37 @@ local remoteLog = {}
 
 -- Safe Implementation for Remote Interception
 local function setupRemoteInterception()
-    local success, result = pcall(function()
-        -- Try to use namecall method if available (higher level executors)
-        local oldNamecall
-        oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
-            local method = getnamecallmethod()
-            local args = {...}
+    if not UserInputService.TouchEnabled then -- Only attempt high-level hooking if NOT on mobile
+        local success, result = pcall(function()
+            -- Try to use namecall method if available (higher level executors)
+            local oldNamecall
+            oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
+                local method = getnamecallmethod()
+                local args = {...}
 
-            if (method == "FireServer" or method == "InvokeServer") and (self:IsA("RemoteEvent") or self:IsA("RemoteFunction")) then
-                table.insert(remoteLog, {
-                    remote = self,
-                    method = method,
-                    args = args,
-                    time = os.time()
-                })
-            end
+                if (method == "FireServer" or method == "InvokeServer") and (self:IsA("RemoteEvent") or self:IsA("RemoteFunction")) then
+                    table.insert(remoteLog, {
+                        remote = self,
+                        method = method,
+                        args = args,
+                        time = os.time()
+                    })
+                end
 
-            return oldNamecall(self, ...)
+                return oldNamecall(self, ...)
+            end)
+
+            return true
         end)
 
-        return true
-    end)
-
-    if not success then
-        -- Lower level executor, use simplified approach
-        -- We'll rely on manual capturing when firing from our UI
+        if not success then
+            -- Lower level executor, use simplified approach
+            -- We'll rely on manual capturing when firing from our UI
+            warn("High-level remote interception failed.")
+        end
+    else
+        warn("Skipping high-level remote interception on mobile.")
+        -- On mobile, we'll rely solely on capturing when firing from our UI
     end
 end
 
@@ -297,6 +302,12 @@ RemoteTab.Size = UDim2.new(0, 120, 0, 30)
 RemoteTab.Text = "Remotes"
 styleButton(RemoteTab)
 
+local InfoTab = Instance.new("TextButton", MainFrame)
+InfoTab.Position = UDim2.new(0, 270, 0, 40)
+InfoTab.Size = UDim2.new(0, 120, 0, 30)
+InfoTab.Text = "Info"
+styleButton(InfoTab)
+
 -- Remote List
 local RemoteList = Instance.new("ScrollingFrame", MainFrame)
 RemoteList.Position = UDim2.new(0, 10, 0, 80)
@@ -329,7 +340,27 @@ LearnLabel.TextYAlignment = Enum.TextYAlignment.Top
 LearnLabel.Font = Enum.Font.Gotham
 LearnLabel.TextSize = 14
 LearnLabel.TextWrapped = true
-LearnLabel.Text = "\nWelcome to Remote Explorer!\n\n• Click 'Remotes' to scan and view RemoteEvents/RemoteFunctions.\n• Click any remote name to open the popup.\n• Enter Lua table-style args and fire/call the remote.\n• Explorer is styled in red & black for easy visibility.\n• Designed to be fully draggable, clean and responsive.\n• Smart argument generation based on remote name patterns."
+LearnLabel.Text = "\nWelcome to Remote Explorer!\n\n• Click 'Remotes' to scan and view RemoteEvents/RemoteFunctions.\n• Click any remote name to open the popup.\n• Enter Lua table-style args and fire/call the remote.\n• Explorer is styled in red & black for easy visibility.\n• Designed to be fully draggable, clean and responsive.\n• Smart argument generation based on remote name patterns.\n• Use the 'Info' tab to see previously used arguments."
+
+-- Info Tab Panel
+local InfoPanel = Instance.new("Frame", MainFrame)
+InfoPanel.Position = RemoteList.Position
+InfoPanel.Size = RemoteList.Size
+InfoPanel.BackgroundColor3 = RemoteList.BackgroundColor3
+InfoPanel.Visible = false
+InfoPanel.BorderSizePixel = 0
+
+local InfoText = Instance.new("TextLabel", InfoPanel)
+InfoText.Size = UDim2.new(1, -10, 1, -10)
+InfoText.Position = UDim2.new(0, 5, 0, 5)
+InfoText.TextColor3 = Color3.fromRGB(255, 50, 50)
+InfoText.BackgroundTransparency = 1
+InfoText.TextXAlignment = Enum.TextXAlignment.Left
+InfoText.TextYAlignment = Enum.TextYAlignment.Top
+InfoText.Font = Enum.Font.Gotham
+InfoText.TextSize = 14
+InfoText.TextWrapped = true
+InfoText.Text = "Select a remote in the 'Remotes' tab to see information about its usage here."
 
 -- Status Label
 local StatusLabel = Instance.new("TextLabel", MainFrame)
@@ -538,13 +569,40 @@ end
 -- Tab switching logic
 RemoteTab.MouseButton1Click:Connect(function()
     LearnPanel.Visible = false
+    InfoPanel.Visible = false
     RemoteList.Visible = true
     scanForRemotes()
 end)
 
 LearnTab.MouseButton1Click:Connect(function()
     LearnPanel.Visible = true
+    InfoPanel.Visible = false
     RemoteList.Visible = false
+end)
+
+InfoTab.MouseButton1Click:Connect(function()
+    LearnPanel.Visible = false
+    RemoteList.Visible = false
+    InfoPanel.Visible = true
+    if selectedRemote then
+        local infoText = ""
+        local found = false
+        for _, log in ipairs(remoteLog) do
+            if log.remote == selectedRemote then
+                found = true
+                infoText = infoText .. "Time: " .. os.date("%Y-%m-%d %H:%M:%S", log.time) .. "\n"
+                infoText = infoText .. "Method: " .. log.method .. "\n"
+                infoText = infoText .. "Arguments: " .. formatArgs(log.args) .. "\n\n"
+            end
+        end
+        if found then
+            InfoText.Text = "Previous calls to '" .. selectedRemote.Name .. "':\n\n" .. infoText
+        else
+            InfoText.Text = "No previous calls logged for '" .. selectedRemote.Name .. "'."
+        end
+    else
+        InfoText.Text = "Select a remote in the 'Remotes' tab to see information about its usage here."
+    end
 end)
 
 -- Auto arg generator button (works on any level executor)
@@ -627,5 +685,6 @@ end)
 
 -- Initialize with Learn tab active
 RemoteList.Visible = false
+InfoPanel.Visible = false
 LearnPanel.Visible = true
 scanForRemotes()
