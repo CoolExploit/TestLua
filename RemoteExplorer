@@ -3,6 +3,64 @@ local TweenService = game:GetService("TweenService")
 local LocalPlayer = Players.LocalPlayer
 local UserInputService = game:GetService("UserInputService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local HttpService = game:GetService("HttpService")
+
+-- Utility Functions
+local function logRemoteCall(remote, method, args)
+	table.insert(remoteLog, 1, {
+		remote = remote,
+		method = method,
+		args = args,
+		time = os.time()
+	})
+	if #remoteLog > 50 then
+		table.remove(remoteLog)
+	end
+end
+
+local function fireRemote(remote, args)
+	if remote:IsA("RemoteEvent") then
+		local success, err = pcall(function()
+			remote:FireServer(unpack(args))
+		end)
+		if success then
+			StatusLabel.Text = "Remote fired successfully!"
+		else
+			warn("[Remote Error]", remote:GetFullName(), err)
+			StatusLabel.Text = "Error: " .. tostring(err)
+		end
+	elseif remote:IsA("RemoteFunction") then
+		local success, result = pcall(function()
+			return remote:InvokeServer(unpack(args))
+		end)
+		if success then
+			StatusLabel.Text = "Function called. Result: " .. tostring(result)
+		else
+			warn("[Remote Error]", remote:GetFullName(), result)
+			StatusLabel.Text = "Error: " .. tostring(result)
+		end
+	end
+end
+
+-- Update parseArgs to use JSON for safety
+function parseArgs(str)
+	return HttpService:JSONDecode(str)
+end
+
+-- Update formatArgs to use JSON formatting
+function formatArgs(tbl)
+	return HttpService:JSONEncode(tbl)
+end
+
+-- Improve smart argument generator using log history
+function generateSmartArguments(remote)
+	for _, log in ipairs(remoteLog) do
+		if log.remote == remote then
+			return log.args
+		end
+	end
+	return {} -- fallback
+end
 
 -- UI Setup
 local ScreenGui = Instance.new("ScreenGui")
@@ -138,14 +196,15 @@ local function parseArgs(argString)
     local args = {}
 
     -- Remove outer braces if present
-    argString = argString:gsub("^%s*{%s*(.-)%s*}%s*<span class="math-inline">", "%1"\)
-\-\- Split by commas not inside quotes
-local index \= 1
-for arg in argString\:gmatch\("\(\[^,\]\+\)"\) do
-arg \= arg\:match\("^%s\*\(\.\-\)%s\*</span>") -- trim whitespace
+    argString = argString:gsub("^%s*{%s*(.-)%s*}%s*$", "%1")
+
+    -- Split by commas not inside quotes
+    local index = 1
+    for arg in argString:gmatch("([^,]+)") do
+        arg = arg:match("^%s*(.-)%s*$") -- trim whitespace
 
         -- Convert string arguments
-        if arg:match('^".*"<span class="math-inline">'\) or arg\:match\("^'\.\*'</span>") then
+        if arg:match('^".*"$') or arg:match("^'.*'$") then
             args[index] = arg:sub(2, -2)
         -- Convert number arguments
         elseif tonumber(arg) then
@@ -167,6 +226,7 @@ arg \= arg\:match\("^%s\*\(\.\-\)%s\*</span>") -- trim whitespace
 
     return args
 end
+
 
 -- Remote Spy Functionality
 local interceptedCalls = {}
