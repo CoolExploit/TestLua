@@ -87,8 +87,8 @@ local function adjustForDevice()
     local isMobile = UserInputService.TouchEnabled
     if isMobile then
         -- Adjust UI for Mobile
-        MainFrame.Size = UDim2.new(0, 300, 0, 400)  -- Smaller for mobile
-        MainFrame.Position = UDim2.new(0.5, -150, 0.5, -200)
+        MainFrame.Size = UDim2.new(0, 300, 0, 300)  -- Smaller for mobile
+        MainFrame.Position = UDim2.new(0.5, -100, 0.5, -200)
     else
         -- Adjust UI for PC
         MainFrame.Size = UDim2.new(0, 500, 0, 400)  -- Larger for PC
@@ -146,6 +146,10 @@ Close.MouseButton1Click:Connect(function()
     ScreenGui:Destroy()
 end)
 
+-- Make sure this is set ONCE when you create MainFrame:
+MainFrame.ClipsDescendants = true
+
+-- Minimize Button
 local Minimize = Instance.new("TextButton", TopBar)
 Minimize.Size = UDim2.new(0, 30, 1, 0)
 Minimize.Position = UDim2.new(1, -60, 0, 0)
@@ -162,30 +166,21 @@ Minimize.MouseButton1Click:Connect(function()
         minimizeTween:Cancel()
     end
 
-    local targetSize
-    if isMinimized then
-        targetSize = UserInputService.TouchEnabled
-            and UDim2.new(0, 300, 0, 30)
-            or UDim2.new(0, 500, 0, 30)
-    else
-        targetSize = UserInputService.TouchEnabled
-            and UDim2.new(0, 300, 0, 400)
-            or UDim2.new(0, 500, 0, 400)
-    end
+    local targetSize = isMinimized
+        and (UserInputService.TouchEnabled and UDim2.new(0, 300, 0, 30) or UDim2.new(0, 500, 0, 30))
+        or (UserInputService.TouchEnabled and UDim2.new(0, 300, 0, 400) or UDim2.new(0, 500, 0, 400))
 
-    minimizeTween = TweenService:Create(MainFrame, TweenInfo.new(0.3), {
-        Size = targetSize
-    })
+    minimizeTween = TweenService:Create(MainFrame, TweenInfo.new(0.3), { Size = targetSize })
     minimizeTween:Play()
 
-    minimizeTween.Completed:Wait()
-
+    -- Hide/Show contents instantly (except TopBar)
     for _, child in ipairs(MainFrame:GetChildren()) do
         if child ~= TopBar then
             child.Visible = not isMinimized
         end
     end
 end)
+
 
 
 
