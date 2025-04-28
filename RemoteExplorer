@@ -228,9 +228,7 @@ local remoteLog = {}
 
 -- Safe Implementation for Remote Interception
 local function setupRemoteInterception()
-    if not UserInputService.TouchEnabled then -- Only attempt high-level hooking if NOT on mobile
         local success, result = pcall(function()
-            -- Try to use namecall method if available (higher level executors)
             local oldNamecall
             oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
                 local method = getnamecallmethod()
@@ -254,10 +252,10 @@ local function setupRemoteInterception()
         if not success then
             -- Lower level executor, use simplified approach
             -- We'll rely on manual capturing when firing from our UI
-            warn("High-level remote interception failed.")
+            warn("High-level remote failed.")
         end
     else
-        warn("Skipping high-level remote interception on mobile.")
+        warn("Skipping high-level remote interception.")
         -- On mobile, we'll rely solely on capturing when firing from our UI
     end
 end
