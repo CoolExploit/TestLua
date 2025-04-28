@@ -358,7 +358,7 @@ styleButton(RemoteTab)
 
 local InfoTab = Instance.new("TextButton", MainFrame)
 InfoTab.Position = UDim2.new(0, 270, 0, 40)
-InfoTab.Size = UDim2.new(0, 120, 0, 30)
+InfoTab.Size = UDim2.new(0, 0, 0, 0)
 InfoTab.Text = "Info"
 styleButton(InfoTab)
 
