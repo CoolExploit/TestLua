@@ -226,40 +226,39 @@ end
 local interceptedCalls = {}
 local remoteLog = {}
 
--- Safe Implementation for Remote Interception (PC + Mobile Compatible)
+-- Safe Implementation for Remote Interception
 local function setupRemoteInterception()
-    local function logRemoteCall(self, method, args)
-        table.insert(remoteLog, {
-            remote = self,
-            method = method,
-            args = args,
-            time = os.time()
-        })
-    end
-
-    local canHook = not UserInputService.TouchEnabled -- Disable hooking on mobile for safety
-
-    if canHook then
+    if not UserInputService.TouchEnabled then -- Only attempt high-level hooking if NOT on mobile
         local success, result = pcall(function()
+            -- Try to use namecall method if available (higher level executors)
             local oldNamecall
             oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
-                if not checkcaller() then
-                    local method = getnamecallmethod()
-                    if (method == "FireServer" or method == "InvokeServer") and (self:IsA("RemoteEvent") or self:IsA("RemoteFunction")) then
-                        logRemoteCall(self, method, {...})
-                    end
+                local method = getnamecallmethod()
+                local args = {...}
+
+                if (method == "FireServer" or method == "InvokeServer") and (self:IsA("RemoteEvent") or self:IsA("RemoteFunction")) then
+                    table.insert(remoteLog, {
+                        remote = self,
+                        method = method,
+                        args = args,
+                        time = os.time()
+                    })
                 end
+
                 return oldNamecall(self, ...)
             end)
+
+            return true
         end)
 
         if not success then
-            warn("[Remote Interception] High-level interception failed. Falling back to manual capture.")
-        else
-            print("[Remote Interception] High-level interception active.")
+            -- Lower level executor, use simplified approach
+            -- We'll rely on manual capturing when firing from our UI
+            warn("High-level remote interception failed.")
         end
     else
-        warn("[Remote Interception] High-level interception skipped (Mobile Device Detected).")
+        warn("Skipping high-level remote interception on mobile.")
+        -- On mobile, we'll rely solely on capturing when firing from our UI
     end
 end
 
