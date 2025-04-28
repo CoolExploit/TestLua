@@ -940,37 +940,43 @@ FireButton.MouseButton1Click:Connect(function()
 end)
 
 -- Copy Fire Code Button
+-- Copy Fire Code Button
 CopyCodeButton.MouseButton1Click:Connect(function()
     if selectedRemote then
         local args = parseArgs(ArgBox.Text)
+        local remoteName = selectedRemote.Name
         local remotePath = selectedRemote:GetFullName()
-        local methodCall = ""
+        local formattedArgs = formatArgs(args)
 
-        if selectedRemote:IsA("RemoteEvent") then
-            methodCall = string.format(
-                'game.%s:FireServer(%s)', 
-                remotePath, 
-                formatArgs(args)
-            )
-        elseif selectedRemote:IsA("RemoteFunction") then
-            methodCall = string.format(
-                'game.%s:InvokeServer(%s)', 
-                remotePath, 
-                formatArgs(args)
-            )
-        end
+        -- Beautify the output to include the Remote's name and arguments
+        local beautifiedOutput = string.format([[
+local %s = game.ReplicatedStorage:WaitForChild("%s")
 
-        -- Attempt to copy to clipboard
-        if UserInputService:CanSetClipboard() then
-            UserInputService:SetClipboard(methodCall)
+local args = {
+    [1] = "%s", 
+    [2] = %s, 
+    [3] = %s
+}
+
+%s:%s(%s)
+]], remoteName, remoteName, args[1] or "example_arg_1", args[2] or "example_arg_2", args[3] or "example_arg_3", 
+           remoteName, selectedRemote:IsA("RemoteEvent") and "FireServer" or "InvokeServer", formattedArgs)
+
+        -- Try to copy to clipboard if possible (fallback to status label if it fails)
+        local success, errorMsg = pcall(function()
+            UserInputService:SetClipboard(beautifiedOutput)
+        end)
+
+        if success then
             StatusLabel.Text = "Code copied to clipboard!"
         else
-            StatusLabel.Text = "Clipboard not supported. Here is your code:\n" .. methodCall
+            StatusLabel.Text = "Failed to copy code: " .. errorMsg
         end
     else
         StatusLabel.Text = "No remote selected."
     end
 end)
+
 
 
 -- Initialize with Learn tab active
