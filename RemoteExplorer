@@ -433,19 +433,21 @@ StatusLabel.Font = Enum.Font.Gotham
 StatusLabel.TextSize = 12
 StatusLabel.TextXAlignment = Enum.TextXAlignment.Left
 
--- Remote Popup
+-- Remote Popup UI
 local Popup = Instance.new("Frame", ScreenGui)
-Popup.Size = UDim2.new(0, 300, 0, 270) -- Increased size to accommodate new button
-Popup.Position = UDim2.new(0.5, -150, 0.5, -135) -- Adjusted position
+Popup.Size = UDim2.new(0, 300, 0, 270)
+Popup.Position = UDim2.new(0.5, -150, 0.5, -135)
 Popup.BackgroundColor3 = Color3.fromRGB(30, 0, 0)
 Popup.Visible = false
 Popup.Active = true
 Popup.Draggable = true
 Popup.BorderSizePixel = 0
 
+-- UI Elements
 local popupCorner = Instance.new("UICorner", Popup)
 popupCorner.CornerRadius = UDim.new(0, 8)
 
+-- Close Button
 local popupClose = Instance.new("TextButton", Popup)
 popupClose.Size = UDim2.new(0, 30, 0, 30)
 popupClose.Position = UDim2.new(1, -30, 0, 0)
@@ -455,6 +457,7 @@ popupClose.MouseButton1Click:Connect(function()
     Popup.Visible = false
 end)
 
+-- Title Label
 local popupTitle = Instance.new("TextLabel", Popup)
 popupTitle.Size = UDim2.new(1, -40, 0, 30)
 popupTitle.Position = UDim2.new(0, 10, 0, 0)
@@ -465,6 +468,7 @@ popupTitle.Font = Enum.Font.GothamBold
 popupTitle.TextSize = 16
 popupTitle.TextXAlignment = Enum.TextXAlignment.Left
 
+-- Argument Box
 local ArgBox = Instance.new("TextBox", Popup)
 ArgBox.Size = UDim2.new(1, -20, 0, 60)
 ArgBox.Position = UDim2.new(0, 10, 0, 40)
@@ -478,21 +482,24 @@ ArgBox.BackgroundColor3 = Color3.fromRGB(40, 0, 0)
 ArgBox.TextColor3 = Color3.fromRGB(255, 255, 255)
 ArgBox.MultiLine = true
 
+-- Auto Gen Button
 local AutoGenButton = Instance.new("TextButton", Popup)
 AutoGenButton.Size = UDim2.new(1, -20, 0, 30)
 AutoGenButton.Position = UDim2.new(0, 10, 0, 110)
 AutoGenButton.Text = "Auto Generate Args"
 styleButton(AutoGenButton)
 
+-- Fire Button
 local FireButton = Instance.new("TextButton", Popup)
 FireButton.Size = UDim2.new(1, -20, 0, 40)
 FireButton.Position = UDim2.new(0, 10, 0, 150)
 FireButton.Text = "Fire Remote"
 styleButton(FireButton)
 
+-- Path Label
 local PathLabel = Instance.new("TextLabel", Popup)
 PathLabel.Size = UDim2.new(1, -20, 0, 30)
-PathLabel.Position = UDim2.new(0, 10, 0, 230) -- Adjusted position
+PathLabel.Position = UDim2.new(0, 10, 0, 230)
 PathLabel.BackgroundTransparency = 1
 PathLabel.TextColor3 = Color3.fromRGB(200, 50, 50)
 PathLabel.Text = "Path: "
@@ -504,56 +511,42 @@ PathLabel.TextWrapped = true
 -- Copy Code Button
 local CopyCodeButton = Instance.new("TextButton", Popup)
 CopyCodeButton.Size = UDim2.new(1, -20, 0, 30)
-CopyCodeButton.Position = UDim2.new(0, 10, 0, 190) -- Corrected position
+CopyCodeButton.Position = UDim2.new(0, 10, 0, 190)
 CopyCodeButton.Text = "Copy Fire Code"
 styleButton(CopyCodeButton)
 
-
--- Manage remote selection and popup opening
+-- Remote Selection Logic
 local selectedRemote
 local remoteCount = 0
 
--- Function to get path of an instance
+-- Function to Get Instance Path
 local function getInstancePath(instance)
     local path = instance.Name
     local parent = instance.Parent
-
     while parent and parent ~= game do
         path = parent.Name .. "." .. path
         parent = parent.Parent
     end
-
     return path
 end
 
--- Create remote button function
+-- Function to Create Remote Buttons
 local function createRemoteButton(remote, path)
     local button = Instance.new("TextButton")
     button.Size = UDim2.new(1, -10, 0, 30)
     button.Text = remote.Name .. " (" .. remote.ClassName .. ")"
     styleButton(button)
 
-    -- Set different color based on remote type
-    if remote:IsA("RemoteEvent") then
-        button.BackgroundColor3 = Color3.fromRGB(60, 0, 0)
-    else
-        button.BackgroundColor3 = Color3.fromRGB(60, 20, 0)
-    end
+    -- Set color based on remote type
+    button.BackgroundColor3 = remote:IsA("RemoteEvent") and Color3.fromRGB(60, 0, 0) or Color3.fromRGB(60, 20, 0)
 
     button.MouseButton1Click:Connect(function()
         selectedRemote = remote
         popupTitle.Text = remote.Name
         PathLabel.Text = "Path: " .. path
 
-        -- Adjust fire button text based on remote type
-        if remote:IsA("RemoteEvent") then
-            FireButton.Text = "Fire Event"
-            CopyCodeButton.Visible = true
-        else
-            FireButton.Text = "Call Function"
-            CopyCodeButton.Visible = false
-        end
-
+        FireButton.Text = remote:IsA("RemoteEvent") and "Fire Event" or "Call Function"
+        CopyCodeButton.Visible = remote:IsA("RemoteEvent")
         ArgBox.Text = "{}"
         Popup.Visible = true
     end)
@@ -562,14 +555,13 @@ local function createRemoteButton(remote, path)
     return button
 end
 
--- Enhanced scanning function
+-- Scan for Remotes
 local function scanForRemotes()
     RemoteList:ClearAllChildren()
     local listLayout = Instance.new("UIListLayout", RemoteList)
     listLayout.SortOrder = Enum.SortOrder.LayoutOrder
     listLayout.Padding = UDim.new(0, 4)
 
-    -- First scan services that commonly contain remotes
     local servicesToScan = {
         game:GetService("ReplicatedStorage"),
         game:GetService("ReplicatedFirst"),
@@ -580,27 +572,23 @@ local function scanForRemotes()
 
     remoteCount = 0
     StatusLabel.Text = "Scanning for remotes..."
-    local scannedRemotes = {} -- Keep track of scanned remotes to avoid duplicates
+    local scannedRemotes = {}
 
     for _, service in ipairs(servicesToScan) do
         local remotes = {}
 
-        -- Find all remotes in this service
+        -- Find all remotes
         for _, descendant in ipairs(service:GetDescendants()) do
-            if (descendant:IsA("RemoteEvent") or descendant:IsA("RemoteFunction")) then
-                local remoteId = descendant:GetFullName() -- Use full name as unique ID
-                if not scannedRemotes[remoteId] then -- Check if already scanned
-                    table.insert(remotes, {
-                        remote = descendant,
-                        path = getInstancePath(descendant)
-                    })
+            if descendant:IsA("RemoteEvent") or descendant:IsA("RemoteFunction") then
+                local remoteId = descendant:GetFullName()
+                if not scannedRemotes[remoteId] then
+                    table.insert(remotes, { remote = descendant, path = getInstancePath(descendant) })
                     scannedRemotes[remoteId] = true
                     remoteCount = remoteCount + 1
                 end
             end
         end
 
-        -- If we found remotes in this service, add a service label
         if #remotes > 0 then
             local serviceLabel = Instance.new("TextLabel")
             serviceLabel.Size = UDim2.new(1, -10, 0, 25)
@@ -610,13 +598,12 @@ local function scanForRemotes()
             serviceLabel.TextSize = 14
             serviceLabel.Text = "  " .. service.Name .. " (" .. #remotes .. ")"
             serviceLabel.TextXAlignment = Enum.TextXAlignment.Left
-
             local corner = Instance.new("UICorner", serviceLabel)
             corner.CornerRadius = UDim.new(0, 4)
 
             serviceLabel.Parent = RemoteList
 
-            -- Add all remotes under this service
+            -- Create remote buttons
             for _, data in ipairs(remotes) do
                 createRemoteButton(data.remote, data.path)
             end
@@ -626,7 +613,7 @@ local function scanForRemotes()
     StatusLabel.Text = "Found " .. remoteCount .. " remotes"
 end
 
--- Tab switching logic
+-- Tab Switching Logic
 RemoteTab.MouseButton1Click:Connect(function()
     LearnPanel.Visible = false
     InfoPanel.Visible = false
@@ -655,17 +642,13 @@ InfoTab.MouseButton1Click:Connect(function()
                 infoText = infoText .. "Arguments: " .. formatArgs(log.args) .. "\n\n"
             end
         end
-        if found then
-            InfoText.Text = "Previous calls to '" .. selectedRemote.Name .. "':\n\n" .. infoText
-        else
-            InfoText.Text = "No previous calls logged for '" .. selectedRemote.Name .. "'."
-        end
+        InfoText.Text = found and "Previous calls to '" .. selectedRemote.Name .. "':\n\n" .. infoText or "No previous calls logged."
     else
-        InfoText.Text = "Select a remote in the 'Remotes' tab to see information about its usage here."
+        InfoText.Text = "Select a remote in the 'Remotes' tab to see information."
     end
 end)
 
--- Auto arg generator button (works on any level executor)
+-- Auto Argument Generation
 AutoGenButton.MouseButton1Click:Connect(function()
     if selectedRemote then
         local args = generateSmartArguments(selectedRemote)
@@ -673,7 +656,7 @@ AutoGenButton.MouseButton1Click:Connect(function()
     end
 end)
 
--- Fire/Call Button Logic
+-- Fire/Call Remote Logic
 FireButton.MouseButton1Click:Connect(function()
     if not selectedRemote then return end
 
@@ -694,31 +677,23 @@ FireButton.MouseButton1Click:Connect(function()
         time = os.time()
     })
 
-    -- Different logic based on remote type
+    -- Fire or Call remote based on type
     if selectedRemote:IsA("RemoteEvent") then
         local success, err = pcall(function()
             selectedRemote:FireServer(unpack(parsedArgs))
         end)
 
-        if success then
-            StatusLabel.Text = "Remote fired successfully!"
-        else
-            StatusLabel.Text = "Error: " .. tostring(err)
-        end
+        StatusLabel.Text = success and "Remote fired successfully!" or "Error: " .. tostring(err)
     elseif selectedRemote:IsA("RemoteFunction") then
         local success, result = pcall(function()
             return selectedRemote:InvokeServer(unpack(parsedArgs))
         end)
 
-        if success then
-            StatusLabel.Text = "Function called. Result: " .. tostring(result)
-        else
-            StatusLabel.Text = "Error: " .. tostring(result)
-        end
+        StatusLabel.Text = success and "Function called. Result: " .. tostring(result) or "Error: " .. tostring(result)
     end
 end)
 
--- Copy Code Button Logic
+-- Copy Fire Code Button
 CopyCodeButton.MouseButton1Click:Connect(function()
     if selectedRemote then
         local args = parseArgs(ArgBox.Text)
@@ -729,19 +704,17 @@ CopyCodeButton.MouseButton1Click:Connect(function()
             codeToCopy = "game:GetService(\"ReplicatedStorage\"):WaitForChild(\"" .. selectedRemote.Name .. "\"):InvokeServer(" .. formatArgs(args) .. ")"
         end
 
-        -- Use SetClipboard if available
+        -- Copy to clipboard if allowed
         if UserInputService:CanSetClipboard() then
             UserInputService:SetClipboard(codeToCopy)
             StatusLabel.Text = "Code copied to clipboard!"
         else
-            -- Fallback for environments where SetClipboard is not available
             StatusLabel.Text = "Code: " .. codeToCopy
         end
     else
         StatusLabel.Text = "No Remote selected"
     end
 end)
-
 
 -- Initialize with Learn tab active
 RemoteList.Visible = false
