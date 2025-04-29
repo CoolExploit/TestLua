@@ -168,17 +168,17 @@ end
 
 -- Remote Spy Functionality
 local interceptedCalls = {}
-local remoteLog = {}
+remoteLog = remoteLog or {}
 
--- Safe Implementation for Remote Interception
+-- Safe Interception Setup
 local function setupRemoteInterception()
-    if not UserInputService.TouchEnabled then -- Only attempt high-level hooking if NOT on mobile
-        local success, result = pcall(function()
-            -- Try to use namecall method if available (higher level executors)
+    -- High-level interception attempt (only for PC and supported executors)
+    if not UserInputService.TouchEnabled then
+        if type(hookmetamethod) == "function" and type(getnamecallmethod) == "function" then
             local oldNamecall
-            oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
+            oldNamecall = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
                 local method = getnamecallmethod()
-                local args = {...}
+                local args = { ... }
 
                 if (method == "FireServer" or method == "InvokeServer") and (self:IsA("RemoteEvent") or self:IsA("RemoteFunction")) then
                     table.insert(remoteLog, {
@@ -190,24 +190,38 @@ local function setupRemoteInterception()
                 end
 
                 return oldNamecall(self, ...)
-            end)
-
-            return true
-        end)
-
-        if not success then
-            -- Lower level executor, use simplified approach
-            -- We'll rely on manual capturing when firing from our UI
-            warn("High-level remote interception failed.")
+            end))
+        else
+            warn("hookmetamethod/getnamecallmethod not available. Using fallback.")
         end
     else
-        warn("Skipping high-level remote interception on mobile.")
-        -- On mobile, we'll rely solely on capturing when firing from our UI
+        warn("Touch detected: Mobile fallback logging will be used.")
     end
 end
 
+-- Manual fallback logger you can call when firing from your GUI
+function logRemoteCall(remote, method, args)
+    if typeof(remote) ~= "Instance" or (not remote:IsA("RemoteEvent") and not remote:IsA("RemoteFunction")) then
+        return
+    end
 
--- Try to setup interception without causing errors
+    table.insert(remoteLog, {
+        remote = remote,
+        method = method,
+        args = args,
+        time = os.time()
+    })
+end
+
+-- Wrap your Fire/Invoke buttons with:
+-- logRemoteCall(remoteInstance, "FireServer", args)
+
+-- Example:
+-- local args = {...}
+-- logRemoteCall(RemoteNameHere, "FireServer", args)
+-- RemoteNameHere:FireServer(unpack(args))
+
+-- Try safe setup
 pcall(setupRemoteInterception)
 
 -- Smart Argument Generator (Similar to Simple Spy)
