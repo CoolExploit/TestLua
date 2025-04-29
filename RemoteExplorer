@@ -1,3 +1,10 @@
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local LocalPlayer = Players.LocalPlayer
+local UserInputService = game:GetService("UserInputService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local HttpService = game:GetService("HttpService")
+
 -- UI Setup
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "RemoteExplorer"
