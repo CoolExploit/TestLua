@@ -1,0 +1,321 @@
+--[[
+  Advanced Roblox Lua Obfuscator with Middle Finger ASCII Art
+  
+  This obfuscator uses multiple layers of protection:
+  1. Base64 encoding with custom character set
+  2. String encryption with XOR cipher
+  3. Junk code insertion
+  4. Variable name obfuscation
+  5. Control flow obfuscation
+  6. Large ASCII art middle finger made of code
+]]
+
+local AdvancedObfuscator = {}
+
+-- Random string generator for variable names
+local function randomString(length)
+    local chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"
+    local result = ""
+    for i = 1, length do
+        local randIndex = math.random(1, #chars)
+        result = result .. string.sub(chars, randIndex, randIndex)
+    end
+    return result
+end
+
+-- XOR encryption function
+local function xorEncrypt(str, key)
+    local result = ""
+    for i = 1, #str do
+        local char = str:sub(i, i)
+        local keyChar = key:sub((i-1) % #key + 1, (i-1) % #key + 1)
+        result = result .. string.char(bit32.bxor(string.byte(char), string.byte(keyChar)))
+    end
+    return result
+end
+
+-- Custom base64 encoder with shuffled character set
+local function customBase64Encode(str)
+    -- Custom shuffled base64 charset (different from standard)
+    local b = "6QwertYuiOpAsD8fGhJkLzXcVbNm12357+/4ZaqWSxEdCRFvTgHyUjMlI0KB9"
+    
+    return ((str:gsub(".", function(x)
+        local r, b = "", x:byte()
+        for i = 8, 1, -1 do r = r .. (b % 2 ^ i - b % 2 ^ (i - 1) > 0 and "1" or "0") end
+        return r
+    end) .. "0000"):gsub("%d%d%d?%d?%d?%d?", function(x)
+        if (#x < 6) then return "" end
+        local c = 0
+        for i = 1, 6 do c = c + (x:sub(i, i) == "1" and 2 ^ (6 - i) or 0) end
+        return b:sub(c + 1, c + 1)
+    end) .. ({ "", "==", "=" })[#str % 3 + 1])
+end
+
+-- Custom base64 decoder for our custom charset
+local function customBase64Decode(str)
+    -- Must match the encoder charset exactly
+    local b = "6QwertYuiOpAsD8fGhJkLzXcVbNm12357+/4ZaqWSxEdCRFvTgHyUjMlI0KB9"
+    
+    str = string.gsub(str, "[^" .. b .. "=]", "")
+    return (str:gsub(".", function(x)
+        if (x == "=") then return "" end
+        local r, f = "", (b:find(x) - 1)
+        for i = 6, 1, -1 do r = r .. (f % 2 ^ i - f % 2 ^ (i - 1) > 0 and "1" or "0") end
+        return r
+    end):gsub("%d%d%d?%d?%d?%d?%d?%d?", function(x)
+        if (#x ~= 8) then return "" end
+        local c = 0
+        for i = 1, 8 do c = c + (x:sub(i, i) == "1" and 2 ^ (8 - i) or 0) end
+        return string.char(c)
+    end))
+end
+
+-- Generate large middle finger ASCII art with code-like elements
+local function generateLargeMiddleFingerArt()
+    return {
+        "                                                                                                    ",
+        "                                                                                                    ",
+        "                                        local function _F() end                                     ",
+        "                                   for k,v in pairs(getfenv()) do end                               ",
+        "                                local t = {x=1,y=2,['z']=function() end}                           ",
+        "                             while true do if math.random()>0.5 then break end                      ",
+        "                           for i=1,10 do local x = string.char(i+64) end for                        ",
+        "                         game:GetService('RunService').Heartbeat:Connect(function()                 ",
+        "                        pcall(function() game:GetService('Players'):GetChildren() end)              ",
+        "                       debug.traceback()\ntostring({})\ntonumber('1e5')\ntype({})                   ",
+        "                      utf8.char(65,66,67,68,69,70)\ntask.wait()\ntask.spawn(function()              ",
+        "                     collectgarbage('count')\nrawget(_G,'game')\nselect(2,pcall(print))             ",
+        "                    string.gsub('abc','a','d')\nstring.match('abc','a')\nstring.find('abc','a')     ",
+        "                   table.insert({},1)\ntable.remove({},1)\ntable.sort({})\ntable.concat({})         ",
+        "                  math.sin(math.pi/2)\nmath.cos(0)\nmath.tan(math.pi/4)\nmath.log(10,10)            ",
+        "                 os.time()\nos.date()\nos.clock()\ncoroutine.create(function() end)                 ",
+        "                Vector3.new(1,2,3)\nCFrame.new(1,2,3)\nColor3.fromRGB(255,255,255)                 ",
+        "               Ray.new(Vector3.new(),Vector3.new(1,0,0))\nRegion3.new(Vector3.new(),Vector3.new())  ",
+        "              UDim.new(1,0)\nUDim2.new(1,0,1,0)\nEnumItem.new('KeyCode',65,'A')\nBrickColor.Red()   ",
+        "              Instance.new('Part')\nVector2.new(1,2)\nTweenInfo.new(1,Enum.EasingStyle.Linear)      ",
+        "             _G.MyTable = {}\n_G.MyFunction = function() end\n_G.MyNumber = 123\n_G.MyBoolean=true  ",
+        "            local b='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'            ",
+        "            local function e(data) local s='' for i=1,#data do s=s..string.char(data:byte(i)) end   ",
+        "           string.dump(function() end)\nbit32.bxor(10,5)\nbit32.band(10,5)\nbit32.bor(10,5)         ",
+        "          function fib(n) if n<=1 then return n else return fib(n-1)+fib(n-2) end end              ",
+        "         function fact(n) if n<=1 then return 1 else return n*fact(n-1) end end                    ",
+        "        for i=1,1000 do local t={} for j=1,100 do t[j]=j end end                                  ",
+        "       local s=''\nfor i=1,10 do s=s..string.char(math.random(65,90)) end                         ",
+        "      local t={}\nfor i=1,10 do t[i]={} for j=1,10 do t[i][j]=i*j end end                        ",
+        "     function quicksort(t,low,high)\nif low<high then\nlocal p=partition(t,low,high)              ",
+        "    quicksort(t,low,p-1)\nquicksort(t,p+1,high)\nend\nend                                        ",
+        "   function partition(t,low,high)\nlocal pivot=t[high]\nlocal i=low-1                            ",
+        "  for j=low,high-1 do\nif t[j]<=pivot then\ni=i+1\nt[i],t[j]=t[j],t[i]\nend\nend               ",
+        " t[i+1],t[high]=t[high],t[i+1]\nreturn i+1\nend                                                 ",
+        "function mergesort(t)\nif #t<=1 then return t end\nlocal mid=math.floor(#t/2)                   ",
+        "local left,right={},{}\nfor i=1,mid do left[i]=t[i] end\nfor i=mid+1,#t do right[i-mid]=t[i] end",
+        "left=mergesort(left)\nright=mergesort(right)\nreturn merge(left,right)\nend                      ",
+        "function merge(left,right)\nlocal result={}\nlocal i,j=1,1\nwhile i<=#left and j<=#right do     ",
+        " if left[i]<=right[j] then result[#result+1]=left[i] i=i+1 else result[#result+1]=right[j] j=j+1",
+        "  end\nend\nwhile i<=#left do result[#result+1]=left[i] i=i+1 end                              ",
+        "   while j<=#right do result[#result+1]=right[j] j=j+1 end\nreturn result\nend                 ",
+        "    function bfs(graph,start)\nlocal queue,visited={start},{[start]=true}                      ",
+        "     local i=1\nwhile i<=#queue do\nlocal node=queue[i]\ni=i+1                                ",
+        "      for _,neighbor in ipairs(graph[node]) do\nif not visited[neighbor] then                 ",
+        "       visited[neighbor]=true\nqueue[#queue+1]=neighbor\nend\nend\nend                       ",
+        "        return visited\nend                                                                  ",
+        "         function dfs(graph,node,visited)\nvisited=visited or {}\nvisited[node]=true         ",
+        "          for _,neighbor in ipairs(graph[node]) do\nif not visited[neighbor] then           ",
+        "           dfs(graph,neighbor,visited)\nend\nend\nreturn visited\nend                      ",
+        "            local cache={}\nfunction memoize(f)\nreturn function(x)                        ",
+        "             if cache[x] then return cache[x] else cache[x]=f(x) return cache[x] end      ",
+        "              end\nend                                                                    ",
+        "               for i=1,100 do pcall(function() error('Test error '..i) end) end           ",
+        "                 function map(f,t) local r={} for i,v in ipairs(t) do r[i]=f(v) end     ",
+        "                   return r end                                                         ",
+        "                     function filter(f,t) local r={} for _,v in ipairs(t) do          ",
+        "                       if f(v) then table.insert(r,v) end end return r end           ",
+        "                         function reduce(f,t,init) local acc=init for _,v in       ",
+        "                           ipairs(t) do acc=f(acc,v) end return acc end          ",
+        "                              function compose(f,g) return function(x)           ", 
+        "                                return f(g(x)) end end                         ",
+        "                                   function curry(f,a) return                 ",
+        "                                      function(...) return                  ",
+        "                                         f(a,...)                         ",
+        "                                           end                         ",
+        "                                             end                     ",
+    }
+end
+
+-- Generate junk code that looks real but won't actually execute
+local function generateJunkCode()
+    local junkPatterns = {
+        "if false then\n  %s\nend",
+        "do local _ = function() %s end end",
+        "while false do\n  %s\nbreak\nend",
+        "for _=0,0 do\n  %s\nend",
+        "local _ = (%s or nil) and nil",
+        "pcall(function() if 0==1 then %s end end)",
+        "if 0~=0 then\n  %s\nend"
+    }
+    
+    local junkCodeBlocks = {
+        "local a={} for i=1,1000 do a[i]=i^2-i end table.sort(a)",
+        "local t,f={},function(n) return n*n end for i=1,100 do t[i]=f(i) end",
+        "local x,y=0,0 for i=1,10 do x=x+i y=y+i^2 end return x*y",
+        "game:GetService('RunService').Heartbeat:Connect(function() print('Heartbeat') end)",
+        "local p = Instance.new('Part') p.Size = Vector3.new(5,5,5) p.Material = Enum.Material.Neon",
+        "local db = {} for i=1,50 do db[i]={name=string.char(64+i),value=i*10,ref={}} end",
+        "local function fibonacci(n) if n<=1 then return n else return fibonacci(n-1)+fibonacci(n-2) end end local result=fibonacci(20)",
+        "local chars={} for i=32,126 do chars[#chars+1]=string.char(i) end table.sort(chars) local str=table.concat(chars)",
+        "local cache={} setmetatable(cache,{__mode='k'}) for i=1,100 do cache[tostring(i)]={} end collectgarbage()",
+        "local r=Region3.new(Vector3.new(-10,-10,-10),Vector3.new(10,10,10)) workspace:FindPartsInRegion3(r)"
+    }
+    
+    local result = {}
+    for i = 1, 50 do -- Generate 50 chunks of junk code
+        local junkCode = junkCodeBlocks[math.random(1, #junkCodeBlocks)]
+        local pattern = junkPatterns[math.random(1, #junkPatterns)]
+        table.insert(result, string.format(pattern, junkCode))
+    end
+    
+    return table.concat(result, "\n")
+end
+
+-- Generate a bunch of variables with random names that won't be used
+local function generateJunkVariables()
+    local result = {}
+    for i = 1, 50 do
+        local varName = randomString(math.random(5, 20))
+        local varType = math.random(1, 4)
+        
+        if varType == 1 then -- String
+            table.insert(result, "local " .. varName .. " = \"" .. randomString(math.random(10, 50)) .. "\"")
+        elseif varType == 2 then -- Number
+            table.insert(result, "local " .. varName .. " = " .. math.random(1, 10000) .. "." .. math.random(1, 10000))
+        elseif varType == 3 then -- Table
+            table.insert(result, "local " .. varName .. " = {" .. math.random(1, 100) .. "," .. math.random(1, 100) .. ",\"" .. randomString(5) .. "\"}")
+        else -- Function
+            table.insert(result, "local " .. varName .. " = function() return \"" .. randomString(10) .. "\" end")
+        end
+    end
+    
+    return table.concat(result, "\n")
+end
+
+-- Generate obfuscated variable names that will be used
+local function generateObfuscatedNames(count)
+    local result = {}
+    for i = 1, count do
+        local length = math.random(5, 15)
+        table.insert(result, randomString(length))
+    end
+    return result
+end
+
+-- Embed code into ASCII art with multiple layers of obfuscation
+local function embedCodeWithObfuscation(code)
+    -- Generate encryption key
+    local encKey = randomString(16)
+    
+    -- First encrypt the code with XOR
+    local xorEncrypted = xorEncrypt(code, encKey)
+    
+    -- Then encode it with our custom base64
+    local encodedCode = customBase64Encode(xorEncrypted)
+    
+    -- Generate obfuscated variable names
+    local varNames = generateObfuscatedNames(10)
+    local loadFunc = varNames[1]
+    local encodedVar = varNames[2]
+    local decodeFunc = varNames[3]
+    local decryptFunc = varNames[4]
+    local keyVar = varNames[5]
+    local tempVar = varNames[6]
+    local execFunc = varNames[7]
+    local junkVar1 = varNames[8]
+    local junkVar2 = varNames[9]
+    local junkVar3 = varNames[10]
+    
+    -- Generate ASCII art
+    local asciiArt = generateLargeMiddleFingerArt()
+    
+    -- Create result with ASCII art comment
+    local result = {"--[["}
+    for y = 1, #asciiArt do
+        table.insert(result, asciiArt[y])
+    end
+    table.insert(result, "]]")
+    
+    -- Generate junk code and variables that won't be executed
+    table.insert(result, "\n-- System initialization")
+    table.insert(result, generateJunkVariables())
+    
+    -- Add actual decoder with obfuscated names
+    table.insert(result, "\nlocal " .. loadFunc .. "=loadstring or load")
+    table.insert(result, "local " .. encodedVar .. "=[[" .. encodedCode .. "]]")
+    table.insert(result, "local " .. keyVar .. "=[[" .. encKey .. "]]")
+    
+    -- Add junk code between important parts
+    table.insert(result, generateJunkCode())
+    
+    -- Add custom base64 decoder function with obfuscated name
+    table.insert(result, "local " .. decodeFunc .. "=function(str)")
+    table.insert(result, "  local b=\"6QwertYuiOpAsD8fGhJkLzXcVbNm12357+/4ZaqWSxEdCRFvTgHyUjMlI0KB9\"")
+    table.insert(result, "  str=string.gsub(str,\"[^\"..b..\"=]\",\"\")")
+    table.insert(result, "  return(str:gsub(\".\",function(x)")
+    table.insert(result, "    if(x==\"=\")then return\"\"end")
+    table.insert(result, "    local r,f=\"\",(b:find(x)-1)")
+    table.insert(result, "    for i=6,1,-1 do r=r..(f%2^i-f%2^(i-1)>0 and\"1\"or\"0\")end")
+    table.insert(result, "    return r")
+    table.insert(result, "  end):gsub(\"%d%d%d?%d?%d?%d?%d?%d?\",function(x)")
+    table.insert(result, "    if(#x~=8)then return\"\"end")
+    table.insert(result, "    local c=0")
+    table.insert(result, "    for i=1,8 do c=c+(x:sub(i,i)==\"1\"and 2^(8-i)or 0)end")
+    table.insert(result, "    return string.char(c)")
+    table.insert(result, "  end))")
+    table.insert(result, "end")
+    
+    -- More junk code
+    table.insert(result, generateJunkCode())
+    
+    -- Add XOR decryption function
+    table.insert(result, "local " .. decryptFunc .. "=function(str,key)")
+    table.insert(result, "  local result=\"\"")
+    table.insert(result, "  for i=1,#str do")
+    table.insert(result, "    local char=str:sub(i,i)")
+    table.insert(result, "    local keyChar=key:sub((i-1)%#key+1,(i-1)%#key+1)")
+    table.insert(result, "    result=result..string.char(bit32.bxor(string.byte(char),string.byte(keyChar)))")
+    table.insert(result, "  end")
+    table.insert(result, "  return result")
+    table.insert(result, "end")
+    
+    -- Final junk variables
+    table.insert(result, "local " .. junkVar1 .. "=" .. math.random(1000, 9999))
+    table.insert(result, "local " .. junkVar2 .. "=\"" .. randomString(30) .. "\"")
+    table.insert(result, "local " .. junkVar3 .. "={}")
+    
+    -- Add execution chain that will decode, decrypt and run the code
+    table.insert(result, "local " .. tempVar .. "=" .. decodeFunc .. "(" .. encodedVar .. ")")
+    table.insert(result, "local " .. execFunc .. "=" .. decryptFunc .. "(" .. tempVar .. "," .. keyVar .. ")")
+    table.insert(result, loadFunc .. "(" .. execFunc .. ")()")
+    
+    return table.concat(result, "\n")
+end
+
+-- Main obfuscation function
+function AdvancedObfuscator.obfuscate(code)
+    -- Reset random seed for different results each time
+    math.randomseed(os.time())
+    return embedCodeWithObfuscation(code)
+end
+
+-- Function to test if the code works (it extracts the original code)
+function AdvancedObfuscator.extract(obfuscatedCode)
+    -- This is only for testing and won't fully decode the obfuscated code
+    -- Real deobfuscation would require reverse engineering the entire process
+    
+    local encodedPart = obfuscatedCode:match("local [%w_]+=(%[%[.-%]%])")
+    if not encodedPart then
+        return "Failed to extract encoded part"
+    end
+    
+    return "Code is deeply obfuscated with multiple layers. Real extraction would require reverse engineering."
+end
+
+return AdvancedObfuscator
