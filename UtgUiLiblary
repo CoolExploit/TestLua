@@ -1,4 +1,3 @@
--- UTGUILib.lua
 local UTGUILib = {}
 
 local TweenService = game:GetService("TweenService")
@@ -22,26 +21,14 @@ function UTGUILib:CreateWindow(config)
     gui.ResetOnSpawn = false
     gui.Parent = game:GetService("CoreGui")
 
-
- local frame = Instance.new("TextLabel")
-    topbar.Size = UDim2.new(1, 0, 0, 40)
-    topbar.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-    topbar.BorderSizePixel = 0
-    topbar.Text = "   " .. title  -- Adding space for padding
-    topbar.Font = Enum.Font.GothamBold
-    topbar.TextSize = 20
-    topbar.TextColor3 = Color3.new(1, 1, 1)
-    topbar.TextXAlignment = Enum.TextXAlignment.Left
-    topbar.Parent = gui
-
-    local topbar = Instance.new("Frame")
+    local frame = Instance.new("Frame")
     frame.Size = size
     frame.Position = UDim2.new(0.5, -size.X.Offset/2, 0.5, -size.Y.Offset/2)
     frame.BackgroundColor3 = Color3.fromRGB(16, 16, 16)
     frame.BorderSizePixel = 0
     frame.Active = true
     frame.Draggable = true
-    frame.Parent = frame
+    frame.Parent = gui
 
     local frameCorner = Instance.new("UICorner")
     frameCorner.CornerRadius = UDim.new(0, 8)
@@ -51,12 +38,12 @@ function UTGUILib:CreateWindow(config)
     topbar.Size = UDim2.new(1, 0, 0, 40)
     topbar.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
     topbar.BorderSizePixel = 0
-    topbar.Text = "   " .. title  -- Adding space for padding
+    topbar.Text = "    " .. title  -- Adding space for padding
     topbar.Font = Enum.Font.GothamBold
     topbar.TextSize = 20
     topbar.TextColor3 = Color3.new(1, 1, 1)
     topbar.TextXAlignment = Enum.TextXAlignment.Left
-    topbar.Parent = frame
+    topbar.Parent = frame -- Topbar is now a child of frame
 
     local topbarCorner = Instance.new("UICorner")
     topbarCorner.CornerRadius = UDim.new(0, 8)
@@ -71,7 +58,7 @@ function UTGUILib:CreateWindow(config)
     closeBtn.BackgroundColor3 = Color3.fromRGB(45, 0, 0)
     closeBtn.TextColor3 = Color3.new(1, 1, 1)
     closeBtn.BorderSizePixel = 0
-    closeBtn.Parent = topbar
+    closeBtn.Parent = topbar -- Button is child of topbar
 
     local minBtn = Instance.new("TextButton")
     minBtn.Text = "–"
@@ -82,7 +69,7 @@ function UTGUILib:CreateWindow(config)
     minBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     minBtn.TextColor3 = Color3.new(1, 1, 1)
     minBtn.BorderSizePixel = 0
-    minBtn.Parent = topbar
+    minBtn.Parent = topbar -- Button is child of topbar
 
     local content = Instance.new("ScrollingFrame")
     content.Size = UDim2.new(1, -20, 1, -60)
@@ -92,7 +79,7 @@ function UTGUILib:CreateWindow(config)
     content.CanvasSize = UDim2.new(0, 0, 0, 0)
     content.ScrollBarThickness = 6
     content.AutomaticCanvasSize = Enum.AutomaticSize.Y
-    content.Parent = frame
+    content.Parent = frame -- Content is child of frame
 
     local contentCorner = Instance.new("UICorner")
     contentCorner.CornerRadius = UDim.new(0, 6)
@@ -183,9 +170,32 @@ function UTGUILib:CreateWindow(config)
     end)
 
     local minimized = false
+    local originalSize = frame.Size
+    local originalPosition = frame.Position
     minBtn.MouseButton1Click:Connect(function()
         minimized = not minimized
-        content.Visible = not minimized
+        if minimized then
+            -- Minimize:  Resize the frame to only show the topbar
+            frame:TweenSizeAndPosition(
+                UDim2.new(originalSize.X, UDim2.new(0, 40)), -- Height of the topbar
+                UDim.new(0.3, 0), -- Tween Duration
+                Enum.EasingStyle.Quad,
+                Enum.EasingDirection.Out
+            )
+            content.Visible = false
+            frame.Draggable = false
+        else
+            -- Restore:  Resize the frame to its original size
+            frame:TweenSizeAndPosition(
+                originalSize,
+                originalPosition,
+                0.3,
+                Enum.EasingStyle.Quad,
+                Enum.EasingDirection.Out
+            )
+            content.Visible = true
+            frame.Draggable = true
+        end
     end)
 
     return elements
