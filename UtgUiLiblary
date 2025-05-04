@@ -1,23 +1,20 @@
--- UTGUILib.lua
 local UTGUILib = {}
 
 local TweenService = game:GetService("TweenService")
 local UIS = game:GetService("UserInputService")
 
--- UTG Color Scheme
 local COLORS = {
     BACKGROUND = Color3.fromRGB(30, 30, 30),
     TOPBAR = Color3.fromRGB(45, 45, 45),
     CONTENT_BG = Color3.fromRGB(35, 35, 35),
     BUTTON = Color3.fromRGB(50, 50, 50),
     BUTTON_HOVER = Color3.fromRGB(60, 60, 60),
-    ACCENT = Color3.fromRGB(255, 87, 51),  -- UTG Orange/Red accent color
+    ACCENT = Color3.fromRGB(255, 87, 51), 
     TEXT = Color3.fromRGB(255, 255, 255),
     TOGGLE_OFF = Color3.fromRGB(50, 50, 50),
     TOGGLE_ON = Color3.fromRGB(255, 87, 51),
 }
 
--- Utility function to update canvas size
 local function UpdateCanvasSize(container)
     local layout = container:FindFirstChildOfClass("UIListLayout")
     if layout then
@@ -25,7 +22,6 @@ local function UpdateCanvasSize(container)
     end
 end
 
--- Create hover effect for buttons
 local function CreateButtonHoverEffect(button)
     local originalColor = button.BackgroundColor3
     local hoverColor = COLORS.BUTTON_HOVER
@@ -39,7 +35,6 @@ local function CreateButtonHoverEffect(button)
     end)
 end
 
--- Create window
 function UTGUILib:CreateWindow(config)
     local title = config.Title or "UTG UI Library"
     local size = config.Size or UDim2.new(0, 350, 0, 400)
@@ -50,7 +45,6 @@ function UTGUILib:CreateWindow(config)
     gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     gui.Parent = game:GetService("CoreGui")
 
-    -- Main frame with drop shadow effect
     local mainFrame = Instance.new("Frame")
     mainFrame.Size = size
     mainFrame.Position = UDim2.new(0.5, -size.X.Offset/2, 0.5, -size.Y.Offset/2)
@@ -60,12 +54,11 @@ function UTGUILib:CreateWindow(config)
     mainFrame.Draggable = true
     mainFrame.Parent = gui
 
-    -- Drop shadow effect
     local dropShadow = Instance.new("ImageLabel")
     dropShadow.Size = UDim2.new(1, 10, 1, 10)
     dropShadow.Position = UDim2.new(0, -5, 0, -5)
     dropShadow.BackgroundTransparency = 1
-    dropShadow.Image = "rbxassetid://297694300" -- Drop shadow image
+    dropShadow.Image = "rbxassetid://297694300" 
     dropShadow.ImageTransparency = 0.3
     dropShadow.ZIndex = 0
     dropShadow.Parent = mainFrame
@@ -74,13 +67,11 @@ function UTGUILib:CreateWindow(config)
     frameCorner.CornerRadius = UDim.new(0, 6)
     frameCorner.Parent = mainFrame
 
-    -- Create a subtle border effect
     local border = Instance.new("UIStroke")
     border.Color = COLORS.ACCENT
     border.Thickness = 1.5
     border.Parent = mainFrame
 
-    -- Topbar with UTG styling
     local topbar = Instance.new("Frame")
     topbar.Size = UDim2.new(1, 0, 0, 35)
     topbar.BackgroundColor3 = COLORS.TOPBAR
@@ -91,7 +82,6 @@ function UTGUILib:CreateWindow(config)
     topbarCorner.CornerRadius = UDim.new(0, 6)
     topbarCorner.Parent = topbar
 
-    -- Title with icon
     local titleLabel = Instance.new("TextLabel")
     titleLabel.Size = UDim2.new(1, -90, 1, 0)
     titleLabel.Position = UDim2.new(0, 35, 0, 0)
@@ -103,7 +93,6 @@ function UTGUILib:CreateWindow(config)
     titleLabel.TextXAlignment = Enum.TextXAlignment.Left
     titleLabel.Parent = topbar
 
-    -- UTG Icon (simplified version)
     local icon = Instance.new("Frame")
     icon.Size = UDim2.new(0, 18, 0, 18)
     icon.Position = UDim2.new(0, 10, 0.5, -9)
@@ -115,7 +104,6 @@ function UTGUILib:CreateWindow(config)
     iconCorner.CornerRadius = UDim.new(0, 4)
     iconCorner.Parent = icon
 
-    -- Close button with UTG styling
     local closeBtn = Instance.new("TextButton")
     closeBtn.Text = "✕"
     closeBtn.Font = Enum.Font.GothamBold
@@ -128,7 +116,6 @@ function UTGUILib:CreateWindow(config)
     closeBtn.AutoButtonColor = false
     closeBtn.Parent = topbar
 
-    -- Minimize button with UTG styling
     local minBtn = Instance.new("TextButton")
     minBtn.Text = "—"
     minBtn.Font = Enum.Font.GothamBold
@@ -141,11 +128,9 @@ function UTGUILib:CreateWindow(config)
     minBtn.AutoButtonColor = false
     minBtn.Parent = topbar
 
-    -- Hover effects for buttons
     CreateButtonHoverEffect(closeBtn)
     CreateButtonHoverEffect(minBtn)
 
-    -- Content area
     local contentContainer = Instance.new("Frame")
     contentContainer.Size = UDim2.new(1, 0, 1, -35)
     contentContainer.Position = UDim2.new(0, 0, 0, 35)
@@ -158,7 +143,6 @@ function UTGUILib:CreateWindow(config)
     contentContainerCorner.CornerRadius = UDim.new(0, 6)
     contentContainerCorner.Parent = contentContainer
 
-    -- Fix for corner overlap
     local contentCornerFix = Instance.new("Frame")
     contentCornerFix.Size = UDim2.new(1, 0, 0, 10)
     contentCornerFix.Position = UDim2.new(0, 0, 0, -5)
@@ -232,7 +216,6 @@ function UTGUILib:CreateWindow(config)
         buttonCorner.CornerRadius = UDim.new(0, 4)
         buttonCorner.Parent = button
 
-        -- Create a subtle highlight effect
         local highlight = Instance.new("Frame")
         highlight.Size = UDim2.new(1, 0, 0, 1)
         highlight.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
@@ -242,7 +225,6 @@ function UTGUILib:CreateWindow(config)
         CreateButtonHoverEffect(button)
 
         button.MouseButton1Click:Connect(function()
-            -- Flash effect when clicked
             TweenService:Create(button, TweenInfo.new(0.1), {BackgroundColor3 = COLORS.ACCENT}):Play()
             wait(0.1)
             TweenService:Create(button, TweenInfo.new(0.1), {BackgroundColor3 = COLORS.BUTTON}):Play()
@@ -329,7 +311,6 @@ function UTGUILib:CreateWindow(config)
         clickArea.MouseButton1Click:Connect(function()
             state = not state
             
-            -- Animate the toggle switch
             if state then
                 TweenService:Create(toggleButton, TweenInfo.new(0.2), {BackgroundColor3 = COLORS.TOGGLE_ON}):Play()
                 TweenService:Create(toggleCircle, TweenInfo.new(0.2), {Position = UDim2.new(0, 22, 0.5, -8)}):Play()
@@ -344,7 +325,6 @@ function UTGUILib:CreateWindow(config)
         CreateButtonHoverEffect(toggleFrame)
         UpdateCanvasSize(content)
         
-        -- Return the toggle with a function to set its state
         local toggle = {
             Frame = toggleFrame,
             SetState = function(self, newState)
@@ -465,7 +445,6 @@ function UTGUILib:CreateWindow(config)
         CreateButtonHoverEffect(sliderFrame)
         UpdateCanvasSize(content)
         
-        -- Return the slider with functions to get and set its value
         local slider = {
             Frame = sliderFrame,
             SetValue = function(self, value)
@@ -541,7 +520,6 @@ function UTGUILib:CreateWindow(config)
         optionsContainer.Visible = false
         optionsContainer.Parent = dropdownFrame
 
-        -- Create options
         for i, option in ipairs(options) do
             local optionButton = Instance.new("TextButton")
             optionButton.Size = UDim2.new(1, 0, 0, 28)
@@ -554,14 +532,12 @@ function UTGUILib:CreateWindow(config)
             optionButton.TextColor3 = COLORS.TEXT
             optionButton.Parent = optionsContainer
             
-            -- Option hover effect
             CreateButtonHoverEffect(optionButton)
             
             optionButton.MouseButton1Click:Connect(function()
                 selected = option
                 selectedLabel.Text = selected
                 
-                -- Close dropdown
                 isOpen = false
                 TweenService:Create(dropdownFrame, TweenInfo.new(0.2), {Size = UDim2.new(1, 0, 0, 32)}):Play()
                 TweenService:Create(dropdownArrow, TweenInfo.new(0.2), {Rotation = 0}):Play()
@@ -582,12 +558,10 @@ function UTGUILib:CreateWindow(config)
             isOpen = not isOpen
             
             if isOpen then
-                -- Open dropdown
                 optionsContainer.Visible = true
                 TweenService:Create(dropdownFrame, TweenInfo.new(0.2), {Size = UDim2.new(1, 0, 0, 32 + #options * 28)}):Play()
                 TweenService:Create(dropdownArrow, TweenInfo.new(0.2), {Rotation = 180}):Play()
             else
-                -- Close dropdown
                 TweenService:Create(dropdownFrame, TweenInfo.new(0.2), {Size = UDim2.new(1, 0, 0, 32)}):Play()
                 TweenService:Create(dropdownArrow, TweenInfo.new(0.2), {Rotation = 0}):Play()
                 wait(0.2)
@@ -598,7 +572,6 @@ function UTGUILib:CreateWindow(config)
         CreateButtonHoverEffect(dropdownFrame)
         UpdateCanvasSize(content)
         
-        -- Return dropdown with functions to get and set selected option
         local dropdown = {
             Frame = dropdownFrame,
             SetOption = function(self, option)
@@ -656,7 +629,6 @@ function UTGUILib:CreateWindow(config)
         inputBoxCorner.CornerRadius = UDim.new(0, 4)
         inputBoxCorner.Parent = inputBox
 
-        -- Add a subtle highlight when focused
         local highlight = Instance.new("UIStroke")
         highlight.Color = COLORS.ACCENT
         highlight.Thickness = 0
@@ -676,7 +648,6 @@ function UTGUILib:CreateWindow(config)
         CreateButtonHoverEffect(textBoxFrame)
         UpdateCanvasSize(content)
         
-        -- Return textbox with functions to get and set text
         local textbox = {
             Frame = textBoxFrame,
             SetText = function(self, newText)
@@ -690,7 +661,6 @@ function UTGUILib:CreateWindow(config)
         return textbox
     end
 
-    -- Close and Minimize Functionality
     local originalSize = mainFrame.Size
     local minimizedSize = UDim2.new(originalSize.X.Scale, originalSize.X.Offset, 0, 35)
     local minimized = false
@@ -703,16 +673,13 @@ function UTGUILib:CreateWindow(config)
         minimized = not minimized
         
         if minimized then
-            -- Save current size before minimizing
             if mainFrame.Size ~= minimizedSize then
                 originalSize = mainFrame.Size
             end
             
-            -- Animate to minimized state
             TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = minimizedSize}):Play()
             contentContainer.Visible = false
         else
-            -- Animate back to original size
             TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = originalSize}):Play()
             contentContainer.Visible = true
         end
