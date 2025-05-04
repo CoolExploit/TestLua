@@ -1,3 +1,4 @@
+-- UTGUILib.lua
 local UTGUILib = {}
 
 local TweenService = game:GetService("TweenService")
@@ -21,41 +22,35 @@ function UTGUILib:CreateWindow(config)
     gui.ResetOnSpawn = false
     gui.Parent = game:GetService("CoreGui")
 
-    -- Topbar is now a direct child of the ScreenGui
-    local topbar = Instance.new("TextLabel")
-    topbar.Name = "Topbar"
-    topbar.Size = UDim2.new(1, 0, 0, 40)
-    topbar.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-    topbar.BorderSizePixel = 0
-    topbar.Text = "    " .. title
-    topbar.Font = Enum.Font.GothamBold
-    topbar.TextSize = 20
-    topbar.TextColor3 = Color3.new(1, 1, 1)
-    topbar.TextXAlignment = Enum.TextXAlignment.Left
-    topbar.Draggable = true -- Make the topbar draggable
-    topbar.Parent = gui
-
-    local topbarCorner = Instance.new("UICorner")
-    topbarCorner.CornerRadius = UDim.new(0, 8)
-    topbarCorner.Parent = topbar
-
-    -- Frame is now a child of the Topbar
     local frame = Instance.new("Frame")
-    frame.Name = "MainFrame"
-    frame.Size = UDim2.new(1, -20, 1, -60)
-    frame.Position = UDim2.new(0, 10, 0, 50)
+    frame.Size = size
+    frame.Position = UDim2.new(0.5, -size.X.Offset/2, 0.5, -size.Y.Offset/2)
     frame.BackgroundColor3 = Color3.fromRGB(16, 16, 16)
     frame.BorderSizePixel = 0
     frame.Active = true
-    frame.Draggable = false -- Frame itself is not draggable
-    frame.Parent = topbar
+    frame.Draggable = true
+    frame.Parent = gui
 
     local frameCorner = Instance.new("UICorner")
     frameCorner.CornerRadius = UDim.new(0, 8)
     frameCorner.Parent = frame
 
+    local topbar = Instance.new("TextLabel")
+    topbar.Size = UDim2.new(1, 0, 0, 40)
+    topbar.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    topbar.BorderSizePixel = 0
+    topbar.Text = "   " .. title  -- Adding space for padding
+    topbar.Font = Enum.Font.GothamBold
+    topbar.TextSize = 20
+    topbar.TextColor3 = Color3.new(1, 1, 1)
+    topbar.TextXAlignment = Enum.TextXAlignment.Left
+    topbar.Parent = frame
+
+    local topbarCorner = Instance.new("UICorner")
+    topbarCorner.CornerRadius = UDim.new(0, 8)
+    topbarCorner.Parent = topbar
+
     local closeBtn = Instance.new("TextButton")
-    closeBtn.Name = "CloseButton"
     closeBtn.Text = "✕"
     closeBtn.Font = Enum.Font.GothamBold
     closeBtn.TextSize = 18
@@ -67,7 +62,6 @@ function UTGUILib:CreateWindow(config)
     closeBtn.Parent = topbar
 
     local minBtn = Instance.new("TextButton")
-    minBtn.Name = "MinimizeButton"
     minBtn.Text = "–"
     minBtn.Font = Enum.Font.GothamBold
     minBtn.TextSize = 18
@@ -79,7 +73,6 @@ function UTGUILib:CreateWindow(config)
     minBtn.Parent = topbar
 
     local content = Instance.new("ScrollingFrame")
-    content.Name = "ContentFrame"
     content.Size = UDim2.new(1, -20, 1, -60)
     content.Position = UDim2.new(0, 10, 0, 50)
     content.BackgroundColor3 = Color3.fromRGB(24, 24, 24)
@@ -177,23 +170,31 @@ function UTGUILib:CreateWindow(config)
         gui:Destroy()
     end)
 
-    local minimized = false
-    local originalSize = size
-    local originalPosition = frame.Position
-    minBtn.MouseButton1Click:Connect(function()
-        minimized = not minimized
-        if minimized then
-            -- Minimize:  Resize the gui to only show the topbar
-            gui.Size = UDim2.new(originalSize.X.Scale, 0, 0, 40) -- Adjusted for Topbar height.
-            content.Visible = false
-            frame.Draggable = false
-        else
-            -- Restore: Resize the gui to its original size
-            gui.Size = originalSize
-            content.Visible = true
-            frame.Draggable = false
+    -- Replace the current minimize button click handler with this code
+local minimized = false
+local originalSize = frame.Size -- Store the original size
+local minimizedSize = UDim2.new(originalSize.X.Scale, originalSize.X.Offset, 0, 40) -- Just the height of the topbar
+
+minBtn.MouseButton1Click:Connect(function()
+    minimized = not minimized
+    
+    if minimized then
+        -- Save current size before minimizing if it's not already minimized
+        if frame.Size ~= minimizedSize then
+            originalSize = frame.Size
         end
-    end)
+        
+        -- Minimize: animate to just show the topbar
+        local tween = TweenService:Create(frame, TweenInfo.new(0.3), {Size = minimizedSize})
+        tween:Play()
+        content.Visible = false
+    else
+        -- Restore: animate back to original size
+        local tween = TweenService:Create(frame, TweenInfo.new(0.3), {Size = originalSize})
+        tween:Play()
+        content.Visible = true
+    end
+end)
 
     return elements
 end
