@@ -27,7 +27,7 @@ function UTGUILib:CreateWindow(config)
     frame.BackgroundColor3 = Color3.fromRGB(16, 16, 16)
     frame.BorderSizePixel = 0
     frame.Active = true
-    frame.Draggable = true
+    frame.Draggable = false -- Changed to false initially
     frame.Parent = gui
 
     local frameCorner = Instance.new("UICorner")
@@ -39,11 +39,11 @@ function UTGUILib:CreateWindow(config)
     topbar.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
     topbar.BorderSizePixel = 0
     topbar.Text = "    " .. title  -- Adding space for padding
-    topbar.Draggable = true
     topbar.Font = Enum.Font.GothamBold
     topbar.TextSize = 20
     topbar.TextColor3 = Color3.new(1, 1, 1)
     topbar.TextXAlignment = Enum.TextXAlignment.Left
+    topbar.Draggable = true -- Added: Topbar is draggable
     topbar.Parent = frame -- Topbar is now a child of frame
 
     local topbarCorner = Instance.new("UICorner")
@@ -184,7 +184,7 @@ function UTGUILib:CreateWindow(config)
                 0.3
             )
             content.Visible = false
-            frame.Draggable = false
+            frame.Draggable = false -- Disable dragging when minimized.
         else
             -- Restore:  Resize the frame to its original size
             frame:TweenSize(
@@ -194,7 +194,7 @@ function UTGUILib:CreateWindow(config)
                 0.3
             )
             content.Visible = true
-            frame.Draggable = true
+            frame.Draggable = false -- Keep it false
         end
     end)
 
