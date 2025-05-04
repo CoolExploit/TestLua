@@ -176,22 +176,21 @@ function UTGUILib:CreateWindow(config)
         minimized = not minimized
         if minimized then
             -- Minimize:  Resize the frame to only show the topbar
-            frame:TweenSizeAndPosition(
-                UDim2.new(originalSize.X, UDim2.new(0, 40)), -- Height of the topbar
-                UDim.new(0.3, 0), -- Tween Duration
+            frame:TweenSize(
+                UDim2.new(originalSize.X.Scale, originalSize.X.Offset, 0, 40), -- Height of the topbar
+                Enum.EasingDirection.Out,
                 Enum.EasingStyle.Quad,
-                Enum.EasingDirection.Out
+                0.3
             )
             content.Visible = false
             frame.Draggable = false
         else
             -- Restore:  Resize the frame to its original size
-            frame:TweenSizeAndPosition(
+            frame:TweenSize(
                 originalSize,
-                originalPosition,
-                0.3,
+                Enum.EasingDirection.Out,
                 Enum.EasingStyle.Quad,
-                Enum.EasingDirection.Out
+                0.3
             )
             content.Visible = true
             frame.Draggable = true
