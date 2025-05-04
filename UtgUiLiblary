@@ -22,14 +22,26 @@ function UTGUILib:CreateWindow(config)
     gui.ResetOnSpawn = false
     gui.Parent = game:GetService("CoreGui")
 
-    local frame = Instance.new("Frame")
+
+ local frame = Instance.new("TextLabel")
+    topbar.Size = UDim2.new(1, 0, 0, 40)
+    topbar.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    topbar.BorderSizePixel = 0
+    topbar.Text = "   " .. title  -- Adding space for padding
+    topbar.Font = Enum.Font.GothamBold
+    topbar.TextSize = 20
+    topbar.TextColor3 = Color3.new(1, 1, 1)
+    topbar.TextXAlignment = Enum.TextXAlignment.Left
+    topbar.Parent = gui
+
+    local topbar = Instance.new("Frame")
     frame.Size = size
     frame.Position = UDim2.new(0.5, -size.X.Offset/2, 0.5, -size.Y.Offset/2)
     frame.BackgroundColor3 = Color3.fromRGB(16, 16, 16)
     frame.BorderSizePixel = 0
     frame.Active = true
     frame.Draggable = true
-    frame.Parent = gui
+    frame.Parent = frame
 
     local frameCorner = Instance.new("UICorner")
     frameCorner.CornerRadius = UDim.new(0, 8)
