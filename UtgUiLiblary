@@ -44,8 +44,11 @@ function UTGUILib:CreateWindow(config)
     topbar.TextSize = 20
     topbar.TextColor3 = Color3.new(1, 1, 1)
     topbar.TextXAlignment = Enum.TextXAlignment.Left
-    topbar.PaddingLeft = UDim.new(0, 10)
     topbar.Parent = frame
+
+    local topbarPadding = Instance.new("UIPadding")
+    topbarPadding.PaddingLeft = UDim.new(0, 10)
+    topbarPadding.Parent = topbar
 
     local topbarCorner = Instance.new("UICorner")
     topbarCorner.CornerRadius = UDim.new(0, 8)
