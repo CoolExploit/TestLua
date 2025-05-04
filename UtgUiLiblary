@@ -15,7 +15,7 @@ end
 -- Create window
 function UTGUILib:CreateWindow(config)
     local title = config.Title or "UTG UI Library"
-    local size = config.Size or UDim2.new(0, 400, 0, 300)
+    local size = config.Size or UDim2.new(0, 350, 0, 400)
 
     local gui = Instance.new("ScreenGui")
     gui.Name = "UTGUILib"
@@ -25,15 +25,19 @@ function UTGUILib:CreateWindow(config)
     local frame = Instance.new("Frame")
     frame.Size = size
     frame.Position = UDim2.new(0.5, -size.X.Offset/2, 0.5, -size.Y.Offset/2)
-    frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    frame.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
     frame.BorderSizePixel = 0
     frame.Active = true
     frame.Draggable = true
     frame.Parent = gui
 
+    local frameCorner = Instance.new("UICorner")
+    frameCorner.CornerRadius = UDim.new(0, 8)
+    frameCorner.Parent = frame
+
     local topbar = Instance.new("TextLabel")
     topbar.Size = UDim2.new(1, 0, 0, 40)
-    topbar.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    topbar.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     topbar.BorderSizePixel = 0
     topbar.Text = title
     topbar.Font = Enum.Font.GothamBold
@@ -41,14 +45,22 @@ function UTGUILib:CreateWindow(config)
     topbar.TextColor3 = Color3.new(1, 1, 1)
     topbar.Parent = frame
 
+    local topbarCorner = Instance.new("UICorner")
+    topbarCorner.CornerRadius = UDim.new(0, 8)
+    topbarCorner.Parent = topbar
+
     local content = Instance.new("ScrollingFrame")
     content.Size = UDim2.new(1, -20, 1, -60)
     content.Position = UDim2.new(0, 10, 0, 50)
-    content.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    content.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
     content.BorderSizePixel = 0
     content.CanvasSize = UDim2.new(0, 0, 0, 0)
     content.ScrollBarThickness = 6
     content.Parent = frame
+
+    local contentCorner = Instance.new("UICorner")
+    contentCorner.CornerRadius = UDim.new(0, 6)
+    contentCorner.Parent = content
 
     local layout = Instance.new("UIListLayout")
     layout.Padding = UDim.new(0, 6)
@@ -66,13 +78,19 @@ function UTGUILib:CreateWindow(config)
 
     function elements:CreateButton(text, callback)
         local button = Instance.new("TextButton")
-        button.Size = UDim2.new(1, 0, 0, 30)
+        button.Size = UDim2.new(1, 0, 0, 35)
         button.Text = text
         button.Font = Enum.Font.Gotham
         button.TextSize = 14
         button.TextColor3 = Color3.new(1, 1, 1)
-        button.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+        button.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+        button.BorderSizePixel = 0
         button.Parent = content
+
+        local buttonCorner = Instance.new("UICorner")
+        buttonCorner.CornerRadius = UDim.new(0, 6)
+        buttonCorner.Parent = button
+
         button.MouseButton1Click:Connect(callback)
         UpdateCanvasSize(content)
         return button
@@ -85,9 +103,14 @@ function UTGUILib:CreateWindow(config)
         label.Font = Enum.Font.Gotham
         label.TextSize = 14
         label.TextColor3 = Color3.new(1, 1, 1)
-        label.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+        label.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
         label.BorderSizePixel = 0
         label.Parent = content
+
+        local labelCorner = Instance.new("UICorner")
+        labelCorner.CornerRadius = UDim.new(0, 6)
+        labelCorner.Parent = label
+
         UpdateCanvasSize(content)
         return label
     end
@@ -95,18 +118,25 @@ function UTGUILib:CreateWindow(config)
     function elements:CreateToggle(text, callback)
         local state = false
         local button = Instance.new("TextButton")
-        button.Size = UDim2.new(1, 0, 0, 30)
+        button.Size = UDim2.new(1, 0, 0, 35)
         button.Text = "[ OFF ] " .. text
         button.Font = Enum.Font.Gotham
         button.TextSize = 14
         button.TextColor3 = Color3.new(1, 1, 1)
-        button.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+        button.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+        button.BorderSizePixel = 0
         button.Parent = content
+
+        local toggleCorner = Instance.new("UICorner")
+        toggleCorner.CornerRadius = UDim.new(0, 6)
+        toggleCorner.Parent = button
+
         button.MouseButton1Click:Connect(function()
             state = not state
             button.Text = state and "[ ON ] " .. text or "[ OFF ] " .. text
             callback(state)
         end)
+
         UpdateCanvasSize(content)
         return button
     end
