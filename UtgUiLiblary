@@ -696,12 +696,7 @@ function UTGUILib:CreateWindow(config)
     local minimized = false
 
     closeBtn.MouseButton1Click:Connect(function()
-        -- Add fade out animation
-        local fadeOut = TweenService:Create(gui, TweenInfo.new(0.3), {Transparency = 1})
-        fadeOut:Play()
-        fadeOut.Completed:Connect(function()
-            gui:Destroy()
-        end)
+    gui:Destroy()
     end)
 
     minBtn.MouseButton1Click:Connect(function()
