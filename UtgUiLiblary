@@ -176,9 +176,9 @@ function UTGUILib:CreateWindow(config)
     minBtn.MouseButton1Click:Connect(function()
         minimized = not minimized
         if minimized then
-            -- Minimize:  Resize the frame to only show the topbar
-            frame:TweenSize(
-                UDim2.new(originalSize.X.Scale, originalSize.X.Offset, 0, 40),
+            -- Minimize:  Resize the gui to only show the topbar
+            gui:TweenSize(
+                UDim2.new(originalSize.X.Scale, 0), -- Keep original width, set height to 0
                 Enum.EasingDirection.Out,
                 Enum.EasingStyle.Quad,
                 0.3
@@ -186,9 +186,9 @@ function UTGUILib:CreateWindow(config)
             content.Visible = false
             frame.Draggable = false
         else
-            -- Restore:  Resize the frame to its original size
-            frame:TweenSize(
-                originalSize,
+            -- Restore: Resize the gui to its original size
+            gui:TweenSize(
+                UDim2.new(originalSize.X.Scale, 0, 0, originalSize.Y.Offset),
                 Enum.EasingDirection.Out,
                 Enum.EasingStyle.Quad,
                 0.3
