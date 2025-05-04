@@ -1,0 +1,137 @@
+local UTGLib = {}
+
+local TweenService = game:GetService("TweenService")
+local UIS = game:GetService("UserInputService")
+
+local function makeDraggable(frame)
+	local dragToggle, dragStart, startPos
+
+	frame.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			dragToggle = true
+			dragStart = input.Position
+			startPos = frame.Position
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then
+					dragToggle = false
+				end
+			end)
+		end
+	end)
+
+	UIS.InputChanged:Connect(function(input)
+		if dragToggle and input.UserInputType == Enum.UserInputType.MouseMovement then
+			local delta = input.Position - dragStart
+			frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+		end
+	end)
+end
+
+function UTGLib:CreateWindow(config)
+	local title = config.Title or "UTG Library"
+	local size = config.Size or UDim2.new(0, 400, 0, 300)
+
+	local ScreenGui = Instance.new("ScreenGui", game:GetService("CoreGui"))
+	ScreenGui.Name = "UTGLibGui"
+	ScreenGui.ResetOnSpawn = false
+
+	local MainFrame = Instance.new("Frame", ScreenGui)
+	MainFrame.Size = size
+	MainFrame.Position = UDim2.new(0.5, -size.X.Offset/2, 0.5, -size.Y.Offset/2)
+	MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+	MainFrame.BorderSizePixel = 0
+	MainFrame.Active = true
+	MainFrame.Draggable = false
+	MainFrame.Name = "UTGWindow"
+
+	local TopBar = Instance.new("TextLabel", MainFrame)
+	TopBar.Size = UDim2.new(1, 0, 0, 30)
+	TopBar.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+	TopBar.Text = title
+	TopBar.Font = Enum.Font.GothamBold
+	TopBar.TextSize = 16
+	TopBar.TextColor3 = Color3.new(1,1,1)
+	TopBar.TextXAlignment = Enum.TextXAlignment.Left
+	TopBar.PaddingLeft = UDim.new(0, 8)
+
+	makeDraggable(MainFrame)
+
+	local TabHolder = Instance.new("Frame", MainFrame)
+	TabHolder.Size = UDim2.new(0, 100, 1, -30)
+	TabHolder.Position = UDim2.new(0, 0, 0, 30)
+	TabHolder.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+
+	local ContentHolder = Instance.new("Frame", MainFrame)
+	ContentHolder.Size = UDim2.new(1, -100, 1, -30)
+	ContentHolder.Position = UDim2.new(0, 100, 0, 30)
+	ContentHolder.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+	ContentHolder.ClipsDescendants = true
+
+	local UIListLayout = Instance.new("UIListLayout", TabHolder)
+	UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+	local Tabs = {}
+
+	function Tabs:CreateTab(tabName)
+		local tabBtn = Instance.new("TextButton", TabHolder)
+		tabBtn.Text = tabName
+		tabBtn.Size = UDim2.new(1, 0, 0, 30)
+		tabBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+		tabBtn.Font = Enum.Font.Gotham
+		tabBtn.TextColor3 = Color3.new(1, 1, 1)
+		tabBtn.TextSize = 14
+
+		local tabPage = Instance.new("ScrollingFrame", ContentHolder)
+		tabPage.Size = UDim2.new(1, 0, 1, 0)
+		tabPage.Visible = false
+		tabPage.CanvasSize = UDim2.new(0, 0, 0, 0)
+		tabPage.BackgroundTransparency = 1
+		tabPage.ScrollBarThickness = 6
+
+		local layout = Instance.new("UIListLayout", tabPage)
+		layout.Padding = UDim.new(0, 5)
+		layout.SortOrder = Enum.SortOrder.LayoutOrder
+
+		tabBtn.MouseButton1Click:Connect(function()
+			for _, v in ipairs(ContentHolder:GetChildren()) do
+				if v:IsA("ScrollingFrame") then v.Visible = false end
+			end
+			tabPage.Visible = true
+		end)
+
+		local Elements = {}
+
+		function Elements:CreateButton(text, callback)
+			local btn = Instance.new("TextButton", tabPage)
+			btn.Size = UDim2.new(1, -10, 0, 30)
+			btn.Text = text
+			btn.Font = Enum.Font.Gotham
+			btn.TextSize = 14
+			btn.TextColor3 = Color3.new(1,1,1)
+			btn.BackgroundColor3 = Color3.fromRGB(50,50,50)
+			btn.MouseButton1Click:Connect(callback)
+		end
+
+		function Elements:CreateToggle(text, callback)
+			local toggle = false
+			local btn = Instance.new("TextButton", tabPage)
+			btn.Size = UDim2.new(1, -10, 0, 30)
+			btn.Text = "[ OFF ] " .. text
+			btn.Font = Enum.Font.Gotham
+			btn.TextSize = 14
+			btn.TextColor3 = Color3.new(1,1,1)
+			btn.BackgroundColor3 = Color3.fromRGB(60,60,60)
+			btn.MouseButton1Click:Connect(function()
+				toggle = not toggle
+				btn.Text = toggle and "[ ON ] " .. text or "[ OFF ] " .. text
+				callback(toggle)
+			end)
+		end
+
+		return Elements
+	end
+
+	return Tabs
+end
+
+return UTGLib
