@@ -39,16 +39,12 @@ function UTGUILib:CreateWindow(config)
     topbar.Size = UDim2.new(1, 0, 0, 40)
     topbar.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
     topbar.BorderSizePixel = 0
-    topbar.Text = title
+    topbar.Text = "   " .. title  -- Adding space for padding
     topbar.Font = Enum.Font.GothamBold
     topbar.TextSize = 20
     topbar.TextColor3 = Color3.new(1, 1, 1)
     topbar.TextXAlignment = Enum.TextXAlignment.Left
     topbar.Parent = frame
-
-    local topbarPadding = Instance.new("UIPadding")
-    topbarPadding.PaddingLeft = UDim.new(0, 10)
-    topbarPadding.Parent = topbar
 
     local topbarCorner = Instance.new("UICorner")
     topbarCorner.CornerRadius = UDim.new(0, 8)
