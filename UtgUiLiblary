@@ -25,7 +25,7 @@ function UTGUILib:CreateWindow(config)
     local frame = Instance.new("Frame")
     frame.Size = size
     frame.Position = UDim2.new(0.5, -size.X.Offset/2, 0.5, -size.Y.Offset/2)
-    frame.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+    frame.BackgroundColor3 = Color3.fromRGB(16, 16, 16)
     frame.BorderSizePixel = 0
     frame.Active = true
     frame.Draggable = true
@@ -37,7 +37,7 @@ function UTGUILib:CreateWindow(config)
 
     local topbar = Instance.new("TextLabel")
     topbar.Size = UDim2.new(1, 0, 0, 40)
-    topbar.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    topbar.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
     topbar.BorderSizePixel = 0
     topbar.Text = title
     topbar.Font = Enum.Font.GothamBold
@@ -60,10 +60,10 @@ function UTGUILib:CreateWindow(config)
     closeBtn.TextSize = 18
     closeBtn.Size = UDim2.new(0, 40, 0, 40)
     closeBtn.Position = UDim2.new(1, -40, 0, 0)
-    closeBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-    closeBtn.TextColor3 = Color3.new(1, 0.2, 0.2)
+    closeBtn.BackgroundColor3 = Color3.fromRGB(45, 0, 0)
+    closeBtn.TextColor3 = Color3.new(1, 1, 1)
     closeBtn.BorderSizePixel = 0
-    closeBtn.Parent = frame
+    closeBtn.Parent = topbar
 
     local minBtn = Instance.new("TextButton")
     minBtn.Text = "–"
@@ -71,18 +71,19 @@ function UTGUILib:CreateWindow(config)
     minBtn.TextSize = 18
     minBtn.Size = UDim2.new(0, 40, 0, 40)
     minBtn.Position = UDim2.new(1, -80, 0, 0)
-    minBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    minBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     minBtn.TextColor3 = Color3.new(1, 1, 1)
     minBtn.BorderSizePixel = 0
-    minBtn.Parent = frame
+    minBtn.Parent = topbar
 
     local content = Instance.new("ScrollingFrame")
     content.Size = UDim2.new(1, -20, 1, -60)
     content.Position = UDim2.new(0, 10, 0, 50)
-    content.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
+    content.BackgroundColor3 = Color3.fromRGB(24, 24, 24)
     content.BorderSizePixel = 0
     content.CanvasSize = UDim2.new(0, 0, 0, 0)
     content.ScrollBarThickness = 6
+    content.AutomaticCanvasSize = Enum.AutomaticSize.Y
     content.Parent = frame
 
     local contentCorner = Instance.new("UICorner")
