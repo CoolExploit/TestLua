@@ -1,0 +1,172 @@
+--[[
+	BlazeUiLibrary - A modern Roblox UI framework
+	Version: 1.0
+	GitHub: https://github.com/YourGitHub/BlazeUiLibrary (update this)
+--]]
+
+local BlazeUiLibrary = {}
+BlazeUiLibrary.__index = BlazeUiLibrary
+
+local TweenService = game:GetService("TweenService")
+local UIS = game:GetService("UserInputService")
+
+local function Tween(obj, props, time)
+	TweenService:Create(obj, TweenInfo.new(time or 0.2), props):Play()
+end
+
+local function AddCorner(obj, radius)
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, radius or 8)
+	corner.Parent = obj
+end
+
+function BlazeUiLibrary:CreateWindow(windowTitle)
+	local screenGui = Instance.new("ScreenGui", game.CoreGui)
+	screenGui.Name = "BlazeUiLibrary"
+	screenGui.ResetOnSpawn = false
+
+	local main = Instance.new("Frame", screenGui)
+	main.Size = UDim2.new(0, 580, 0, 390)
+	main.Position = UDim2.new(0.5, -290, 0.5, -195)
+	main.BackgroundColor3 = Color3.fromRGB(28, 28, 35)
+	main.BorderSizePixel = 0
+	main.ClipsDescendants = true
+	AddCorner(main)
+
+	local shadow = Instance.new("ImageLabel", main)
+	shadow.AnchorPoint = Vector2.new(0.5, 0.5)
+	shadow.Position = UDim2.new(0.5, 0, 0.5, 5)
+	shadow.Size = UDim2.new(1, 60, 1, 60)
+	shadow.BackgroundTransparency = 1
+	shadow.Image = "rbxassetid://1316045217"
+	shadow.ImageTransparency = 0.7
+	shadow.ZIndex = -1
+
+	local topBar = Instance.new("TextLabel", main)
+	topBar.Text = windowTitle or "Blaze UI"
+	topBar.Size = UDim2.new(1, 0, 0, 40)
+	topBar.BackgroundTransparency = 1
+	topBar.TextColor3 = Color3.new(1, 1, 1)
+	topBar.Font = Enum.Font.GothamBold
+	topBar.TextSize = 18
+
+	local tabBar = Instance.new("Frame", main)
+	tabBar.Size = UDim2.new(0, 130, 1, -40)
+	tabBar.Position = UDim2.new(0, 0, 0, 40)
+	tabBar.BackgroundColor3 = Color3.fromRGB(24, 24, 30)
+	AddCorner(tabBar)
+
+	local tabContent = Instance.new("Frame", main)
+	tabContent.Size = UDim2.new(1, -130, 1, -40)
+	tabContent.Position = UDim2.new(0, 130, 0, 40)
+	tabContent.BackgroundTransparency = 1
+
+	local tabs = {}
+	local activeTab = nil
+
+	function BlazeUiLibrary:CreateTab(name)
+		local tabBtn = Instance.new("TextButton", tabBar)
+		tabBtn.Size = UDim2.new(1, 0, 0, 36)
+		tabBtn.Text = name
+		tabBtn.BackgroundColor3 = Color3.fromRGB(28, 28, 35)
+		tabBtn.TextColor3 = Color3.new(1, 1, 1)
+		tabBtn.Font = Enum.Font.Gotham
+		tabBtn.TextSize = 14
+		tabBtn.BorderSizePixel = 0
+		AddCorner(tabBtn)
+
+		local content = Instance.new("ScrollingFrame", tabContent)
+		content.Visible = false
+		content.Size = UDim2.new(1, 0, 1, 0)
+		content.CanvasSize = UDim2.new(0, 0, 0, 0)
+		content.ScrollBarThickness = 4
+		content.BackgroundTransparency = 1
+
+		local layout = Instance.new("UIListLayout", content)
+		layout.Padding = UDim.new(0, 8)
+		layout.SortOrder = Enum.SortOrder.LayoutOrder
+
+		tabBtn.MouseButton1Click:Connect(function()
+			if activeTab then activeTab.Visible = false end
+			content.Visible = true
+			activeTab = content
+		end)
+
+		local function UpdateCanvas()
+			task.wait()
+			content.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 10)
+		end
+		layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(UpdateCanvas)
+
+		local tab = {}
+
+		function tab:AddLabel(text)
+			local lbl = Instance.new("TextLabel", content)
+			lbl.Size = UDim2.new(1, -10, 0, 24)
+			lbl.BackgroundTransparency = 1
+			lbl.Text = text
+			lbl.Font = Enum.Font.Gotham
+			lbl.TextColor3 = Color3.fromRGB(200, 200, 200)
+			lbl.TextSize = 13
+		end
+
+		function tab:AddButton(text, callback)
+			local btn = Instance.new("TextButton", content)
+			btn.Size = UDim2.new(1, -10, 0, 32)
+			btn.Text = text
+			btn.Font = Enum.Font.Gotham
+			btn.TextColor3 = Color3.new(1, 1, 1)
+			btn.TextSize = 14
+			btn.BackgroundColor3 = Color3.fromRGB(36, 36, 42)
+			btn.AutoButtonColor = false
+			AddCorner(btn)
+
+			btn.MouseEnter:Connect(function()
+				Tween(btn, {BackgroundColor3 = Color3.fromRGB(50, 50, 60)})
+			end)
+			btn.MouseLeave:Connect(function()
+				Tween(btn, {BackgroundColor3 = Color3.fromRGB(36, 36, 42)})
+			end)
+			btn.MouseButton1Click:Connect(function()
+				if callback then pcall(callback) end
+			end)
+		end
+
+		function tab:AddToggle(text, callback)
+			local frame = Instance.new("Frame", content)
+			frame.Size = UDim2.new(1, -10, 0, 30)
+			frame.BackgroundTransparency = 1
+
+			local toggleBtn = Instance.new("TextButton", frame)
+			toggleBtn.Size = UDim2.new(0, 20, 0, 20)
+			toggleBtn.Position = UDim2.new(0, 0, 0.5, -10)
+			toggleBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+			toggleBtn.Text = ""
+			AddCorner(toggleBtn)
+
+			local label = Instance.new("TextLabel", frame)
+			label.Position = UDim2.new(0, 30, 0, 0)
+			label.Size = UDim2.new(1, -30, 1, 0)
+			label.Text = text
+			label.BackgroundTransparency = 1
+			label.TextColor3 = Color3.fromRGB(255, 255, 255)
+			label.Font = Enum.Font.Gotham
+			label.TextSize = 13
+			label.TextXAlignment = Enum.TextXAlignment.Left
+
+			local toggled = false
+			toggleBtn.MouseButton1Click:Connect(function()
+				toggled = not toggled
+				Tween(toggleBtn, {BackgroundColor3 = toggled and Color3.fromRGB(0, 170, 127) or Color3.fromRGB(60, 60, 70)})
+				if callback then pcall(callback, toggled) end
+			end)
+		end
+
+		tabs[name] = tab
+		return tab
+	end
+
+	return self
+end
+
+return BlazeUiLibrary
