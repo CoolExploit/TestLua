@@ -1,137 +1,117 @@
-local UTGLib = {}
+-- UTGUILib.lua
+local UTGUILib = {}
 
 local TweenService = game:GetService("TweenService")
 local UIS = game:GetService("UserInputService")
 
-local function makeDraggable(frame)
-	local dragToggle, dragStart, startPos
-
-	frame.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 then
-			dragToggle = true
-			dragStart = input.Position
-			startPos = frame.Position
-			input.Changed:Connect(function()
-				if input.UserInputState == Enum.UserInputState.End then
-					dragToggle = false
-				end
-			end)
-		end
-	end)
-
-	UIS.InputChanged:Connect(function(input)
-		if dragToggle and input.UserInputType == Enum.UserInputType.MouseMovement then
-			local delta = input.Position - dragStart
-			frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-		end
-	end)
+-- Utility function to update canvas size
+local function UpdateCanvasSize(container)
+    local layout = container:FindFirstChildOfClass("UIListLayout")
+    if layout then
+        container.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 20)
+    end
 end
 
-function UTGLib:CreateWindow(config)
-	local title = config.Title or "UTG Library"
-	local size = config.Size or UDim2.new(0, 400, 0, 300)
+-- Create window
+function UTGUILib:CreateWindow(config)
+    local title = config.Title or "UTG UI Library"
+    local size = config.Size or UDim2.new(0, 400, 0, 300)
 
-	local ScreenGui = Instance.new("ScreenGui", game:GetService("CoreGui"))
-	ScreenGui.Name = "UTGLibGui"
-	ScreenGui.ResetOnSpawn = false
+    local gui = Instance.new("ScreenGui")
+    gui.Name = "UTGUILib"
+    gui.ResetOnSpawn = false
+    gui.Parent = game:GetService("CoreGui")
 
-	local MainFrame = Instance.new("Frame", ScreenGui)
-	MainFrame.Size = size
-	MainFrame.Position = UDim2.new(0.5, -size.X.Offset/2, 0.5, -size.Y.Offset/2)
-	MainFrame.BackgroundColor3 = Color3.fromRGB(255, 105, 180) -- Pink background
-	MainFrame.BorderSizePixel = 0
-	MainFrame.Active = true
-	MainFrame.Draggable = false
-	MainFrame.Name = "UTGWindow"
+    local frame = Instance.new("Frame")
+    frame.Size = size
+    frame.Position = UDim2.new(0.5, -size.X.Offset/2, 0.5, -size.Y.Offset/2)
+    frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    frame.BorderSizePixel = 0
+    frame.Active = true
+    frame.Draggable = true
+    frame.Parent = gui
 
-	local TopBar = Instance.new("TextLabel", MainFrame)
-	TopBar.Size = UDim2.new(1, 0, 0, 30)
-	TopBar.BackgroundColor3 = Color3.fromRGB(128, 0, 128) -- Purple header
-	TopBar.Text = title
-	TopBar.Font = Enum.Font.GothamBold
-	TopBar.TextSize = 16
-	TopBar.TextColor3 = Color3.new(1,1,1)
-	TopBar.TextXAlignment = Enum.TextXAlignment.Left
-	TopBar.PaddingLeft = UDim.new(0, 8)
+    local topbar = Instance.new("TextLabel")
+    topbar.Size = UDim2.new(1, 0, 0, 40)
+    topbar.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    topbar.BorderSizePixel = 0
+    topbar.Text = title
+    topbar.Font = Enum.Font.GothamBold
+    topbar.TextSize = 20
+    topbar.TextColor3 = Color3.new(1, 1, 1)
+    topbar.Parent = frame
 
-	makeDraggable(MainFrame)
+    local content = Instance.new("ScrollingFrame")
+    content.Size = UDim2.new(1, -20, 1, -60)
+    content.Position = UDim2.new(0, 10, 0, 50)
+    content.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    content.BorderSizePixel = 0
+    content.CanvasSize = UDim2.new(0, 0, 0, 0)
+    content.ScrollBarThickness = 6
+    content.Parent = frame
 
-	local TabHolder = Instance.new("Frame", MainFrame)
-	TabHolder.Size = UDim2.new(0, 100, 1, -30)
-	TabHolder.Position = UDim2.new(0, 0, 0, 30)
-	TabHolder.BackgroundColor3 = Color3.fromRGB(255, 182, 193) -- Light pink
+    local layout = Instance.new("UIListLayout")
+    layout.Padding = UDim.new(0, 6)
+    layout.SortOrder = Enum.SortOrder.LayoutOrder
+    layout.Parent = content
 
-	local ContentHolder = Instance.new("Frame", MainFrame)
-	ContentHolder.Size = UDim2.new(1, -100, 1, -30)
-	ContentHolder.Position = UDim2.new(0, 100, 0, 30)
-	ContentHolder.BackgroundColor3 = Color3.fromRGB(255, 192, 203) -- Pink
-	ContentHolder.ClipsDescendants = true
+    local padding = Instance.new("UIPadding")
+    padding.PaddingTop = UDim.new(0, 10)
+    padding.PaddingBottom = UDim.new(0, 10)
+    padding.PaddingLeft = UDim.new(0, 10)
+    padding.PaddingRight = UDim.new(0, 10)
+    padding.Parent = content
 
-	local UIListLayout = Instance.new("UIListLayout", TabHolder)
-	UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    local elements = {}
 
-	local Tabs = {}
+    function elements:CreateButton(text, callback)
+        local button = Instance.new("TextButton")
+        button.Size = UDim2.new(1, 0, 0, 30)
+        button.Text = text
+        button.Font = Enum.Font.Gotham
+        button.TextSize = 14
+        button.TextColor3 = Color3.new(1, 1, 1)
+        button.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+        button.Parent = content
+        button.MouseButton1Click:Connect(callback)
+        UpdateCanvasSize(content)
+        return button
+    end
 
-	function Tabs:CreateTab(tabName)
-		local tabBtn = Instance.new("TextButton", TabHolder)
-		tabBtn.Text = tabName
-		tabBtn.Size = UDim2.new(1, 0, 0, 30)
-		tabBtn.BackgroundColor3 = Color3.fromRGB(255, 105, 180) -- Hot pink
-		tabBtn.Font = Enum.Font.Gotham
-		tabBtn.TextColor3 = Color3.new(1, 1, 1)
-		tabBtn.TextSize = 14
+    function elements:CreateLabel(text)
+        local label = Instance.new("TextLabel")
+        label.Size = UDim2.new(1, 0, 0, 30)
+        label.Text = text
+        label.Font = Enum.Font.Gotham
+        label.TextSize = 14
+        label.TextColor3 = Color3.new(1, 1, 1)
+        label.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+        label.BorderSizePixel = 0
+        label.Parent = content
+        UpdateCanvasSize(content)
+        return label
+    end
 
-		local tabPage = Instance.new("ScrollingFrame", ContentHolder)
-		tabPage.Size = UDim2.new(1, 0, 1, 0)
-		tabPage.Visible = false
-		tabPage.CanvasSize = UDim2.new(0, 0, 0, 0)
-		tabPage.BackgroundTransparency = 1
-		tabPage.ScrollBarThickness = 6
+    function elements:CreateToggle(text, callback)
+        local state = false
+        local button = Instance.new("TextButton")
+        button.Size = UDim2.new(1, 0, 0, 30)
+        button.Text = "[ OFF ] " .. text
+        button.Font = Enum.Font.Gotham
+        button.TextSize = 14
+        button.TextColor3 = Color3.new(1, 1, 1)
+        button.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+        button.Parent = content
+        button.MouseButton1Click:Connect(function()
+            state = not state
+            button.Text = state and "[ ON ] " .. text or "[ OFF ] " .. text
+            callback(state)
+        end)
+        UpdateCanvasSize(content)
+        return button
+    end
 
-		local layout = Instance.new("UIListLayout", tabPage)
-		layout.Padding = UDim.new(0, 5)
-		layout.SortOrder = Enum.SortOrder.LayoutOrder
-
-		tabBtn.MouseButton1Click:Connect(function()
-			for _, v in ipairs(ContentHolder:GetChildren()) do
-				if v:IsA("ScrollingFrame") then v.Visible = false end
-			end
-			tabPage.Visible = true
-		end)
-
-		local Elements = {}
-
-		function Elements:CreateButton(text, callback)
-			local btn = Instance.new("TextButton", tabPage)
-			btn.Size = UDim2.new(1, -10, 0, 30)
-			btn.Text = text
-			btn.Font = Enum.Font.Gotham
-			btn.TextSize = 14
-			btn.TextColor3 = Color3.new(1,1,1)
-			btn.BackgroundColor3 = Color3.fromRGB(255, 20, 147) -- Deep pink
-			btn.MouseButton1Click:Connect(callback)
-		end
-
-		function Elements:CreateToggle(text, callback)
-			local toggle = false
-			local btn = Instance.new("TextButton", tabPage)
-			btn.Size = UDim2.new(1, -10, 0, 30)
-			btn.Text = "[ OFF ] " .. text
-			btn.Font = Enum.Font.Gotham
-			btn.TextSize = 14
-			btn.TextColor3 = Color3.new(1,1,1)
-			btn.BackgroundColor3 = Color3.fromRGB(255, 20, 147) -- Deep pink
-			btn.MouseButton1Click:Connect(function()
-				toggle = not toggle
-				btn.Text = toggle and "[ ON ] " .. text or "[ OFF ] " .. text
-				callback(toggle)
-			end)
-		end
-
-		return Elements
-	end
-
-	return Tabs
+    return elements
 end
 
-return UTGLib
+return UTGUILib
