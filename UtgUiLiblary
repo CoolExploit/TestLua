@@ -38,7 +38,7 @@ function UTGLib:CreateWindow(config)
 	local MainFrame = Instance.new("Frame", ScreenGui)
 	MainFrame.Size = size
 	MainFrame.Position = UDim2.new(0.5, -size.X.Offset/2, 0.5, -size.Y.Offset/2)
-	MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+	MainFrame.BackgroundColor3 = Color3.fromRGB(255, 105, 180) -- Pink background
 	MainFrame.BorderSizePixel = 0
 	MainFrame.Active = true
 	MainFrame.Draggable = false
@@ -46,7 +46,7 @@ function UTGLib:CreateWindow(config)
 
 	local TopBar = Instance.new("TextLabel", MainFrame)
 	TopBar.Size = UDim2.new(1, 0, 0, 30)
-	TopBar.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+	TopBar.BackgroundColor3 = Color3.fromRGB(128, 0, 128) -- Purple header
 	TopBar.Text = title
 	TopBar.Font = Enum.Font.GothamBold
 	TopBar.TextSize = 16
@@ -59,12 +59,12 @@ function UTGLib:CreateWindow(config)
 	local TabHolder = Instance.new("Frame", MainFrame)
 	TabHolder.Size = UDim2.new(0, 100, 1, -30)
 	TabHolder.Position = UDim2.new(0, 0, 0, 30)
-	TabHolder.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+	TabHolder.BackgroundColor3 = Color3.fromRGB(255, 182, 193) -- Light pink
 
 	local ContentHolder = Instance.new("Frame", MainFrame)
 	ContentHolder.Size = UDim2.new(1, -100, 1, -30)
 	ContentHolder.Position = UDim2.new(0, 100, 0, 30)
-	ContentHolder.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+	ContentHolder.BackgroundColor3 = Color3.fromRGB(255, 192, 203) -- Pink
 	ContentHolder.ClipsDescendants = true
 
 	local UIListLayout = Instance.new("UIListLayout", TabHolder)
@@ -76,7 +76,7 @@ function UTGLib:CreateWindow(config)
 		local tabBtn = Instance.new("TextButton", TabHolder)
 		tabBtn.Text = tabName
 		tabBtn.Size = UDim2.new(1, 0, 0, 30)
-		tabBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+		tabBtn.BackgroundColor3 = Color3.fromRGB(255, 105, 180) -- Hot pink
 		tabBtn.Font = Enum.Font.Gotham
 		tabBtn.TextColor3 = Color3.new(1, 1, 1)
 		tabBtn.TextSize = 14
@@ -108,7 +108,7 @@ function UTGLib:CreateWindow(config)
 			btn.Font = Enum.Font.Gotham
 			btn.TextSize = 14
 			btn.TextColor3 = Color3.new(1,1,1)
-			btn.BackgroundColor3 = Color3.fromRGB(50,50,50)
+			btn.BackgroundColor3 = Color3.fromRGB(255, 20, 147) -- Deep pink
 			btn.MouseButton1Click:Connect(callback)
 		end
 
@@ -120,7 +120,7 @@ function UTGLib:CreateWindow(config)
 			btn.Font = Enum.Font.Gotham
 			btn.TextSize = 14
 			btn.TextColor3 = Color3.new(1,1,1)
-			btn.BackgroundColor3 = Color3.fromRGB(60,60,60)
+			btn.BackgroundColor3 = Color3.fromRGB(255, 20, 147) -- Deep pink
 			btn.MouseButton1Click:Connect(function()
 				toggle = not toggle
 				btn.Text = toggle and "[ ON ] " .. text or "[ OFF ] " .. text
