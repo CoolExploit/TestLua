@@ -43,11 +43,35 @@ function UTGUILib:CreateWindow(config)
     topbar.Font = Enum.Font.GothamBold
     topbar.TextSize = 20
     topbar.TextColor3 = Color3.new(1, 1, 1)
+    topbar.TextXAlignment = Enum.TextXAlignment.Left
+    topbar.PaddingLeft = UDim.new(0, 10)
     topbar.Parent = frame
 
     local topbarCorner = Instance.new("UICorner")
     topbarCorner.CornerRadius = UDim.new(0, 8)
     topbarCorner.Parent = topbar
+
+    local closeBtn = Instance.new("TextButton")
+    closeBtn.Text = "✕"
+    closeBtn.Font = Enum.Font.GothamBold
+    closeBtn.TextSize = 18
+    closeBtn.Size = UDim2.new(0, 40, 0, 40)
+    closeBtn.Position = UDim2.new(1, -40, 0, 0)
+    closeBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    closeBtn.TextColor3 = Color3.new(1, 0.2, 0.2)
+    closeBtn.BorderSizePixel = 0
+    closeBtn.Parent = frame
+
+    local minBtn = Instance.new("TextButton")
+    minBtn.Text = "–"
+    minBtn.Font = Enum.Font.GothamBold
+    minBtn.TextSize = 18
+    minBtn.Size = UDim2.new(0, 40, 0, 40)
+    minBtn.Position = UDim2.new(1, -80, 0, 0)
+    minBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    minBtn.TextColor3 = Color3.new(1, 1, 1)
+    minBtn.BorderSizePixel = 0
+    minBtn.Parent = frame
 
     local content = Instance.new("ScrollingFrame")
     content.Size = UDim2.new(1, -20, 1, -60)
@@ -140,6 +164,17 @@ function UTGUILib:CreateWindow(config)
         UpdateCanvasSize(content)
         return button
     end
+
+    -- Close and Minimize Functionality
+    closeBtn.MouseButton1Click:Connect(function()
+        gui:Destroy()
+    end)
+
+    local minimized = false
+    minBtn.MouseButton1Click:Connect(function()
+        minimized = not minimized
+        content.Visible = not minimized
+    end)
 
     return elements
 end
