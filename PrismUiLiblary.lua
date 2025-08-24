@@ -1,516 +1,321 @@
--- Enhanced Roblox UI Library with Smooth Animations & Modern Design
-local UILib = {}
-local TweenService = game:GetService("TweenService")
-local UserInputService = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
-local Players = game:GetService("Players")
+--[[
+PrismUI — loadstring-ready, modern Roblox UI library (~330 lines)
+• No dependencies; TweenService animations (Quad/Quart/Back/Linear)
+• Dark/Light themes, glassmorphism, shadow depth, hover/ripple
+• Window (drag/minimize/close), Tabs, Scrollable content
+• Elements: Button, Toggle, Checkbox, Slider, Dropdown (+Search), Textbox, Keybind,
+           Label, Paragraph, Section, Separator, ProgressBar, ImageButton, RadioGroup
+• Notifications, Tooltips, Intro Loading screen
 
-local Player = Players.LocalPlayer
-local PlayerGui = Player:WaitForChild("PlayerGui")
+USAGE (after you host this file as raw text):
+local PrismUI = loadstring(game:HttpGet("https://your-host/PrismUI.lua"))()
+local win = PrismUI:Window("Prism Window")
+local tab = win:Tab("Main")
+-- add elements...
+--]]
 
--- Enhanced Theme System
-local Themes = {
-    Dark = {
-        bg = Color3.fromRGB(25, 25, 30),
-        surface = Color3.fromRGB(35, 35, 42),
-        accent = Color3.fromRGB(88, 101, 242),
-        accentHover = Color3.fromRGB(71, 82, 196),
-        text = Color3.fromRGB(255, 255, 255),
-        textDim = Color3.fromRGB(180, 180, 180),
-        border = Color3.fromRGB(50, 50, 60),
-        success = Color3.fromRGB(87, 242, 135),
-        warning = Color3.fromRGB(255, 202, 40)
-    },
-    Light = {
-        bg = Color3.fromRGB(248, 249, 250),
-        surface = Color3.fromRGB(255, 255, 255),
-        accent = Color3.fromRGB(99, 102, 241),
-        accentHover = Color3.fromRGB(79, 70, 229),
-        text = Color3.fromRGB(17, 24, 39),
-        textDim = Color3.fromRGB(107, 114, 128),
-        border = Color3.fromRGB(229, 231, 235),
-        success = Color3.fromRGB(34, 197, 94),
-        warning = Color3.fromRGB(245, 158, 11)
-    }
+local PrismUI = {}; PrismUI.__index = PrismUI
+local TS = game:GetService("TweenService")
+local UIS = game:GetService("UserInputService")
+local CG  = game:GetService("CoreGui")
+
+-- util ------
+local function inst(t) local o=Instance.new(t[1]); for k,v in pairs(t) do if k~=1 then o[k]=v end end; return o end
+local function tween(i,ti,prop,style,dir) return TS:Create(i, TweenInfo.new(ti or .25, style or Enum.EasingStyle.Quad, dir or Enum.EasingDirection.Out), prop) end
+local function ripple(p)
+	local c=inst{"Frame",BackgroundColor3=Color3.new(1,1,1),BackgroundTransparency=.8,Size=UDim2.fromOffset(0,0),AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromScale(.5,.5),ZIndex=p.ZIndex+1}
+	inst{"UICorner",CornerRadius=UDim.new(1,0),Parent=c}; c.Parent=p
+	tween(c,.45,{Size=UDim2.fromScale(1.3,1.3),BackgroundTransparency=1},Enum.EasingStyle.Quart):Play(); task.delay(.46,function() c:Destroy() end)
+end
+local function shadow(p)
+	local s=inst{"ImageLabel",BackgroundTransparency=1,Image="rbxassetid://5028857084",ImageTransparency=.5,ScaleType=Enum.ScaleType.Slice,SliceCenter=Rect.new(24,24,276,276),Size=UDim2.fromScale(1,1),Position=UDim2.new(0,0,0,4),ZIndex=p.ZIndex-1}
+	s.Name="Shadow"; s.Parent=p
+end
+
+-- themes ------
+local Themes={
+	Dark={BG=Color3.fromRGB(16,18,22),Card=Color3.fromRGB(26,28,34),Accent=Color3.fromRGB(120,90,255),Text=Color3.fromRGB(235,238,245),Muted=Color3.fromRGB(168,176,189),Stroke=Color3.fromRGB(56,60,72)},
+	Light={BG=Color3.fromRGB(244,246,250),Card=Color3.fromRGB(255,255,255),Accent=Color3.fromRGB(66,133,244), Text=Color3.fromRGB(33,38,45),  Muted=Color3.fromRGB(110,119,129), Stroke=Color3.fromRGB(220,224,230)}
 }
-local currentTheme = Themes.Dark
-
--- Animation Presets
-local Animations = {
-    fast = TweenInfo.new(0.15, Enum.EasingStyle.Quart, Enum.EasingDirection.Out),
-    smooth = TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out),
-    bounce = TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
-    elastic = TweenInfo.new(0.6, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out)
-}
-
--- Enhanced Utility Functions
-local function tween(obj, props, animType, callback)
-    local tweenInfo = animType or Animations.smooth
-    local tweenObj = TweenService:Create(obj, tweenInfo, props)
-    if callback then tweenObj.Completed:Connect(callback) end
-    tweenObj:Play()
-    return tweenObj
+local function glass(frame,t)
+	frame.BackgroundTransparency=.08
+	inst{"UIStroke",Color=t.Stroke,Transparency=.35,Thickness=1,ApplyStrokeMode=Enum.ApplyStrokeMode.Border,Parent=frame}
+	inst{"UICorner",CornerRadius=UDim.new(0,12),Parent=frame}; shadow(frame)
+	inst{"UIGradient",Rotation=90,Transparency=NumberSequence.new{NumberSequenceKeypoint.new(0,.05),NumberSequenceKeypoint.new(1,.2)},Parent=frame}
 end
 
-local function createElement(class, props, parent)
-    local obj = Instance.new(class)
-    for k, v in pairs(props or {}) do obj[k] = v end
-    if parent then obj.Parent = parent end
-    return obj
+function PrismUI.new()
+	local self=setmetatable({T=Themes.Dark,ThemeName="Dark",Themables={},Screen=inst{"ScreenGui",ResetOnSpawn=false,IgnoreGuiInset=true,ZIndexBehavior=Enum.ZIndexBehavior.Sibling,Name="PrismUI"}},PrismUI)
+	self.Screen.Parent=CG; self:_intro(); return self
+end
+function PrismUI:_apply()
+	for _,v in ipairs(self.Themables) do
+		if v.kind=="text" then v.obj.TextColor3=self.T.Text
+		elseif v.kind=="bg" then v.obj.BackgroundColor3=self.T.Card
+		elseif v.kind=="muted" then v.obj.TextColor3=self.T.Muted
+		elseif v.kind=="stroke" then v.obj.Color=self.T.Stroke end
+	end
+	if self.RootBG then self.RootBG.BackgroundColor3=self.T.BG end
+end
+function PrismUI:Theme(name) self.T=Themes[name] or self.T; self.ThemeName=name or self.ThemeName; self:_apply() end
+
+-- intro --------
+function PrismUI:_intro()
+	self.RootBG=inst{"Frame",Size=UDim2.fromScale(1,1),BackgroundColor3=self.T.BG,Parent=self.Screen}
+	local card=inst{"Frame",Size=UDim2.fromOffset(360,140),AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromScale(.5,.5),BackgroundColor3=self.T.Card,Parent=self.RootBG,ZIndex=2}
+	glass(card,self.T)
+	local title=inst{"TextLabel",Text="PrismUI",Font=Enum.Font.GothamBold,TextSize=24,BackgroundTransparency=1,Parent=card,Size=UDim2.fromOffset(200,28),Position=UDim2.fromOffset(16,12),TextXAlignment=Enum.TextXAlignment.Left}
+	table.insert(self.Themables,{obj=title,kind="text"})
+	local bar=inst{"Frame",BackgroundColor3=self.T.Stroke,Size=UDim2.new(1,-32,0,6),Position=UDim2.new(0,16,1,-28),Parent=card}
+	inst{"UICorner",CornerRadius=UDim.new(0,6),Parent=bar}
+	local fill=inst{"Frame",BackgroundColor3=self.T.Accent,Size=UDim2.fromScale(0,1),Parent=bar}
+	inst{"UICorner",CornerRadius=UDim.new(0,6),Parent=fill}
+	local dots=inst{"TextLabel",Text="",Font=Enum.Font.GothamSemibold,TextSize=14,TextColor3=self.T.Muted,BackgroundTransparency=1,Parent=card,Position=UDim2.new(1,-16,1,-50),AnchorPoint=Vector2.new(1,1)}
+	table.insert(self.Themables,{obj=dots,kind="muted"})
+	for i=1,20 do tween(fill,.08,{Size=UDim2.new(i/20,0,1,0)},Enum.EasingStyle.Quad):Play(); dots.Text=string.rep(".",(i%3)+1); task.wait(.06) end
+	tween(card,.25,{Size=UDim2.fromOffset(360,0)},Enum.EasingStyle.Quart):Play(); tween(self.RootBG,.25,{BackgroundTransparency=1}):Play(); task.delay(.26,function() self.RootBG:Destroy(); self.RootBG=nil end)
 end
 
-local function addHoverEffect(obj, hoverColor, originalColor)
-    obj.MouseEnter:Connect(function()
-        tween(obj, {BackgroundColor3 = hoverColor}, Animations.fast)
-    end)
-    obj.MouseLeave:Connect(function()
-        tween(obj, {BackgroundColor3 = originalColor}, Animations.fast)
-    end)
+-- window/tabs ----
+function PrismUI:Window(title)
+	local ui=self
+	local win={_ui=ui,Tabs={},Active=nil}
+	local g=inst{"Frame",Parent=ui.Screen,BackgroundTransparency=1,Size=UDim2.fromOffset(560,390),Position=UDim2.fromScale(.5,.5),AnchorPoint=Vector2.new(.5,.5),ZIndex=5}; win.Root=g
+	local card=inst{"Frame",Parent=g,BackgroundColor3=ui.T.Card,Size=UDim2.fromScale(1,1)}; glass(card,ui.T); table.insert(ui.Themables,{obj=card,kind="bg"})
+	local titlebar=inst{"Frame",Parent=card,BackgroundTransparency=.5,BackgroundColor3=ui.T.Card,Size=UDim2.new(1,0,0,36)}; table.insert(ui.Themables,{obj=titlebar,kind="bg"})
+	local tl=inst{"TextLabel",Parent=titlebar,BackgroundTransparency=1,Text=title,Font=Enum.Font.GothamSemibold,TextSize=16,Position=UDim2.fromOffset(12,0),Size=UDim2.new(1,-120,1,0),TextXAlignment=Enum.TextXAlignment.Left}; table.insert(ui.Themables,{obj=tl,kind="text"})
+	local function tbtn(txt,x)
+		local b=inst{"TextButton",Parent=titlebar,Text=txt,Font=Enum.Font.GothamBold,TextSize=14,AutoButtonColor=false,BackgroundTransparency=.2,Size=UDim2.fromOffset(28,24),Position=UDim2.new(1,-x,0,.5),AnchorPoint=Vector2.new(1,.5)}
+		inst{"UICorner",CornerRadius=UDim.new(0,6),Parent=b}; table.insert(ui.Themables,{obj=b,kind="text"})
+		b.MouseEnter:Connect(function() tween(b,.15,{BackgroundTransparency=.05}):Play() end)
+		b.MouseLeave:Connect(function() tween(b,.2,{BackgroundTransparency=.2}):Play() end)
+		return b
+	end
+	local close=tbtn("✕",8); local mini=tbtn("–",40)
+	close.MouseButton1Click:Connect(function() pcall(ripple,titlebar); tween(card,.2,{Size=UDim2.new(0,0,0,0)},Enum.EasingStyle.Back):Play(); tween(g,.2,{BackgroundTransparency=1}):Play(); task.delay(.2,function() g:Destroy() end) end)
+	local minimized=false
+	mini.MouseButton1Click:Connect(function() minimized=not minimized; tween(card,.25,{Size=UDim2.new(1,0,0,minimized and 36 or 390)},Enum.EasingStyle.Back):Play() end)
+	-- drag
+	local drag=false; local off
+	titlebar.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 then drag=true; off=Vector2.new(i.Position.X-g.AbsolutePosition.X,i.Position.Y-g.AbsolutePosition.Y) end end)
+	UIS.InputEnded:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 then drag=false end end)
+	UIS.InputChanged:Connect(function(i) if drag and i.UserInputType==Enum.UserInputType.MouseMovement then g.Position=UDim2.fromOffset(i.Position.X-off.X,i.Position.Y-off.Y) end end)
+	-- tabs
+	local tabs=inst{"Frame",Parent=card,BackgroundTransparency=1,Position=UDim2.new(0,8,0,40),Size=UDim2.new(1,-16,0,24)}; inst{"UIListLayout",Parent=tabs,FillDirection=Enum.FillDirection.Horizontal,Padding=UDim.new(0,6)}
+	local content=inst{"Frame",Parent=card,BackgroundTransparency=1,Position=UDim2.new(0,8,0,72),Size=UDim2.new(1,-16,1,-80)}
+	local holder=inst{"Frame",Parent=content,Size=UDim2.fromScale(1,1),BackgroundTransparency=1}
+	local pages={}
+
+	function win:Tab(name)
+		local t={Name=name}
+		local tb=inst{"TextButton",Parent=tabs,Text=name,Font=Enum.Font.Gotham,TextSize=14,AutoButtonColor=false,BackgroundColor3=ui.T.Card,Size=UDim2.fromOffset(110,24)}; inst{"UICorner",CornerRadius=UDim.new(0,8),Parent=tb}; table.insert(ui.Themables,{obj=tb,kind="text"})
+		local page=inst{"ScrollingFrame",Parent=holder,Visible=false,BackgroundTransparency=.2,BackgroundColor3=ui.T.Card,Size=UDim2.fromScale(1,1),CanvasSize=UDim2.new(0,0,0,0),ScrollBarThickness=4}
+		inst{"UICorner",CornerRadius=UDim.new(0,10),Parent=page}; table.insert(ui.Themables,{obj=page,kind="bg"}); inst{"UIPadding",Parent=page,PaddingLeft=UDim.new(0,10),PaddingTop=UDim.new(0,10),PaddingRight=UDim.new(0,10),PaddingBottom=UDim.new(0,10)}
+		local list=inst{"UIListLayout",Parent=page,Padding=UDim.new(0,8)}; list:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function() page.CanvasSize=UDim2.new(0,0,0,list.AbsoluteContentSize.Y+12) end)
+		pages[name]=page
+		local function activate() if win.Active==name then return end; for _,pg in pairs(pages) do pg.Visible=false end; page.Visible=true; page.BackgroundTransparency=1; tween(page,.18,{BackgroundTransparency=.2},Enum.EasingStyle.Quad):Play(); win.Active=name end
+		tb.MouseButton1Click:Connect(function() ripple(tb); activate() end); if not win.Active then activate() end
+
+		-- helpers
+		local function card()
+			local f=inst{"Frame",Parent=page,BackgroundColor3=ui.T.Card,BackgroundTransparency=.05,Size=UDim2.new(1,-4,0,36)}; inst{"UICorner",CornerRadius=UDim.new(0,10),Parent=f}; table.insert(ui.Themables,{obj=f,kind="bg"}); shadow(f); return f
+		end
+		local function label(txt,parent,sz,bold)
+			local l=inst{"TextLabel",Parent=parent,BackgroundTransparency=1,Text=txt,Font= bold and Enum.Font.GothamSemibold or Enum.Font.Gotham,TextSize=sz or 14,TextXAlignment=Enum.TextXAlignment.Left,Size=UDim2.new(1,-8,1,0),Position=UDim2.fromOffset(8,0)}; table.insert(ui.Themables,{obj=l,kind="text"}); return l
+		end
+		local function mkbtn(p)
+			local b=inst{"TextButton",Parent=p,Text="",BackgroundTransparency=1,Size=UDim2.fromScale(1,1)}; return b
+		end
+
+		function t:Section(text)
+			local f=inst{"Frame",Parent=page,BackgroundTransparency=1,Size=UDim2.new(1,-4,0,28)}; local l=inst{"TextLabel",Parent=f,BackgroundTransparency=1,Text=text,Font=Enum.Font.GothamSemibold,TextSize=16,TextXAlignment=Enum.TextXAlignment.Left,Size=UDim2.new(1,0,1,0)}; table.insert(ui.Themables,{obj=l,kind="text"}); return f
+		end
+		function t:Separator()
+			local f=inst{"Frame",Parent=page,BackgroundTransparency=1,Size=UDim2.new(1,-4,0,8)}; local line=inst{"Frame",Parent=f,BackgroundColor3=ui.T.Stroke,Size=UDim2.new(1,0,0,1),Position=UDim2.new(0,0,.5,0)}; table.insert(ui.Themables,{obj=line,kind="stroke"}); return f
+		end
+		function t:Label(text) local f=card(); label(text,f); return f end
+		function t:Paragraph(text)
+			local f=card(); f.Size=UDim2.new(1,-4,0,64); local l=inst{"TextLabel",Parent=f,BackgroundTransparency=1,TextWrapped=true,TextXAlignment=Enum.TextXAlignment.Left,TextYAlignment=Enum.TextYAlignment.Top,Text=text,Font=Enum.Font.Gotham,TextSize=14,Size=UDim2.new(1,-12,1,-12),Position=UDim2.fromOffset(8,6)}; table.insert(ui.Themables,{obj=l,kind="text"}); return f
+		end
+
+		function t:Button(text,cb)
+			local f=card(); local b=mkbtn(f); label(text,f)
+			b.MouseEnter:Connect(function() tween(f,.12,{BackgroundTransparency=0},Enum.EasingStyle.Quart):Play() end)
+			b.MouseLeave:Connect(function() tween(f,.18,{BackgroundTransparency=.05}):Play() end)
+			b.MouseButton1Click:Connect(function() ripple(f); if cb then cb() end end)
+			return f
+		end
+
+		function t:ImageButton(text,imageId,cb)
+			local f=card(); f.Size=UDim2.new(1,-4,0,48); label(text,f)
+			local img=inst{"ImageLabel",Parent=f,BackgroundTransparency=1,Image=imageId or "rbxassetid://0",Size=UDim2.fromOffset(36,36),Position=UDim2.new(1,-44,0.5,-18)}
+			local b=mkbtn(f); b.MouseEnter:Connect(function() tween(img,.1,{Size=UDim2.fromOffset(40,40)},Enum.EasingStyle.Back):Play() end)
+			b.MouseLeave:Connect(function() tween(img,.12,{Size=UDim2.fromOffset(36,36)}):Play() end)
+			b.MouseButton1Click:Connect(function() ripple(f); if cb then cb() end end)
+			return f
+		end
+
+		function t:Toggle(text,default,cb)
+			local f=card(); label(text,f)
+			local sw=inst{"Frame",Parent=f,Size=UDim2.fromOffset(44,22),Position=UDim2.new(1,-52,0.5,-11),BackgroundColor3=ui.T.Stroke}; inst{"UICorner",CornerRadius=UDim.new(1,0),Parent=sw}
+			local knob=inst{"Frame",Parent=sw,Size=UDim2.fromOffset(18,18),Position=UDim2.fromOffset(2,2),BackgroundColor3=Color3.new(1,1,1)}; inst{"UICorner",CornerRadius=UDim.new(1,0),Parent=knob}
+			local on=default or false
+			local function set(v) on=v; tween(sw,.15,{BackgroundColor3=v and ui.T.Accent or ui.T.Stroke},Enum.EasingStyle.Quart):Play(); tween(knob,.15,{Position=UDim2.fromOffset(v and 24 or 2,2)},Enum.EasingStyle.Quart):Play(); if cb then cb(on) end end
+			set(on); f.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 then set(not on) end end)
+			return set
+		end
+
+		function t:Checkbox(text,default,cb)
+			local f=card(); label(text,f)
+			local box=inst{"Frame",Parent=f,Size=UDim2.fromOffset(22,22),Position=UDim2.new(1,-34,0.5,-11),BackgroundColor3=ui.T.Stroke}; inst{"UICorner",CornerRadius=UDim.new(0,6),Parent=box}
+			local tick=inst{"Frame",Parent=box,Size=UDim2.fromOffset(0,0),AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromScale(.5,.5),BackgroundColor3=ui.T.Accent}; inst{"UICorner",CornerRadius=UDim.new(0,5),Parent=tick}
+			local on=default or false
+			local function set(v) on=v; tween(tick,.12,{Size=v and UDim2.fromOffset(14,14) or UDim2.fromOffset(0,0)},Enum.EasingStyle.Back):Play(); if cb then cb(on) end end
+			set(on); f.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 then set(not on) end end)
+			return set
+		end
+
+		function t:Slider(text,min,max,default,cb)
+			local f=card(); label(text,f)
+			local track=inst{"Frame",Parent=f,Size=UDim2.new(0.55,0,0,6),Position=UDim2.new(1,-280,0.5,-3),BackgroundColor3=ui.T.Stroke}; inst{"UICorner",CornerRadius=UDim.new(0,3),Parent=track}
+			local fill=inst{"Frame",Parent=track,Size=UDim2.fromScale(0,1),BackgroundColor3=ui.T.Accent}; inst{"UICorner",CornerRadius=UDim.new(0,3),Parent=fill}
+			local val=inst{"TextLabel",Parent=f,BackgroundTransparency=1,Text="",Font=Enum.Font.GothamSemibold,TextSize=14,Position=UDim2.new(1,-56,0,0),Size=UDim2.fromOffset(48,36)}; table.insert(ui.Themables,{obj=val,kind="text"})
+			min,max=tonumber(min) or 0, tonumber(max) or 100; local v=math.clamp(default or min,min,max); local dragging=false
+			local function set(x) v=math.floor(x+0.5); val.Text=tostring(v); local pct=(v-min)/math.max(1,(max-min)); tween(fill,.1,{Size=UDim2.fromScale(pct,1)},Enum.EasingStyle.Quad):Play(); if cb then cb(v) end end
+			set(v)
+			local function toVal(px) local rel=math.clamp((px-track.AbsolutePosition.X)/math.max(1,track.AbsoluteSize.X),0,1); return min+rel*(max-min) end
+			track.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 then dragging=true; set(toVal(i.Position.X)) end end)
+			UIS.InputEnded:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 then dragging=false end end)
+			UIS.InputChanged:Connect(function(i) if dragging and i.UserInputType==Enum.UserInputType.MouseMovement then set(toVal(i.Position.X)) end end)
+			return set
+		end
+
+		function t:Progress(text,default,max,cb)
+			local f=card(); f.Size=UDim2.new(1,-4,0,46); label(text,f)
+			local bar=inst{"Frame",Parent=f,BackgroundColor3=ui.T.Stroke,Size=UDim2.new(1,-16,0,6),Position=UDim2.new(0,8,1,-12)}; inst{"UICorner",CornerRadius=UDim.new(0,3),Parent=bar}
+			local fill=inst{"Frame",Parent=bar,BackgroundColor3=ui.T.Accent,Size=UDim2.fromScale(0,1)}; inst{"UICorner",CornerRadius=UDim.new(0,3),Parent=fill}
+			local v=default or 0; max=max or 100
+			local function set(x) v=math.clamp(x,0,max); tween(fill,.15,{Size=UDim2.fromScale(v/max,1)}):Play(); if cb then cb(v) end end
+			set(v); return set
+		end
+
+		local function buildMenu(anchor,list,withSearch,cb)
+			local menu=inst{"Frame",Parent=anchor,BackgroundColor3=ui.T.Card,BackgroundTransparency=.05,Position=UDim2.new(1,-152,0,36),Size=UDim2.fromOffset(160, #list*26 + (withSearch and 34 or 8)),Visible=false,ZIndex=20}
+			inst{"UICorner",CornerRadius=UDim.new(0,8),Parent=menu}; shadow(menu)
+			local pad=inst{"UIPadding",Parent=menu,PaddingTop=UDim.new(0, withSearch and 30 or 4),PaddingLeft=UDim.new(0,4)}
+			local search; if withSearch then search=inst{"TextBox",Parent=menu,PlaceholderText="Search...",Text="",Font=Enum.Font.Gotham,TextSize=13,ClearTextOnFocus=false,BackgroundTransparency=.1,Size=UDim2.new(1,-8,0,22),Position=UDim2.new(0,4,0,4)}; inst{"UICorner",CornerRadius=UDim.new(0,6),Parent=search}; table.insert(ui.Themables,{obj=search,kind="text"}) end
+			local container=inst{"Frame",Parent=menu,BackgroundTransparency=1,Size=UDim2.new(1,-8,1,-(withSearch and 34 or 8)),Position=UDim2.new(0,4,0, withSearch and 30 or 4)}
+			local listlayout=inst{"UIListLayout",Parent=container,Padding=UDim.new(0,2)}
+			local function refresh(filter)
+				for _,c in ipairs(container:GetChildren()) do if c:IsA("TextButton") then c:Destroy() end end
+				for _,opt in ipairs(list) do
+					if (not filter) or string.find(string.lower(opt), string.lower(filter), 1, true) then
+						local b=inst{"TextButton",Parent=container,Text=opt,Font=Enum.Font.Gotham,TextSize=14,BackgroundTransparency=1,Size=UDim2.new(1,0,0,24)}
+						b.MouseEnter:Connect(function() tween(b,.08,{TextSize=15}):Play() end); b.MouseLeave:Connect(function() tween(b,.08,{TextSize=14}):Play() end)
+						b.MouseButton1Click:Connect(function() cb(opt); tween(menu,.12,{BackgroundTransparency=.25}):Play(); task.delay(.12,function() menu.Visible=false end) end)
+					end
+				end
+			end
+			refresh(); if search then search:GetPropertyChangedSignal("Text"):Connect(function() refresh(search.Text) end) end
+			return menu
+		end
+
+		function t:Dropdown(text,list,default,cb)
+			local f=card(); label(text,f)
+			local dd=inst{"TextButton",Parent=f,Text=default or "Select",Font=Enum.Font.Gotham,TextSize=14,BackgroundTransparency=.1,Size=UDim2.fromOffset(152,28),Position=UDim2.new(1,-164,0.5,-14)}; inst{"UICorner",CornerRadius=UDim.new(0,8),Parent=dd}; table.insert(ui.Themables,{obj=dd,kind="text"})
+			local function set(v) dd.Text=v; if cb then cb(v) end end
+			local menu=buildMenu(f,list,false,set)
+			dd.MouseButton1Click:Connect(function() pcall(ripple,dd); menu.Visible=not menu.Visible; tween(menu,.12,{BackgroundTransparency= menu.Visible and .05 or .25},Enum.EasingStyle.Back):Play() end)
+			return {Set=set, Rebuild=function(new) list=new end}
+		end
+		function t:DropdownSearch(text,list,default,cb)
+			local f=card(); label(text,f)
+			local dd=inst{"TextButton",Parent=f,Text=default or "Select",Font=Enum.Font.Gotham,TextSize=14,BackgroundTransparency=.1,Size=UDim2.fromOffset(152,28),Position=UDim2.new(1,-164,0.5,-14)}; inst{"UICorner",CornerRadius=UDim.new(0,8),Parent=dd}; table.insert(ui.Themables,{obj=dd,kind="text"})
+			local function set(v) dd.Text=v; if cb then cb(v) end end
+			local menu; dd.MouseButton1Click:Connect(function()
+				pcall(ripple,dd); if not menu then menu=buildMenu(f,list,true,set) end; menu.Visible=not menu.Visible; tween(menu,.12,{BackgroundTransparency= menu.Visible and .05 or .25},Enum.EasingStyle.Back):Play()
+			end)
+			return {Set=set}
+		end
+
+		function t:Textbox(text,placeholder,cb)
+			local f=card(); label(text,f)
+			local box=inst{"TextBox",Parent=f,PlaceholderText=placeholder or "",Text="",Font=Enum.Font.Gotham,TextSize=14,ClearTextOnFocus=false,BackgroundTransparency=.1,Size=UDim2.fromOffset(220,28),Position=UDim2.new(1,-232,0.5,-14)}; inst{"UICorner",CornerRadius=UDim.new(0,8),Parent=box}; table.insert(ui.Themables,{obj=box,kind="text"})
+			box.Focused:Connect(function() tween(box,.12,{BackgroundTransparency=0},Enum.EasingStyle.Quart):Play() end)
+			box.FocusLost:Connect(function(enter) tween(box,.12,{BackgroundTransparency=.1}):Play(); if enter and cb then cb(box.Text) end end)
+			return box
+		end
+
+		function t:Keybind(text,key,cb)
+			local f=card(); label(text,f)
+			local b=inst{"TextButton",Parent=f,Text=key and key.Name or "None",Font=Enum.Font.GothamSemibold,TextSize=14,BackgroundTransparency=.1,Size=UDim2.fromOffset(110,28),Position=UDim2.new(1,-122,0.5,-14)}; inst{"UICorner",CornerRadius=UDim.new(0,8),Parent=b}; table.insert(ui.Themables,{obj=b,kind="text"})
+			local current=key; b.MouseButton1Click:Connect(function() b.Text="Press..."; local con; con=UIS.InputBegan:Connect(function(i,gp) if i.UserInputType==Enum.UserInputType.Keyboard then current=i.KeyCode; b.Text=current.Name; con:Disconnect() end end) end)
+			UIS.InputBegan:Connect(function(i,gp) if not gp and current and i.KeyCode==current and cb then cb() end end)
+			return function(k) current=k; b.Text=k.Name end
+		end
+
+		function t:RadioGroup(text,options,default,cb)
+			local f=card(); f.Size=UDim2.new(1,-4,0, (math.ceil(#options/3)*30)+12); label(text,f)
+			local sel=default or options[1]
+			local grid=inst{"UIGridLayout",Parent=f,CellPadding=UDim2.new(0,8,0,8),CellSize=UDim2.new(0,150,0,24),SortOrder=Enum.SortOrder.LayoutOrder}; grid.FillDirectionMaxCells=3
+			grid.HorizontalAlignment=Enum.HorizontalAlignment.Right; grid.VerticalAlignment=Enum.VerticalAlignment.Center
+			for _,opt in ipairs(options) do
+				local item=inst{"Frame",Parent=f,BackgroundTransparency=.1,BackgroundColor3=ui.T.Card,Size=UDim2.fromOffset(150,24)}; inst{"UICorner",CornerRadius=UDim.new(0,8),Parent=item}; table.insert(ui.Themables,{obj=item,kind="bg"})
+				local dot=inst{"Frame",Parent=item,Size=UDim2.fromOffset(18,18),Position=UDim2.fromOffset(4,3),BackgroundColor3=ui.T.Stroke}; inst{"UICorner",CornerRadius=UDim.new(1,0),Parent=dot}
+				local fill=inst{"Frame",Parent=dot,Size=UDim2.fromOffset(0,0),AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromScale(.5,.5),BackgroundColor3=ui.T.Accent}; inst{"UICorner",CornerRadius=UDim.new(1,0),Parent=fill}
+				local tx=inst{"TextLabel",Parent=item,BackgroundTransparency=1,Text=opt,Font=Enum.Font.Gotham,TextSize=14,Position=UDim2.fromOffset(28,0),Size=UDim2.new(1,-30,1,0),TextXAlignment=Enum.TextXAlignment.Left}; table.insert(ui.Themables,{obj=tx,kind="text"})
+				local function update(v) tween(fill,.12,{Size=UDim2.fromOffset(v and 10 or 0, v and 10 or 0)},Enum.EasingStyle.Back):Play() end
+				update(opt==sel)
+				item.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 then sel=opt; for _,c in ipairs(f:GetChildren()) do if c:IsA("Frame") and c~=item then local d=c:FindFirstChildOfClass("Frame"); if d then local fi=d:FindFirstChildOfClass("Frame"); if fi then tween(fi,.12,{Size=UDim2.fromOffset(0,0)}):Play() end end end end; update(true); if cb then cb(sel) end end end)
+			end
+			return function(v) sel=v; if cb then cb(sel) end end
+		end
+
+		-- simple RGB color picker (lightweight)
+		function t:ColorPicker(text,default,cb)
+			local f=card(); f.Size=UDim2.new(1,-4,0,90); label(text,f)
+			local function mkSlider(lbl,init,offset)
+				local row=inst{"Frame",Parent=f,BackgroundTransparency=1,Size=UDim2.new(1,-12,0,24),Position=UDim2.new(0,8,0, offset)}
+				local lt=inst{"TextLabel",Parent=row,BackgroundTransparency=1,Text=lbl,Font=Enum.Font.Gotham,TextSize=13,Size=UDim2.fromOffset(20,24)}; table.insert(ui.Themables,{obj=lt,kind="text"})
+				local tr=inst{"Frame",Parent=row,BackgroundColor3=ui.T.Stroke,Size=UDim2.new(1,-80,0,6),Position=UDim2.new(0,28,0,9)}; inst{"UICorner",CornerRadius=UDim.new(0,3),Parent=tr}
+				local fl=inst{"Frame",Parent=tr,BackgroundColor3=ui.T.Accent,Size=UDim2.fromScale(0,1)}; inst{"UICorner",CornerRadius=UDim.new(0,3),Parent=fl}
+				local out=inst{"TextLabel",Parent=row,BackgroundTransparency=1,Text=tostring(init),Font=Enum.Font.GothamSemibold,TextSize=13,Position=UDim2.new(1,-44,0,0),Size=UDim2.fromOffset(44,24)}; table.insert(ui.Themables,{obj=out,kind="text"})
+				local v=init or 0; local drag=false
+				local function set(px)
+					local rel=math.clamp((px-tr.AbsolutePosition.X)/math.max(1,tr.AbsoluteSize.X),0,1); v=math.floor(rel*255+0.5); out.Text=tostring(v); tween(fl,.1,{Size=UDim2.fromScale(rel,1)}):Play(); return v
+				end
+				tr.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 then drag=true; set(i.Position.X); end end)
+				UIS.InputChanged:Connect(function(i) if drag and i.UserInputType==Enum.UserInputType.MouseMovement then set(i.Position.X); if cb then cb(Color3.fromRGB(r(),g(),b())) end end end)
+				UIS.InputEnded:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 then drag=false end end)
+				return function() return v end, function(x) v=x; out.Text=tostring(v); tween(fl,.1,{Size=UDim2.fromScale(v/255,1)}):Play() end
+			end
+			local r,g,b=0,0,0
+			local getR,setR=mkSlider("R",default and math.floor(default.R*255) or 0,30)
+			local getG,setG=mkSlider("G",default and math.floor(default.G*255) or 0,54)
+			local getB,setB=mkSlider("B",default and math.floor(default.B*255) or 0,78)
+			local swatch=inst{"Frame",Parent=f,BackgroundColor3=default or Color3.new(1,1,1),Size=UDim2.fromOffset(24,24),Position=UDim2.new(1,-34,0,8)}; inst{"UICorner",CornerRadius=UDim.new(0,6),Parent=swatch}
+			local function update() local c=Color3.fromRGB(getR(),getG(),getB()); tween(swatch,.1,{BackgroundColor3=c}):Play(); if cb then cb(c) end end
+			setR(default and math.floor(default.R*255) or 0); setG(default and math.floor(default.G*255) or 0); setB(default and math.floor(default.B*255) or 0); task.delay(.01,update)
+			return function(c) setR(math.floor(c.R*255)); setG(math.floor(c.G*255)); setB(math.floor(c.B*255)); update() end
+		end
+
+		return t
+	end
+	return win
 end
 
-local function addRippleEffect(obj)
-    obj.MouseButton1Down:Connect(function()
-        tween(obj, {Size = obj.Size - UDim2.new(0, 4, 0, 2)}, Animations.fast)
-    end)
-    obj.MouseButton1Up:Connect(function()
-        tween(obj, {Size = obj.Size + UDim2.new(0, 4, 0, 2)}, Animations.bounce)
-    end)
+-- notifications -----
+function PrismUI:Notify(title,msg,dur)
+	dur=dur or 3
+	local root=inst{"Frame",Parent=self.Screen,BackgroundTransparency=1,AnchorPoint=Vector2.new(1,1),Position=UDim2.new(1,-12,1,-12),Size=UDim2.fromOffset(280,0),ZIndex=100}
+	local card=inst{"Frame",Parent=root,Size=UDim2.fromOffset(280,64),BackgroundColor3=self.T.Card}
+	glass(card,self.T); table.insert(self.Themables,{obj=card,kind="bg"})
+	local bar=inst{"Frame",Parent=card,BackgroundColor3=self.T.Accent,Size=UDim2.new(0,0,0,3),Position=UDim2.new(0,0,1,-3)}
+	local tl=inst{"TextLabel",Parent=card,BackgroundTransparency=1,Text=title,Font=Enum.Font.GothamSemibold,TextSize=15,Position=UDim2.fromOffset(10,6),Size=UDim2.fromOffset(260,18)}; table.insert(self.Themables,{obj=tl,kind="text"})
+	local tx=inst{"TextLabel",Parent=card,BackgroundTransparency=1,Text=msg,Font=Enum.Font.Gotham,TextSize=13,TextWrapped=true,Position=UDim2.fromOffset(10,26),Size=UDim2.fromOffset(260,32)}; table.insert(self.Themables,{obj=tx,kind="text"})
+	card.Position=UDim2.new(1,12,1,-12); card.AnchorPoint=Vector2.new(1,1)
+	tween(card,.18,{Position=UDim2.new(1,0,1,-12)},Enum.EasingStyle.Back):Play(); tween(bar,dur,{Size=UDim2.new(1,0,0,3)},Enum.EasingStyle.Linear):Play()
+	task.delay(dur,function() tween(card,.2,{Position=UDim2.new(1,12,1,-12),BackgroundTransparency=.3},Enum.EasingStyle.Quad):Play(); task.delay(.21,function() root:Destroy() end) end)
 end
 
--- Enhanced Window System
-function UILib:Window(title, config)
-    local window = {}
-    config = config or {}
-    
-    -- Create main GUI with backdrop
-    local screenGui = createElement("ScreenGui", {
-        Name = "UILib_" .. title,
-        ResetOnSpawn = false,
-        ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    }, PlayerGui)
-    
-    -- Backdrop blur effect
-    local backdrop = createElement("Frame", {
-        Size = UDim2.new(1, 0, 1, 0),
-        BackgroundColor3 = Color3.new(0, 0, 0),
-        BackgroundTransparency = 0.3,
-        BorderSizePixel = 0
-    }, screenGui)
-    
-    -- Main window with shadow
-    local shadow = createElement("Frame", {
-        Size = UDim2.new(0, 506, 0, 406),
-        Position = UDim2.new(0.5, -253, 0.5, -203),
-        BackgroundColor3 = Color3.new(0, 0, 0),
-        BackgroundTransparency = 0.8,
-        BorderSizePixel = 0
-    }, screenGui)
-    createElement("UICorner", {CornerRadius = UDim.new(0, 12)}, shadow)
-    
-    local main = createElement("Frame", {
-        Size = UDim2.new(0, 500, 0, 400),
-        Position = UDim2.new(0.5, -250, 0.5, -200),
-        BackgroundColor3 = currentTheme.bg,
-        BorderColor3 = currentTheme.border,
-        BorderSizePixel = 1
-    }, screenGui)
-    createElement("UICorner", {CornerRadius = UDim.new(0, 12)}, main)
-    
-    -- Animated entrance
-    main.Size = UDim2.new(0, 0, 0, 0)
-    tween(main, {Size = UDim2.new(0, 500, 0, 400)}, Animations.elastic)
-    
-    -- Enhanced title bar with gradient
-    local titleBar = createElement("Frame", {
-        Size = UDim2.new(1, 0, 0, 40),
-        BackgroundColor3 = currentTheme.accent,
-        BorderSizePixel = 0
-    }, main)
-    createElement("UICorner", {CornerRadius = UDim.new(0, 12)}, titleBar)
-    createElement("Frame", {
-        Size = UDim2.new(1, 0, 0, 20),
-        Position = UDim2.new(0, 0, 1, -20),
-        BackgroundColor3 = currentTheme.accent,
-        BorderSizePixel = 0
-    }, titleBar)
-    
-    -- Title with icon
-    local titleContainer = createElement("Frame", {
-        Size = UDim2.new(1, -100, 1, 0),
-        Position = UDim2.new(0, 15, 0, 0),
-        BackgroundTransparency = 1
-    }, titleBar)
-    
-    local titleText = createElement("TextLabel", {
-        Size = UDim2.new(1, 0, 1, 0),
-        Text = "  " .. title,
-        TextColor3 = Color3.new(1, 1, 1),
-        BackgroundTransparency = 1,
-        Font = Enum.Font.GothamBold,
-        TextSize = 16,
-        TextXAlignment = Enum.TextXAlignment.Left
-    }, titleContainer)
-    
-    -- Enhanced close button
-    local closeBtn = createElement("TextButton", {
-        Size = UDim2.new(0, 35, 0, 35),
-        Position = UDim2.new(1, -40, 0.5, -17.5),
-        Text = "✕",
-        TextColor3 = Color3.new(1, 1, 1),
-        BackgroundColor3 = Color3.fromRGB(255, 59, 48),
-        BackgroundTransparency = 0.3,
-        BorderSizePixel = 0,
-        Font = Enum.Font.GothamBold,
-        TextSize = 14
-    }, titleBar)
-    createElement("UICorner", {CornerRadius = UDim.new(0, 6)}, closeBtn)
-    
-    addHoverEffect(closeBtn, Color3.fromRGB(255, 69, 58), Color3.fromRGB(255, 59, 48))
-    addRippleEffect(closeBtn)
-    
-    closeBtn.MouseButton1Click:Connect(function()
-        tween(main, {Size = UDim2.new(0, 0, 0, 0)}, Animations.smooth, function()
-            screenGui:Destroy()
-        end)
-    end)
-    
-    -- Enhanced tab system
-    local tabBar = createElement("Frame", {
-        Size = UDim2.new(1, 0, 0, 45),
-        Position = UDim2.new(0, 0, 0, 40),
-        BackgroundColor3 = currentTheme.surface,
-        BorderSizePixel = 0
-    }, main)
-    
-    local tabContainer = createElement("Frame", {
-        Size = UDim2.new(1, 0, 1, -85),
-        Position = UDim2.new(0, 0, 0, 85),
-        BackgroundTransparency = 1
-    }, main)
-    
-    -- Enhanced dragging system
-    local dragging = false
-    local dragStart, startPos
-    
-    titleBar.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = true
-            dragStart = input.Position
-            startPos = main.Position
-        end
-    end)
-    
-    UserInputService.InputChanged:Connect(function(input)
-        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-            local delta = input.Position - dragStart
-            main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-        end
-    end)
-    
-    UserInputService.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = false
-        end
-    end)
-    
-    window.tabs = {}
-    window.activeTab = nil
-    
-    function window:Tab(name)
-        local tab = {}
-        local tabIndex = #self.tabs + 1
-        
-        -- Enhanced tab button
-        local tabBtn = createElement("TextButton", {
-            Size = UDim2.new(0, 120, 1, -10),
-            Position = UDim2.new(0, (tabIndex - 1) * 125 + 10, 0, 5),
-            Text = name,
-            TextColor3 = currentTheme.textDim,
-            BackgroundColor3 = currentTheme.border,
-            BorderSizePixel = 0,
-            Font = Enum.Font.Gotham,
-            TextSize = 13
-        }, tabBar)
-        createElement("UICorner", {CornerRadius = UDim.new(0, 8)}, tabBtn)
-        
-        local tabIndicator = createElement("Frame", {
-            Size = UDim2.new(0, 0, 0, 3),
-            Position = UDim2.new(0, 0, 1, -3),
-            BackgroundColor3 = currentTheme.accent,
-            BorderSizePixel = 0
-        }, tabBtn)
-        createElement("UICorner", {CornerRadius = UDim.new(0, 2)}, tabIndicator)
-        
-        -- Tab content with scrolling
-        local content = createElement("ScrollingFrame", {
-            Size = UDim2.new(1, -20, 1, -10),
-            Position = UDim2.new(0, 10, 0, 5),
-            BackgroundTransparency = 1,
-            ScrollBarThickness = 4,
-            ScrollBarImageColor3 = currentTheme.accent,
-            CanvasSize = UDim2.new(0, 0, 0, 0),
-            Visible = false
-        }, tabContainer)
-        
-        local layout = createElement("UIListLayout", {
-            Padding = UDim.new(0, 8),
-            SortOrder = Enum.SortOrder.LayoutOrder
-        }, content)
-        
-        layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-            content.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 10)
-        end)
-        
-        -- Tab switching with animation
-        tabBtn.MouseButton1Click:Connect(function()
-            -- Deactivate current tab
-            if window.activeTab then
-                local oldTab = window.activeTab
-                tween(oldTab, {Position = UDim2.new(-1, 0, 0, 0)}, Animations.fast, function()
-                    oldTab.Visible = false
-                    oldTab.Position = UDim2.new(0, 10, 0, 5)
-                end)
-                
-                -- Reset old tab button
-                for _, tabData in pairs(window.tabs) do
-                    if tabData.content == oldTab then
-                        tween(tabData.button, {TextColor3 = currentTheme.textDim, BackgroundColor3 = currentTheme.border})
-                        tween(tabData.indicator, {Size = UDim2.new(0, 0, 0, 3)})
-                        break
-                    end
-                end
-            end
-            
-            -- Activate new tab
-            content.Position = UDim2.new(1, 0, 0, 5)
-            content.Visible = true
-            tween(content, {Position = UDim2.new(0, 10, 0, 5)}, Animations.smooth)
-            tween(tabBtn, {TextColor3 = currentTheme.text, BackgroundColor3 = currentTheme.surface})
-            tween(tabIndicator, {Size = UDim2.new(1, 0, 0, 3)})
-            
-            window.activeTab = content
-        end)
-        
-        -- Auto-activate first tab
-        if tabIndex == 1 then
-            content.Visible = true
-            tabBtn.TextColor3 = currentTheme.text
-            tabBtn.BackgroundColor3 = currentTheme.surface
-            tabIndicator.Size = UDim2.new(1, 0, 0, 3)
-            window.activeTab = content
-        end
-        
-        -- Enhanced UI Elements
-        function tab:Button(text, callback)
-            local btn = createElement("TextButton", {
-                Size = UDim2.new(1, 0, 0, 35),
-                Text = text,
-                BackgroundColor3 = currentTheme.accent,
-                TextColor3 = Color3.new(1, 1, 1),
-                BorderSizePixel = 0,
-                Font = Enum.Font.GothamSemibold,
-                TextSize = 14,
-                LayoutOrder = #content:GetChildren()
-            }, content)
-            createElement("UICorner", {CornerRadius = UDim.new(0, 8)}, btn)
-            
-            addHoverEffect(btn, currentTheme.accentHover, currentTheme.accent)
-            addRippleEffect(btn)
-            
-            btn.MouseButton1Click:Connect(function()
-                if callback then callback() end
-            end)
-        end
-        
-        function tab:Toggle(text, default, callback)
-            local frame = createElement("Frame", {
-                Size = UDim2.new(1, 0, 0, 40),
-                BackgroundColor3 = currentTheme.surface,
-                BorderSizePixel = 0,
-                LayoutOrder = #content:GetChildren()
-            }, content)
-            createElement("UICorner", {CornerRadius = UDim.new(0, 8)}, frame)
-            
-            local label = createElement("TextLabel", {
-                Size = UDim2.new(1, -70, 1, 0),
-                Position = UDim2.new(0, 15, 0, 0),
-                Text = text,
-                TextColor3 = currentTheme.text,
-                BackgroundTransparency = 1,
-                Font = Enum.Font.Gotham,
-                TextSize = 14,
-                TextXAlignment = Enum.TextXAlignment.Left
-            }, frame)
-            
-            local toggleBg = createElement("Frame", {
-                Size = UDim2.new(0, 50, 0, 25),
-                Position = UDim2.new(1, -60, 0.5, -12.5),
-                BackgroundColor3 = default and currentTheme.success or currentTheme.border,
-                BorderSizePixel = 0
-            }, frame)
-            createElement("UICorner", {CornerRadius = UDim.new(0, 15)}, toggleBg)
-            
-            local toggleKnob = createElement("Frame", {
-                Size = UDim2.new(0, 21, 0, 21),
-                Position = default and UDim2.new(1, -23, 0.5, -10.5) or UDim2.new(0, 2, 0.5, -10.5),
-                BackgroundColor3 = Color3.new(1, 1, 1),
-                BorderSizePixel = 0
-            }, toggleBg)
-            createElement("UICorner", {CornerRadius = UDim.new(0, 12)}, toggleKnob)
-            
-            local state = default
-            local button = createElement("TextButton", {
-                Size = UDim2.new(1, 0, 1, 0),
-                BackgroundTransparency = 1,
-                Text = ""
-            }, toggleBg)
-            
-            button.MouseButton1Click:Connect(function()
-                state = not state
-                tween(toggleBg, {BackgroundColor3 = state and currentTheme.success or currentTheme.border})
-                tween(toggleKnob, {Position = state and UDim2.new(1, -23, 0.5, -10.5) or UDim2.new(0, 2, 0.5, -10.5)}, Animations.bounce)
-                if callback then callback(state) end
-            end)
-        end
-        
-        function tab:Slider(text, min, max, default, callback)
-            local frame = createElement("Frame", {
-                Size = UDim2.new(1, 0, 0, 60),
-                BackgroundColor3 = currentTheme.surface,
-                BorderSizePixel = 0,
-                LayoutOrder = #content:GetChildren()
-            }, content)
-            createElement("UICorner", {CornerRadius = UDim.new(0, 8)}, frame)
-            
-            local label = createElement("TextLabel", {
-                Size = UDim2.new(1, 0, 0, 25),
-                Position = UDim2.new(0, 15, 0, 5),
-                Text = text .. ": " .. default,
-                TextColor3 = currentTheme.text,
-                BackgroundTransparency = 1,
-                Font = Enum.Font.Gotham,
-                TextSize = 14,
-                TextXAlignment = Enum.TextXAlignment.Left
-            }, frame)
-            
-            local sliderBg = createElement("Frame", {
-                Size = UDim2.new(1, -30, 0, 6),
-                Position = UDim2.new(0, 15, 0, 40),
-                BackgroundColor3 = currentTheme.border,
-                BorderSizePixel = 0
-            }, frame)
-            createElement("UICorner", {CornerRadius = UDim.new(0, 3)}, sliderBg)
-            
-            local sliderFill = createElement("Frame", {
-                Size = UDim2.new((default - min) / (max - min), 0, 1, 0),
-                BackgroundColor3 = currentTheme.accent,
-                BorderSizePixel = 0
-            }, sliderBg)
-            createElement("UICorner", {CornerRadius = UDim.new(0, 3)}, sliderFill)
-            
-            local sliderKnob = createElement("Frame", {
-                Size = UDim2.new(0, 16, 0, 16),
-                Position = UDim2.new((default - min) / (max - min), -8, 0.5, -8),
-                BackgroundColor3 = Color3.new(1, 1, 1),
-                BorderColor3 = currentTheme.accent,
-                BorderSizePixel = 2
-            }, sliderBg)
-            createElement("UICorner", {CornerRadius = UDim.new(0, 8)}, sliderKnob)
-            
-            local value = default
-            local dragging = false
-            
-            sliderBg.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    dragging = true
-                    tween(sliderKnob, {Size = UDim2.new(0, 20, 0, 20)}, Animations.fast)
-                end
-            end)
-            
-            UserInputService.InputChanged:Connect(function(input)
-                if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-                    local percent = math.clamp((input.Position.X - sliderBg.AbsolutePosition.X) / sliderBg.AbsoluteSize.X, 0, 1)
-                    value = math.floor(min + (max - min) * percent)
-                    
-                    tween(sliderFill, {Size = UDim2.new(percent, 0, 1, 0)}, Animations.fast)
-                    tween(sliderKnob, {Position = UDim2.new(percent, -10, 0.5, -10)}, Animations.fast)
-                    label.Text = text .. ": " .. value
-                    
-                    if callback then callback(value) end
-                end
-            end)
-            
-            UserInputService.InputEnded:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 and dragging then
-                    dragging = false
-                    tween(sliderKnob, {Size = UDim2.new(0, 16, 0, 16)}, Animations.bounce)
-                end
-            end)
-        end
-        
-        table.insert(window.tabs, {content = content, button = tabBtn, indicator = tabIndicator})
-        return tab
-    end
-    
-    return window
-end
-
--- Enhanced Notification System
-function UILib:Notify(title, message, duration, notifType)
-    local typeColors = {
-        info = currentTheme.accent,
-        success = currentTheme.success,
-        warning = currentTheme.warning,
-        error = Color3.fromRGB(239, 68, 68)
-    }
-    
-    local notif = createElement("Frame", {
-        Size = UDim2.new(0, 0, 0, 80),
-        Position = UDim2.new(1, 0, 0, 100 + (#PlayerGui:GetChildren() * 90)),
-        BackgroundColor3 = currentTheme.surface,
-        BorderColor3 = typeColors[notifType or "info"],
-        BorderSizePixel = 2
-    }, PlayerGui)
-    createElement("UICorner", {CornerRadius = UDim.new(0, 10)}, notif)
-    
-    -- Slide in animation
-    tween(notif, {Size = UDim2.new(0, 320, 0, 80), Position = UDim2.new(1, -340, 0, 100 + (#PlayerGui:GetChildren() * 90))}, Animations.bounce)
-    
-    -- Content
-    createElement("TextLabel", {
-        Size = UDim2.new(1, -20, 0, 30),
-        Position = UDim2.new(0, 15, 0, 10),
-        Text = title,
-        TextColor3 = currentTheme.text,
-        BackgroundTransparency = 1,
-        Font = Enum.Font.GothamBold,
-        TextSize = 16,
-        TextXAlignment = Enum.TextXAlignment.Left
-    }, notif)
-    
-    createElement("TextLabel", {
-        Size = UDim2.new(1, -20, 0, 35),
-        Position = UDim2.new(0, 15, 0, 35),
-        Text = message,
-        TextColor3 = currentTheme.textDim,
-        BackgroundTransparency = 1,
-        Font = Enum.Font.Gotham,
-        TextSize = 13,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        TextWrapped = true
-    }, notif)
-    
-    -- Auto dismiss
-    wait(duration or 4)
-    tween(notif, {Position = UDim2.new(1, 0, 0, notif.Position.Y.Offset)}, Animations.smooth, function()
-        notif:Destroy()
-    end)
-end
-
-function UILib:Theme(themeName)
-    if Themes[themeName] then
-        currentTheme = Themes[themeName]
-    end
-end
-
-return UILib
+return PrismUI
