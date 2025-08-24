@@ -616,6 +616,7 @@ function Window:GetElementMethods()
         container.BackgroundTransparency = 1
         container.Parent = self.frame
         
+         -- Modern button design
         local button = Instance.new("TextButton")
         button.Name = "Button"
         button.Size = UDim2.new(1, -10, 1, 0)
@@ -1096,7 +1097,7 @@ function PrismUI:Notify(title, message, duration, notificationType)
     local notifGui = Instance.new("ScreenGui")
     notifGui.Name = "PrismNotification"
     notifGui.Parent = PlayerGui
-    
+    notifGui.ResetOnSpawn = false
     local notification = Instance.new("Frame")
     notification.Name = "Notification"
     notification.Size = UDim2.new(0, 350, 0, 90)
