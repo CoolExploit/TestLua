@@ -350,7 +350,7 @@ function Library:CreateWindow(config)
         btn.BorderSizePixel = 0
         btn.Font = Enum.Font.GothamBold
         btn.Text = text
-        btn.TextColor3 = Color3.white
+        btn.TextColor3 = Color3.fromRGB(255, 255, 255)
         btn.TextSize = 16
         btn.Parent = controlsFrame
         
