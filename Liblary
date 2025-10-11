@@ -569,7 +569,7 @@ function Library:AddButton(tab, config)
     button.BorderSizePixel = 0
     button.Font = Enum.Font.GothamBold
     button.Text = buttonText
-    button.TextColor3 = Color3.white
+    button.TextColor3 = Color3.fromRGB(255, 255, 255)
     button.TextSize = 14
     button.Parent = tab.Frame
     
