@@ -1,0 +1,261 @@
+-- Lightweight Roblox UI Library
+-- Single-file module (ModuleScript). Minimal dependencies, tween-based animations.
+-- Features: CreateWindow, AddSection, AddToggle, AddButton, AddSlider, AddDropdown,
+--           SetToggleKeybind, ShowTogglePrompt
+-- Usage: local UILib = require(path_to_this_module)
+--        local win = UILib.CreateWindow("Example")
+--        local sec = win:AddSection("Main")
+--        sec:AddToggle("Godmode", false, function(val) print("Godmode: ", val) end)
+
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local HttpService = game:GetService("HttpService")
+
+local UILib = {}
+UILib.__index = UILib
+
+-- Simple utility
+local function new(class, props)
+    local obj = Instance.new(class)
+    if props then
+        for k, v in pairs(props) do
+            if k == "Parent" then
+                obj.Parent = v
+            else
+                pcall(function() obj[k] = v end)
+            end
+        end
+    end
+    return obj
+end
+
+local function tween(instance, props, t, style, dir)
+    local info = TweenInfo.new(t or 0.18, Enum.EasingStyle[style or "Quad"], Enum.EasingDirection[dir or "Out"])
+    local tw = TweenService:Create(instance, info, props)
+    tw:Play()
+    return tw
+end
+
+-- Root GUI
+local function makeScreenGui(name)
+    local screen = new("ScreenGui", {Name = name or "LightUI", ResetOnSpawn = false, Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")})
+    return screen
+end
+
+-- Basic themed frame constructor
+local function makeWindowFrame(title)
+    local frame = new("Frame", {Name = "Window", Size = UDim2.new(0, 420, 0, 60), AnchorPoint = Vector2.new(0.5, 0), Position = UDim2.new(0.5, 0, 0.08, 0), BackgroundTransparency = 1})
+    local bg = new("Frame", {Name = "BG", Size = UDim2.new(1, 0, 1, 0), Parent = frame, BackgroundColor3 = Color3.fromRGB(28, 28, 30), BackgroundTransparency = 0})
+    new("UICorner", {Parent = bg, CornerRadius = UDim.new(0, 10)})
+    new("Frame", {Parent = bg, Name = "Header", Size = UDim2.new(1,0,0,36), BackgroundTransparency = 1})
+
+    local titleLabel = new("TextLabel", {Parent = bg.Header, Text = title or "Window", BackgroundTransparency = 1, Size = UDim2.new(1, -8, 1, 0), Position = UDim2.new(0, 8, 0, 0), TextSize = 18, Font = Enum.Font.GothamSemibold, TextColor3 = Color3.fromRGB(240,240,240), TextXAlignment = Enum.TextXAlignment.Left})
+
+    local content = new("ScrollingFrame", {Name = "Content", Parent = bg, Size = UDim2.new(1, -12, 1, -46), Position = UDim2.new(0, 6, 0, 40), BackgroundTransparency = 1, CanvasSize = UDim2.new(0,0,0,0), ScrollBarThickness = 6})
+    new("UIListLayout", {Parent = content, Padding = UDim.new(0, 8)})
+    new("UIPadding", {Parent = content, PaddingTop = UDim.new(0, 4), PaddingLeft = UDim.new(0, 6), PaddingRight = UDim.new(0, 6), PaddingBottom = UDim.new(0, 6)})
+
+    return frame
+end
+
+-- Section
+local Section = {}
+Section.__index = Section
+function Section:AddToggle(text, default, callback)
+    local holder = new("Frame", {Size = UDim2.new(1,0,0,36), BackgroundTransparency = 1})
+    local lbl = new("TextLabel", {Parent = holder, Text = text or "Toggle", BackgroundTransparency = 1, Size = UDim2.new(0.8,0,1,0), TextSize = 16, Font = Enum.Font.Gotham, TextColor3 = Color3.fromRGB(230,230,230), TextXAlignment = Enum.TextXAlignment.Left})
+    local btn = new("TextButton", {Parent = holder, Name = "ToggleBtn", Size = UDim2.new(0,56,0,24), Position = UDim2.new(1, -60,0,6), BackgroundColor3 = Color3.fromRGB(70,70,74), Text = "", AutoButtonColor = false})
+    new("UICorner", {Parent = btn, CornerRadius = UDim.new(0,6)})
+    local inner = new("Frame", {Parent = btn, Size = UDim2.new(0.5,0,1,0), Position = UDim2.new(0,0,0,0), BackgroundColor3 = default and Color3.fromRGB(0,170,125) or Color3.fromRGB(40,40,45)})
+    new("UICorner", {Parent = inner, CornerRadius = UDim.new(0,6)})
+
+    local state = default and true or false
+    btn.MouseButton1Click:Connect(function()
+        state = not state
+        tween(inner, {Position = UDim2.new(state and 0 or 0.5, 0, 0, 0)}, 0.14)
+        tween(inner, {BackgroundColor3 = state and Color3.fromRGB(0,170,125) or Color3.fromRGB(40,40,45)}, 0.14)
+        if callback then
+            pcall(callback, state)
+        end
+    end)
+
+    self.Container:AddChild(holder)
+    return holder
+end
+
+function Section:AddButton(text, callback)
+    local holder = new("Frame", {Size = UDim2.new(1,0,0,34), BackgroundTransparency = 1})
+    local btn = new("TextButton", {Parent = holder, Text = text or "Button", Size = UDim2.new(1,0,0,30), BackgroundColor3 = Color3.fromRGB(60,60,64), AutoButtonColor = false, Font = Enum.Font.GothamSemibold, TextSize = 16, TextColor3 = Color3.fromRGB(240,240,240)})
+    new("UICorner", {Parent = btn, CornerRadius = UDim.new(0,8)})
+    btn.MouseButton1Click:Connect(function()
+        if callback then pcall(callback) end
+    end)
+    self.Container:AddChild(holder)
+    return holder
+end
+
+function Section:AddSlider(text, min, max, default, callback)
+    local min = min or 0
+    local max = max or 100
+    local default = math.clamp(default or min, min, max)
+    local holder = new("Frame", {Size = UDim2.new(1,0,0,48), BackgroundTransparency = 1})
+    local lbl = new("TextLabel", {Parent = holder, Text = text or "Slider", BackgroundTransparency = 1, Size = UDim2.new(1, -8, 0, 18), Position = UDim2.new(0, 0, 0, 0), TextSize = 14, Font = Enum.Font.Gotham, TextColor3 = Color3.fromRGB(230,230,230), TextXAlignment = Enum.TextXAlignment.Left})
+    local barBG = new("Frame", {Parent = holder, Size = UDim2.new(1, -8, 0, 12), Position = UDim2.new(0, 4, 0, 26), BackgroundColor3 = Color3.fromRGB(50,50,54)})
+    new("UICorner", {Parent = barBG, CornerRadius = UDim.new(0,6)})
+    local fill = new("Frame", {Parent = barBG, Size = UDim2.new((default - min)/(max-min), 0, 1, 0), BackgroundColor3 = Color3.fromRGB(0,170,125)})
+    new("UICorner", {Parent = fill, CornerRadius = UDim.new(0,6)})
+
+    local dragging = false
+    barBG.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+        end
+    end)
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = false
+        end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+            local rel = math.clamp((input.Position.X - barBG.AbsolutePosition.X) / barBG.AbsoluteSize.X, 0, 1)
+            fill.Size = UDim2.new(rel, 0, 1, 0)
+            local value = min + (max - min) * rel
+            if callback then pcall(callback, value) end
+        end
+    end)
+
+    self.Container:AddChild(holder)
+    return holder
+end
+
+function Section:AddDropdown(text, options, callback)
+    options = options or {}
+    local holder = new("Frame", {Size = UDim2.new(1,0,0,36), BackgroundTransparency = 1})
+    local lbl = new("TextLabel", {Parent = holder, Text = text or "Dropdown", BackgroundTransparency = 1, Size = UDim2.new(0.65,0,1,0), TextSize = 16, Font = Enum.Font.Gotham, TextColor3 = Color3.fromRGB(230,230,230), TextXAlignment = Enum.TextXAlignment.Left})
+    local btn = new("TextButton", {Parent = holder, Text = "▼", Size = UDim2.new(0,32,0,24), Position = UDim2.new(1,-36,0,6), BackgroundColor3 = Color3.fromRGB(58,58,62), AutoButtonColor = false})
+    new("UICorner", {Parent = btn, CornerRadius = UDim.new(0,6)})
+
+    local list = new("Frame", {Parent = holder, Size = UDim2.new(1,0,0,0), Position = UDim2.new(0,0,0,36), BackgroundColor3 = Color3.fromRGB(40,40,44), Visible = false})
+    new("UICorner", {Parent = list, CornerRadius = UDim.new(0,8)})
+    local layout = new("UIListLayout", {Parent = list, Padding = UDim.new(0,4)})
+
+    for i, opt in ipairs(options) do
+        local it = new("TextButton", {Parent = list, Text = tostring(opt), Size = UDim2.new(1, -8, 0, 28), Position = UDim2.new(0, 4, 0, 0), BackgroundTransparency = 1, Font = Enum.Font.Gotham, TextSize = 14, TextColor3 = Color3.fromRGB(240,240,240)})
+        it.MouseButton1Click:Connect(function()
+            list.Visible = false
+            if callback then pcall(callback, opt) end
+        end)
+    end
+
+    btn.MouseButton1Click:Connect(function()
+        list.Visible = not list.Visible
+        if list.Visible then
+            list.Size = UDim2.new(1,0,0, #options * 32 + 8)
+        else
+            list.Size = UDim2.new(1,0,0,0)
+        end
+    end)
+
+    self.Container:AddChild(holder)
+    return holder
+end
+
+-- Container helper to append children into ScrollingFrame and update canvas size
+local Container = {}
+Container.__index = Container
+function Container:AddChild(inst)
+    inst.Parent = self.Frame
+    local layout = self.Frame:FindFirstChildOfClass("UIListLayout")
+    local padding = self.Frame:FindFirstChildOfClass("UIPadding")
+    local total = 6
+    for _, v in ipairs(self.Frame:GetChildren()) do
+        if v:IsA("Frame") or v:IsA("TextButton") or v:IsA("TextLabel") then
+            if v.Size and v.Size.Y and typeof(v.Size.Y.Offset)=="number" then
+                total = total + v.Size.Y.Offset + (layout and layout.Padding.Offset or 0)
+            end
+        end
+    end
+    self.Frame.CanvasSize = UDim2.new(0,0,0,total)
+end
+
+-- Window object
+local Window = {}
+Window.__index = Window
+function Window:AddSection(title)
+    local sframe = new("Frame", {Size = UDim2.new(1,0,0,20), BackgroundTransparency = 1})
+    local lbl = new("TextLabel", {Parent = sframe, Text = title or "Section", BackgroundTransparency = 1, Size = UDim2.new(1,0,0,20), TextSize = 15, Font = Enum.Font.GothamSemibold, TextColor3 = Color3.fromRGB(220,220,220), TextXAlignment = Enum.TextXAlignment.Left})
+    local containerFrame = new("Frame", {Parent = sframe, Size = UDim2.new(1,0,0,0), BackgroundTransparency = 1})
+    new("UIListLayout", {Parent = containerFrame, Padding = UDim.new(0,8)})
+
+    local section = setmetatable({Container = setmetatable({Frame = containerFrame}, Container)}, Section)
+    self.Content:AddChild(sframe)
+    return section
+end
+
+function Window:ToggleVisibility(vis)
+    self.Visible = vis == nil and not self.Visible or vis
+    if self.Visible then
+        tween(self.Main, {Position = UDim2.new(0.5,0,0.08,0), BackgroundTransparency = 0}, 0.22)
+        self.Frame.Parent.Enabled = true
+    else
+        tween(self.Main, {Position = UDim2.new(0.5,0,-0.5,0)}, 0.22)
+        -- keep parent enabled so prompt can still open
+    end
+end
+
+-- Show a prompt to confirm toggling the UI
+function Window:ShowTogglePrompt(message)
+    message = message or "Toggle UI?"
+    if self._prompt then self._prompt:Destroy() end
+    local prompt = new("Frame", {Size = UDim2.new(0,300,0,120), AnchorPoint = Vector2.new(0.5,0.5), Position = UDim2.new(0.5,0.5,0.5,0), BackgroundColor3 = Color3.fromRGB(20,20,22), Parent = self.Frame.Parent})
+    new("UICorner", {Parent = prompt, CornerRadius = UDim.new(0,8)})
+    new("TextLabel", {Parent = prompt, Text = message, Size = UDim2.new(1,-16,0,60), Position = UDim2.new(0,8,0,8), BackgroundTransparency = 1, Font = Enum.Font.GothamSemibold, TextColor3 = Color3.fromRGB(240,240,240), TextSize = 16, TextWrapped = true})
+    local yes = new("TextButton", {Parent = prompt, Text = "Yes", Size = UDim2.new(0.5,-12,0,36), Position = UDim2.new(0,8,1,-44), BackgroundColor3 = Color3.fromRGB(0,170,125), Font = Enum.Font.GothamSemibold, TextSize = 16})
+    local no = new("TextButton", {Parent = prompt, Text = "No", Size = UDim2.new(0.5,-12,0,36), Position = UDim2.new(0.5,4,1,-44), BackgroundColor3 = Color3.fromRGB(100,100,104), Font = Enum.Font.GothamSemibold, TextSize = 16})
+    new("UICorner", {Parent = yes, CornerRadius = UDim.new(0,8)})
+    new("UICorner", {Parent = no, CornerRadius = UDim.new(0,8)})
+
+    yes.MouseButton1Click:Connect(function()
+        prompt:Destroy()
+        self:ToggleVisibility()
+    end)
+    no.MouseButton1Click:Connect(function()
+        prompt:Destroy()
+    end)
+    self._prompt = prompt
+end
+
+-- Create window (entry point)
+function UILib.CreateWindow(title)
+    local screen = makeScreenGui("LightUI_" .. tostring(HttpService:GenerateGUID(false)))
+    local mainFrame = makeWindowFrame(title)
+    mainFrame.Parent = screen
+    mainFrame.Main = mainFrame.BG
+    local win = setmetatable({Screen = screen, Main = mainFrame.Main, Frame = screen, Content = setmetatable({Frame = mainFrame.Main.Content}, Container), Visible = true}, Window)
+
+    -- initially animate in
+    mainFrame.Position = UDim2.new(0.5,0,-0.5,0)
+    tween(mainFrame, {Position = UDim2.new(0.5,0,0.08,0)}, 0.28, "Back", "Out")
+
+    -- keybind default: RightShift toggles prompt
+    UserInputService.InputBegan:Connect(function(input, gpe)
+        if gpe then return end
+        if input.KeyCode == Enum.KeyCode.RightShift then
+            win:ShowTogglePrompt("Hide UI? (RightShift)")
+        end
+    end)
+
+    -- expose methods
+    win.ToggleVisibility = function(self, v) Window.ToggleVisibility(self, v) end
+    win.AddSection = function(self, t) return Window.AddSection(self, t) end
+    win.ShowTogglePrompt = function(self, m) return Window.ShowTogglePrompt(self, m) end
+
+    return win
+end
+
+-- Convenience global API wrapper
+return setmetatable({}, {__index = function(_, k)
+    if k == "CreateWindow" then return UILib.CreateWindow end
+    error("Unsupported API member: " .. tostring(k))
+end})
