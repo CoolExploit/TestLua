@@ -653,7 +653,7 @@ function Library:AddToggle(tab, config)
     toggleThumb.Size = UDim2.new(0, 20, 0, 20)
     toggleThumb.Position = UDim2.new(0, 3, 0.5, 0)
     toggleThumb.AnchorPoint = Vector2.new(0, 0.5)
-    toggleThumb.BackgroundColor3 = Color3.white
+    toggleThumb.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     toggleThumb.BorderSizePixel = 0
     toggleThumb.Parent = toggleButton
     
@@ -760,7 +760,7 @@ function Library:AddSlider(tab, config)
     sliderThumb.Size = UDim2.new(0, 16, 0, 16)
     sliderThumb.Position = UDim2.new((defaultValue - minValue) / (maxValue - minValue), 0, 0.5, 0)
     sliderThumb.AnchorPoint = Vector2.new(0.5, 0.5)
-    sliderThumb.BackgroundColor3 = Color3.white
+    sliderThumb.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     sliderThumb.BorderSizePixel = 0
     sliderThumb.Parent = sliderBar
     
