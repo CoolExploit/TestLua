@@ -1,7 +1,7 @@
 --[[
     PaCompat v2.5 - Universal Roblox Executor Compatibility Layer
     Provides cross-executor compatibility for various exploit functions
-    GitHub: https://github.com/yourusername/pacompat
+    GitHub: https://github.com/CoolExploit/TestLua/blob/main/pacompat
 ]]
 
 local stuff = {ver="2.5",exec="Unknown",missing={},caps={}}
