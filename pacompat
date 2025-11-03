@@ -1,0 +1,320 @@
+--[[
+    PaCompat v2.5 - Universal Roblox Executor Compatibility Layer
+    Provides cross-executor compatibility for various exploit functions
+    GitHub: https://github.com/yourusername/pacompat
+]]
+
+local stuff = {ver="2.5",exec="Unknown",missing={},caps={}}
+
+local function try(f,...)local s,r=pcall(f,...)return s and r or nil,r end
+
+local function getexec()
+    if identifyexecutor then return try(identifyexecutor)end
+    if getexecutorname then return try(getexecutorname)end
+    if _G.KRNL_LOADED or _G.KRNL_VERSION then return"KRNL"end
+    if _G.syn then return"Synapse X"end
+    if _G.Fluxus then return"Fluxus"end
+    if _G.PROTOSMASHER_LOADED then return"ProtoSmasher"end
+    if _G.SENTINEL_LOADED then return"Sentinel"end
+    if _G.iselectronexecutor and try(_G.iselectronexecutor)then return"Electron"end
+    if _G.SCRIPTWARE then return"ScriptWare"end
+    if _G.OXYGEN_LOADED then return"Oxygen U"end
+    if _G.CALAMARI then return"Calamari"end
+    if _G.isvm then return"JJsploit"end
+    return _G.EXECUTOR_NAME or"Generic"
+end
+stuff.exec=getexec()
+
+local http=game:GetService("HttpService")
+local rs=game:GetService("RunService")
+local plrs=game:GetService("Players")
+local coregui=game:GetService("CoreGui")
+local uis=game:GetService("UserInputService")
+local ts=game:GetService("TweenService")
+local lighting=game:GetService("Lighting")
+
+local function mkguid()return http:GenerateGUID(false)end
+
+local function dummy(t)
+    local n={}
+    for k,v in pairs(t)do n[k]=function(...)return type(v)=="function"and v(...)or v end end
+    return n
+end
+
+local impl={
+    identifyexecutor=function()return stuff.exec end,
+    getexecutorname=function()return stuff.exec end,
+    request=request or http_request or(syn and syn.request)or function(o)
+        return{Success=false,StatusCode=0,StatusMessage="Not Supported",Headers={},Body=""}
+    end,
+    http_request=http_request or request or(syn and syn.request)or function(o)return impl.request(o)end,
+    writefile=writefile or function(p,c)
+        if not isfolder or not makefolder then return false end
+        local dir=p:match("(.*/)")
+        if dir and not isfolder(dir)then makefolder(dir)end
+        return false
+    end,
+    readfile=readfile or function(p)return""end,
+    appendfile=appendfile or function(p,c)
+        if readfile and writefile then
+            local old=try(readfile,p)or""
+            return writefile(p,old..c)
+        end
+        return false
+    end,
+    delfile=delfile or function(p)return false end,
+    isfile=isfile or function(p)return false end,
+    isfolder=isfolder or function(p)return false end,
+    listfiles=listfiles or function(p)return{}end,
+    makefolder=makefolder or function(p)return false end,
+    delfolder=delfolder or function(p)return false end,
+    getgenv=getgenv or function()return getfenv and getfenv(0)or _G end,
+    getrenv=getrenv or function()
+        return getfenv and getfenv(0)or{game=game,Game=game,workspace=workspace,Workspace=workspace,
+            script=script,require=require,pcall=pcall,xpcall=xpcall,coroutine=coroutine,
+            string=string,table=table,math=math}
+    end,
+    getsenv=getsenv or function(s)
+        if getfenv and s and s:IsA("LocalScript")then return getfenv(s)end
+        return getfenv and getfenv(2)or{}
+    end,
+    getfenv=getfenv,setfenv=setfenv,
+    gethui=gethui or function()return coregui end,
+    protectgui=protectgui or function(g)
+        if g and g:IsA("GuiObject")then
+            g.Name=mkguid()
+            if g.Parent==coregui then g.Parent=nil;task.wait();g.Parent=coregui end
+        end
+    end,
+    unprotectgui=unprotectgui or function(g)if g then g.Name=tostring(g)end end,
+    getnilinstances=getnilinstances or function()
+        local t={}for _,v in pairs(game:GetDescendants())do if not v.Parent then table.insert(t,v)end end return t
+    end,
+    getinstances=getinstances or function()return game:GetDescendants()end,
+    cloneref=cloneref or function(o)return o end,
+    compareinstances=compareinstances or function(a,b)return a==b end,
+    getgc=getgc or function(inc)
+        local t={}for _,v in pairs(_G)do 
+            if type(v)=="function"or(inc and type(v)=="table")then table.insert(t,v)end 
+        end return t
+    end,
+    getcallingscript=getcallingscript or function()return nil end,
+    getscriptclosure=getscriptclosure or function(s)return nil end,
+    getscripthash=getscripthash or function(s)return mkguid()end,
+    getscriptbytecode=getscriptbytecode or function(s)return""end,
+    getscripts=getscripts or function()
+        local t={}for _,v in pairs(game:GetDescendants())do
+            if v:IsA("LocalScript")or v:IsA("ModuleScript")then table.insert(t,v)end
+        end return t
+    end,
+    getloadedmodules=getloadedmodules or function()
+        local t={}for _,v in pairs(game:GetDescendants())do
+            if v:IsA("ModuleScript")then table.insert(t,v)end
+        end return t
+    end,
+    getrunningscripts=getrunningscripts or function()
+        local t={}for _,v in pairs(game:GetDescendants())do
+            if v:IsA("LocalScript")and v.Enabled then table.insert(t,v)end
+        end return t
+    end,
+    hookfunction=hookfunction or function(o,n)return o end,
+    hookmetamethod=hookmetamethod or function(o,m,h)return function(...)return h(...)end end,
+    restorefunction=restorefunction or function(f)return f end,
+    getnamecallmethod=getnamecallmethod or function()return""end,
+    iscclosure=iscclosure or function(f)return false end,
+    islclosure=islclosure or function(f)return type(f)=="function"end,
+    newcclosure=newcclosure or function(f)return f end,
+    getconstants=getconstants or function(f)return{}end,
+    getconstant=getconstant or function(f,i)return nil end,
+    setconstant=setconstant or function(f,i,v)end,
+    getupvalues=getupvalues or function(f)return{}end,
+    getupvalue=getupvalue or function(f,i)return nil end,
+    setupvalue=setupvalue or function(f,i,v)end,
+    getproto=getproto or function(f,i)return nil end,
+    getprotos=getprotos or function(f)return{}end,
+    getstack=getstack or function(l,i)return nil end,
+    setstack=setstack or function(l,i,v)end,
+    checkcaller=checkcaller or function()return rs:IsStudio()end,
+    getconnections=getconnections or function(s)return{}end,
+    firesignal=firesignal or function(s,...)if s and s.Fire then s:Fire(...)end end,
+    fireclickdetector=fireclickdetector or function(cd,d)
+        if cd and cd.Parent then
+            local c=plrs.LocalPlayer and plrs.LocalPlayer.Character
+            if c and c:FindFirstChild("HumanoidRootPart")then 
+                local old=c.HumanoidRootPart.CFrame
+                c.HumanoidRootPart.CFrame=cd.Parent.CFrame
+                task.wait()
+                cd.MouseClick:Fire()
+                c.HumanoidRootPart.CFrame=old
+            end
+        end
+    end,
+    getcallbackvalue=getcallbackvalue or function(cd)
+        return cd and cd.MaxActivationDistance or 32
+    end,
+    firetouchinterest=firetouchinterest or function(p1,p2,t)
+        if p1 and p2 then
+            local old=p1.CFrame
+            p1.CFrame=p2.CFrame
+            task.wait()
+            p1.CFrame=old
+        end
+    end,
+    fireproximityprompt=fireproximityprompt or function(pp,a,s)
+        if pp then 
+            pp.Enabled=true
+            pp:InputHoldBegin()
+            task.wait(pp.HoldDuration or 0.5)
+            pp:InputHoldEnd()
+        end
+    end,
+    getcustomasset=getcustomasset or function(p)return"rbxasset://"..p end,
+    getsynasset=getsynasset or getcustomasset,
+    setclipboard=setclipboard or toclipboard or function(t)return false end,
+    toclipboard=toclipboard or setclipboard,
+    queue_on_teleport=queue_on_teleport or(syn and syn.queue_on_teleport)or function(c)end,
+    queueonteleport=queueonteleport or queue_on_teleport,
+    isnetworkowner=isnetworkowner or function(p)
+        return p and p:IsDescendantOf(plrs.LocalPlayer.Character)
+    end,
+    gethiddenproperty=gethiddenproperty or function(o,p)return o[p]end,
+    sethiddenproperty=sethiddenproperty or function(o,p,v)o[p]=v end,
+    getrawmetatable=getrawmetatable or getmetatable,
+    setrawmetatable=setrawmetatable or setmetatable,
+    setreadonly=setreadonly or function(t,r)end,
+    isreadonly=isreadonly or function(t)return false end,
+    makereadonly=makereadonly or setreadonly or function(t)end,
+    makewriteable=makewriteable or function(t)end,
+    Drawing=Drawing or dummy({new=function(t)return dummy({Remove=function()end,Visible=true,Color=Color3.new(1,1,1),Transparency=1,Thickness=1,From=Vector2.new(),To=Vector2.new()})end}),
+    WebSocket=WebSocket or dummy({
+        connect=function(u)return dummy({Send=function(d)end,Close=function()end,OnMessage=function()end,OnClose=function()end})end
+    }),
+    crypt=crypt or dummy({
+        base64encode=function(s)return s end,base64decode=function(s)return s end,
+        base64_encode=function(s)return s end,base64_decode=function(s)return s end,
+        encrypt=function(s,k)return s end,decrypt=function(s,k)return s end,
+        hash=function(s)return s end,
+        generatekey=function()return mkguid()end,
+        generatebytes=function(n)return string.rep("a",n or 32)end
+    }),
+    getmemoryaddress=getmemoryaddress or function(o)return tostring(o):match("0x%x+")or"0x0"end,
+    schedule=schedule or task.schedule or task.defer or function(f,...)task.spawn(f,...)end,
+    getthreadidentity=getthreadidentity or getidentity or function()return 7 end,
+    setthreadidentity=setthreadidentity or setidentity or function(i)end,
+    getidentity=getidentity or getthreadidentity or function()return 7 end,
+    setidentity=setidentity or setthreadidentity or function(i)end,
+    getnamedhookfunction=getnamedhookfunction or function(n)return nil end,
+    getinfo=getinfo or debug.getinfo or function(f)return{}end,
+    getrenderproperty=getrenderproperty or function(o,p)return nil end,
+    setrenderproperty=setrenderproperty or function(o,p,v)end,
+    cleardrawcache=cleardrawcache or function()end,
+    isrenderobj=isrenderobj or function(o)return false end,
+    getobjects=getobjects or function(id)return game:GetObjects(id)end,
+    loadstring=loadstring or function(s,n)return nil,"not supported"end,
+    saveinstance=saveinstance or function(o)end,
+    messagebox=messagebox or function(t,c,b)print(t,c)end,
+    mouse1click=mouse1click or function(x,y)
+        local vp=workspace.CurrentCamera.ViewportSize
+        uis.InputBegan:Fire({UserInputType=Enum.UserInputType.MouseButton1,Position=Vector2.new(x or vp.X/2,y or vp.Y/2)})
+        task.wait()
+        uis.InputEnded:Fire({UserInputType=Enum.UserInputType.MouseButton1})
+    end,
+    mouse1press=mouse1press or function(x,y)
+        local vp=workspace.CurrentCamera.ViewportSize
+        uis.InputBegan:Fire({UserInputType=Enum.UserInputType.MouseButton1,Position=Vector2.new(x or vp.X/2,y or vp.Y/2)})
+    end,
+    mouse1release=mouse1release or function()
+        uis.InputEnded:Fire({UserInputType=Enum.UserInputType.MouseButton1})
+    end,
+    mouse2click=mouse2click or function(x,y)
+        local vp=workspace.CurrentCamera.ViewportSize
+        uis.InputBegan:Fire({UserInputType=Enum.UserInputType.MouseButton2,Position=Vector2.new(x or vp.X/2,y or vp.Y/2)})
+        task.wait()
+        uis.InputEnded:Fire({UserInputType=Enum.UserInputType.MouseButton2})
+    end,
+    mouse2press=mouse2press or function(x,y)
+        local vp=workspace.CurrentCamera.ViewportSize
+        uis.InputBegan:Fire({UserInputType=Enum.UserInputType.MouseButton2,Position=Vector2.new(x or vp.X/2,y or vp.Y/2)})
+    end,
+    mouse2release=mouse2release or function()
+        uis.InputEnded:Fire({UserInputType=Enum.UserInputType.MouseButton2})
+    end,
+    mousemoveabs=mousemoveabs or function(x,y)end,
+    mousemoverel=mousemoverel or function(x,y)end,
+    mousescroll=mousescroll or function(d)end,
+    keypress=keypress or function(k)
+        uis.InputBegan:Fire({KeyCode=Enum.KeyCode[k],UserInputType=Enum.UserInputType.Keyboard})
+    end,
+    keyrelease=keyrelease or function(k)
+        uis.InputEnded:Fire({KeyCode=Enum.KeyCode[k],UserInputType=Enum.UserInputType.Keyboard})
+    end,
+    isrbxactive=isrbxactive or function()return uis.WindowFocused end,
+    isgameactive=isgameactive or isrbxactive or function()return uis.WindowFocused end,
+    getspecialinfo=getspecialinfo or function(o)return{}end,
+    setscriptable=setscriptable or function(o,p,v)end,
+    isscriptable=isscriptable or function(o,p)return true end,
+    getproperties=getproperties or function(o)return{}end,
+    gethiddenproperties=gethiddenproperties or function(o)return{}end,
+    setsimulationradius=setsimulationradius or function(r,mr)
+        if plrs.LocalPlayer then
+            plrs.LocalPlayer.MaximumSimulationRadius=mr or 1000
+            plrs.LocalPlayer.SimulationRadius=r or 1000
+        end
+    end,
+    getsimulationradius=getsimulationradius or function()
+        return plrs.LocalPlayer and plrs.LocalPlayer.SimulationRadius or 0
+    end,
+    setfpscap=setfpscap or function(c)end,
+    getfpscap=getfpscap or function()return 60 end,
+    getrenderproperty=getrenderproperty or function(i,p)return nil end,
+    setrenderproperty=setrenderproperty or function(i,p,v)end,
+    getnamecallmethod=getnamecallmethod or function()return""end,
+    isexecutorclosure=isexecutorclosure or function(f)return false end,
+    isuntouched=isuntouched or function(f)return true end,
+    islsynapsefunction=islsynapsefunction or isexecutorclosure or function(f)return false end,
+    isourclosure=isourclosure or islclosure or function(f)return type(f)=="function"end,
+    checkcaller=checkcaller or function()return false end,
+    getallmethodnames=getallmethodnames or function(c)
+        local m={}
+        for _,v in pairs(game:GetService(c):GetChildren())do
+            if type(v)=="function"then table.insert(m,tostring(v))end
+        end
+        return m
+    end,
+    getmethodnames=getmethodnames or getallmethodnames,
+    fireasyncfunction=fireasyncfunction or function(f,...)return f(...)end
+}
+
+for k,v in pairs(impl)do
+    if not _G[k]then _G[k]=v else table.insert(stuff.missing,k)end
+end
+
+stuff.caps={
+    http=request~=nil or http_request~=nil or(syn and syn.request~=nil),
+    files=writefile~=nil and readfile~=nil,
+    hooks=hookfunction~=nil,
+    draw=Drawing~=nil and Drawing.new~=nil,
+    ws=WebSocket~=nil and WebSocket.connect~=nil,
+    hidden=gethiddenproperty~=nil,
+    clone=cloneref~=nil,
+    scripts=getscriptclosure~=nil,
+    closures=getconstants~=nil or getupvalues~=nil,
+    signals=getconnections~=nil,
+    clip=setclipboard~=nil,
+    tp=queue_on_teleport~=nil,
+    crypto=crypt~=nil,
+    memory=getmemoryaddress~=nil,
+    input=mouse1click~=nil or keypress~=nil,
+    simulation=setsimulationradius~=nil
+}
+
+_G.CompatStuff=stuff
+
+if #stuff.missing>0 and writefile then
+    try(writefile,"compat_missing.txt",table.concat(stuff.missing,"\n"))
+end
+
+return setmetatable(stuff,{
+    __tostring=function(s)return string.format("compat[%s|%s]",s.ver,s.exec)end,
+    __call=function(s,fn,...)if impl[fn]then return try(impl[fn],...)end return nil end
+})
