@@ -1,6 +1,6 @@
 -- Phantom Spy UI Library v2.0
 -- Universal UI System for PC & Mobile
--- Standalone Component
+-- By CoolExploit
 
 local UILib = {}
 UILib.__index = UILib
@@ -17,7 +17,8 @@ local CONFIG = {
     TWEEN_DURATION = 0.3,
     TOUCH_TARGET_SIZE = 44,
     DESKTOP_PADDING = 10,
-    MOBILE_PADDING = 15
+    MOBILE_PADDING = 15,
+    ANIMATION_SPRING = 0.5
 }
 
 -- Theme System
@@ -30,7 +31,8 @@ UILib.Themes = {
         SubText = Color3.fromRGB(200, 200, 200),
         Success = Color3.fromRGB(85, 170, 85),
         Warning = Color3.fromRGB(255, 170, 0),
-        Error = Color3.fromRGB(255, 85, 85)
+        Error = Color3.fromRGB(255, 85, 85),
+        Border = Color3.fromRGB(60, 60, 70)
     },
     Light = {
         Background = Color3.fromRGB(245, 245, 245),
@@ -40,33 +42,39 @@ UILib.Themes = {
         SubText = Color3.fromRGB(100, 100, 100),
         Success = Color3.fromRGB(65, 150, 65),
         Warning = Color3.fromRGB(200, 120, 0),
-        Error = Color3.fromRGB(200, 60, 60)
+        Error = Color3.fromRGB(200, 60, 60),
+        Border = Color3.fromRGB(200, 200, 210)
     }
 }
 
 UILib.CurrentTheme = UILib.Themes.Dark
 UILib.Windows = {}
 UILib.IsMobile = UserInputService.TouchEnabled
+UILib.Components = {}
 
 -- Core UI Creation Functions
-function UILib:CreateScreenGui(name)
+function UILib:CreateScreenGui(name, parent)
     local screenGui = Instance.new("ScreenGui")
     screenGui.Name = name or "UILibGui"
     screenGui.ResetOnSpawn = false
     screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     screenGui.DisplayOrder = 999
-    screenGui.Parent = game:GetService("CoreGui") or Players.LocalPlayer:WaitForChild("PlayerGui")
+    screenGui.Parent = parent or game:GetService("CoreGui") or Players.LocalPlayer:WaitForChild("PlayerGui")
     
     return screenGui
 end
 
-function UILib:CreateWindow(name, size, position)
+function UILib:CreateWindow(name, size, position, theme)
     local screenGui = self:CreateScreenGui(name .. "Gui")
     
     local isMobile = self.IsMobile
-    local baseSize = size or (isMobile and UDim2.new(0.9, 0, 0.8, 0) or UDim2.new(0, 450, 0, 600))
+    local baseSize = size or (isMobile and UDim2.new(0.9, 0, 0.8, 0) or UDim2.new(0, 500, 0, 600))
     local basePosition = position or (isMobile and UDim2.new(0.05, 0, 0.1, 0) or UDim2.new(0, 50, 0, 50))
     
+    if theme then
+        self.CurrentTheme = self.Themes[theme] or self.Themes.Dark
+    end
+
     local mainFrame = Instance.new("Frame")
     mainFrame.Name = name .. "Window"
     mainFrame.Size = baseSize
@@ -113,6 +121,7 @@ function UILib:CreateWindow(name, size, position)
     title.TextSize = isMobile and 20 or 18
     title.Font = Enum.Font.GothamBold
     title.TextXAlignment = Enum.TextXAlignment.Left
+    title.TextYAlignment = Enum.TextYAlignment.Center
     title.Parent = header
 
     local content = Instance.new("Frame")
@@ -122,6 +131,22 @@ function UILib:CreateWindow(name, size, position)
     content.BackgroundTransparency = 1
     content.Parent = mainFrame
 
+    -- Header buttons
+    local buttonContainer = Instance.new("Frame")
+    buttonContainer.Name = "HeaderButtons"
+    buttonContainer.Size = UDim2.new(0.3, 0, 1, 0)
+    buttonContainer.Position = UDim2.new(0.7, 0, 0, 0)
+    buttonContainer.BackgroundTransparency = 1
+    buttonContainer.Parent = header
+
+    local minimizeBtn = self:CreateHeaderButton(buttonContainer, "−", 0, function()
+        self:ToggleMinimize(name)
+    end)
+
+    local closeBtn = self:CreateHeaderButton(buttonContainer, "×", 1, function()
+        self:DestroyWindow(name)
+    end)
+
     local windowTable = {
         Gui = screenGui,
         Main = mainFrame,
@@ -129,11 +154,34 @@ function UILib:CreateWindow(name, size, position)
         Header = header,
         Title = title,
         IsMobile = isMobile,
-        IsMinimized = false
+        IsMinimized = false,
+        OriginalSize = baseSize
     }
     
     self.Windows[name] = windowTable
     return windowTable
+end
+
+function UILib:CreateHeaderButton(parent, text, index, onClick)
+    local isMobile = self.IsMobile
+    local buttonSize = isMobile and 30 or 25
+    
+    local button = Instance.new("TextButton")
+    button.Name = "HeaderBtn_" .. text
+    button.Size = UDim2.new(0, buttonSize, 0, buttonSize)
+    button.Position = UDim2.new(index * 0.33, 5, 0.5, -buttonSize/2)
+    button.BackgroundTransparency = 1
+    button.Text = text
+    button.TextColor3 = self.CurrentTheme.Text
+    button.TextSize = isMobile and 18 or 16
+    button.Font = Enum.Font.GothamBold
+    button.Parent = parent
+
+    button.MouseButton1Click:Connect(function()
+        pcall(onClick)
+    end)
+
+    return button
 end
 
 function UILib:CreateSection(parent, title, height)
@@ -141,7 +189,7 @@ function UILib:CreateSection(parent, title, height)
     local padding = isMobile and CONFIG.MOBILE_PADDING or CONFIG.DESKTOP_PADDING
     
     local section = Instance.new("Frame")
-    section.Name = "Section"
+    section.Name = "Section_" .. (title or "Untitled")
     section.Size = UDim2.new(1, -padding * 2, 0, height or (isMobile and 50 or 40))
     section.Position = UDim2.new(0, padding, 0, 0)
     section.BackgroundColor3 = self.CurrentTheme.Secondary
@@ -157,31 +205,34 @@ function UILib:CreateSection(parent, title, height)
     label.Size = UDim2.new(1, -padding * 2, 1, 0)
     label.Position = UDim2.new(0, padding, 0, 0)
     label.BackgroundTransparency = 1
-    label.Text = title
+    label.Text = title or "Section"
     label.TextColor3 = self.CurrentTheme.Text
     label.TextSize = isMobile and 18 or 16
     label.Font = Enum.Font.GothamSemibold
     label.TextXAlignment = Enum.TextXAlignment.Left
+    label.TextYAlignment = Enum.TextYAlignment.Center
     label.Parent = section
 
     return section
 end
 
-function UILib:CreateLabel(parent, text, textSize)
+function UILib:CreateLabel(parent, text, textSize, options)
+    options = options or {}
     local isMobile = self.IsMobile
     local padding = isMobile and CONFIG.MOBILE_PADDING or CONFIG.DESKTOP_PADDING
     
     local label = Instance.new("TextLabel")
-    label.Name = "Label"
-    label.Size = UDim2.new(1, -padding * 2, 0, isMobile and 25 or 20)
-    label.Position = UDim2.new(0, padding, 0, 0)
+    label.Name = "Label_" .. (text or "Untitled")
+    label.Size = options.Size or UDim2.new(1, -padding * 2, 0, isMobile and 25 or 20)
+    label.Position = options.Position or UDim2.new(0, padding, 0, 0)
     label.BackgroundTransparency = 1
-    label.Text = text
-    label.TextColor3 = self.CurrentTheme.Text
+    label.Text = text or "Label"
+    label.TextColor3 = options.TextColor3 or self.CurrentTheme.Text
     label.TextSize = textSize or (isMobile and 16 or 14)
-    label.Font = Enum.Font.Gotham
-    label.TextXAlignment = Enum.TextXAlignment.Left
-    label.TextYAlignment = Enum.TextYAlignment.Center
+    label.Font = options.Font or Enum.Font.Gotham
+    label.TextXAlignment = options.TextXAlignment or Enum.TextXAlignment.Left
+    label.TextYAlignment = options.TextYAlignment or Enum.TextYAlignment.Center
+    label.TextWrapped = options.TextWrapped or false
     label.Parent = parent
 
     return label
@@ -193,12 +244,12 @@ function UILib:CreateButton(parent, text, onClick, options)
     local padding = isMobile and CONFIG.MOBILE_PADDING or CONFIG.DESKTOP_PADDING
     
     local button = Instance.new("TextButton")
-    button.Name = "Button_" .. text
+    button.Name = "Button_" .. (text or "Untitled")
     button.Size = options.Size or UDim2.new(1, -padding * 2, 0, isMobile and 45 or 35)
     button.Position = options.Position or UDim2.new(0, padding, 0, 0)
     button.BackgroundColor3 = options.BackgroundColor3 or self.CurrentTheme.Accent
     button.BorderSizePixel = 0
-    button.Text = text
+    button.Text = text or "Button"
     button.TextColor3 = options.TextColor3 or Color3.new(1, 1, 1)
     button.TextSize = isMobile and 18 or 14
     button.Font = Enum.Font.GothamSemibold
@@ -252,13 +303,13 @@ function UILib:CreateTextBox(parent, placeholder, onChange, options)
     local padding = isMobile and CONFIG.MOBILE_PADDING or CONFIG.DESKTOP_PADDING
     
     local textBox = Instance.new("TextBox")
-    textBox.Name = "TextBox"
+    textBox.Name = "TextBox_" .. (placeholder or "Input")
     textBox.Size = options.Size or UDim2.new(1, -padding * 2, 0, isMobile and 45 or 35)
     textBox.Position = options.Position or UDim2.new(0, padding, 0, 0)
     textBox.BackgroundColor3 = self.CurrentTheme.Background
     textBox.BorderSizePixel = 0
-    textBox.Text = ""
-    textBox.PlaceholderText = placeholder
+    textBox.Text = options.Text or ""
+    textBox.PlaceholderText = placeholder or "Type here..."
     textBox.TextColor3 = self.CurrentTheme.Text
     textBox.PlaceholderColor3 = self.CurrentTheme.SubText
     textBox.TextSize = isMobile and 16 or 14
@@ -318,7 +369,7 @@ function UILib:CreateToggle(parent, text, defaultValue, onChange)
     local padding = isMobile and CONFIG.MOBILE_PADDING or CONFIG.DESKTOP_PADDING
     
     local container = Instance.new("Frame")
-    container.Name = "Toggle"
+    container.Name = "Toggle_" .. (text or "Toggle")
     container.Size = UDim2.new(1, -padding * 2, 0, isMobile and 45 or 35)
     container.Position = UDim2.new(0, padding, 0, 0)
     container.BackgroundTransparency = 1
@@ -329,7 +380,7 @@ function UILib:CreateToggle(parent, text, defaultValue, onChange)
     label.Size = UDim2.new(0.7, 0, 1, 0)
     label.Position = UDim2.new(0, 0, 0, 0)
     label.BackgroundTransparency = 1
-    label.Text = text
+    label.Text = text or "Toggle"
     label.TextColor3 = self.CurrentTheme.Text
     label.TextSize = isMobile and 16 or 14
     label.Font = Enum.Font.Gotham
@@ -415,7 +466,7 @@ function UILib:CreateSlider(parent, text, min, max, defaultValue, onChange)
     local padding = isMobile and CONFIG.MOBILE_PADDING or CONFIG.DESKTOP_PADDING
     
     local container = Instance.new("Frame")
-    container.Name = "Slider"
+    container.Name = "Slider_" .. (text or "Slider")
     container.Size = UDim2.new(1, -padding * 2, 0, isMobile and 70 or 60)
     container.Position = UDim2.new(0, padding, 0, 0)
     container.BackgroundTransparency = 1
@@ -426,7 +477,7 @@ function UILib:CreateSlider(parent, text, min, max, defaultValue, onChange)
     label.Size = UDim2.new(1, 0, 0, isMobile and 25 or 20)
     label.Position = UDim2.new(0, 0, 0, 0)
     label.BackgroundTransparency = 1
-    label.Text = text
+    label.Text = text or "Slider"
     label.TextColor3 = self.CurrentTheme.Text
     label.TextSize = isMobile and 16 or 14
     label.Font = Enum.Font.Gotham
@@ -564,7 +615,7 @@ function UILib:CreateList(parent, items, onItemSelected, options)
             local padding = isMobile and CONFIG.MOBILE_PADDING or CONFIG.DESKTOP_PADDING
             
             local itemFrame = Instance.new("Frame")
-            itemFrame.Name = "ListItem"
+            itemFrame.Name = "ListItem_" .. i
             itemFrame.Size = UDim2.new(1, -padding * 2, 0, isMobile and 50 or 40)
             itemFrame.Position = UDim2.new(0, padding, 0, 0)
             itemFrame.BackgroundColor3 = self.CurrentTheme.Secondary
@@ -772,25 +823,30 @@ function UILib:DestroyWindow(windowName)
     end
 end
 
-function UILib:MinimizeWindow(windowName)
+function UILib:ToggleMinimize(windowName)
     local window = self.Windows[windowName]
-    if window and not window.IsMinimized then
-        window.IsMinimized = true
-        self:Tween(window.Main, {
-            Size = UDim2.new(window.Main.Size.X.Scale, window.Main.Size.X.Offset, 0, window.Header.Size.Y.Offset)
-        }, 0.3)
+    if window then
+        if window.IsMinimized then
+            window.IsMinimized = false
+            self:Tween(window.Main, {Size = window.OriginalSize}, 0.3)
+        else
+            window.IsMinimized = true
+            self:Tween(window.Main, {
+                Size = UDim2.new(window.Main.Size.X.Scale, window.Main.Size.X.Offset, 0, window.Header.Size.Y.Offset)
+            }, 0.3)
+        end
     end
 end
 
-function UILib:MaximizeWindow(windowName)
+function UILib:SetWindowVisibility(windowName, visible)
     local window = self.Windows[windowName]
-    if window and window.IsMinimized then
-        window.IsMinimized = false
-        self:Tween(window.Main, {
-            Size = UDim2.new(window.IsMobile and 0.9 or 0, window.IsMobile and 0 or 450, 
-                           window.IsMobile and 0.8 or 0, window.IsMobile and 0 or 600)
-        }, 0.3)
+    if window then
+        window.Gui.Enabled = visible
     end
+end
+
+function UILib:GetWindow(windowName)
+    return self.Windows[windowName]
 end
 
 -- Mobile-specific utilities
