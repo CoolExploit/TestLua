@@ -1,0 +1,354 @@
+-- Phantom UI Library - Enhanced for Phantom Spy
+local UILib = {}
+UILib.Windows = {}
+
+-- Smooth tweening function
+function UILib:Tween(element, properties, duration)
+    local tweenInfo = TweenInfo.new(duration or 0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+    local tween = game:GetService("TweenService"):Create(element, tweenInfo, properties)
+    tween:Play()
+    return tween
+end
+
+function UILib:CreateWindow(name)
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = name
+    screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    screenGui.Parent = game.CoreGui
+    
+    local mainFrame = Instance.new("Frame")
+    mainFrame.Size = UDim2.new(0, 600, 0, 500)
+    mainFrame.Position = UDim2.new(0.5, -300, 0.5, -250)
+    mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+    mainFrame.BorderSizePixel = 0
+    mainFrame.ClipsDescendants = true
+    mainFrame.Parent = screenGui
+    
+    -- Glass morphism effect
+    local blur = Instance.new("BlurEffect")
+    blur.Size = 10
+    blur.Parent = mainFrame
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 12)
+    corner.Parent = mainFrame
+    
+    -- Drop shadow
+    local shadow = Instance.new("ImageLabel")
+    shadow.Size = UDim2.new(1, 24, 1, 24)
+    shadow.Position = UDim2.new(0, -12, 0, -12)
+    shadow.BackgroundTransparency = 1
+    shadow.Image = "rbxassetid://1316045217"
+    shadow.ImageColor3 = Color3.new(0, 0, 0)
+    shadow.ImageTransparency = 0.8
+    shadow.ScaleType = Enum.ScaleType.Slice
+    shadow.SliceCenter = Rect.new(10, 10, 118, 118)
+    shadow.Parent = mainFrame
+    
+    -- Title bar
+    local titleBar = Instance.new("Frame")
+    titleBar.Size = UDim2.new(1, 0, 0, 40)
+    titleBar.BackgroundColor3 = Color3.fromRGB(30, 35, 45)
+    titleBar.BorderSizePixel = 0
+    titleBar.Parent = mainFrame
+    
+    local titleCorner = Instance.new("UICorner")
+    titleCorner.CornerRadius = UDim.new(0, 12, 0, 0)
+    titleCorner.Parent = titleBar
+    
+    local title = Instance.new("TextLabel")
+    title.Size = UDim2.new(1, -40, 1, 0)
+    title.Position = UDim2.new(0, 15, 0, 0)
+    title.BackgroundTransparency = 1
+    title.Text = "🔮 " .. name
+    title.TextColor3 = Color3.fromRGB(0, 255, 255)
+    title.TextSize = 16
+    title.Font = Enum.Font.GothamBold
+    title.TextXAlignment = Enum.TextXAlignment.Left
+    title.Parent = titleBar
+    
+    -- Close button
+    local closeBtn = Instance.new("TextButton")
+    closeBtn.Size = UDim2.new(0, 30, 0, 30)
+    closeBtn.Position = UDim2.new(1, -35, 0.5, -15)
+    closeBtn.BackgroundColor3 = Color3.fromRGB(255, 60, 60)
+    closeBtn.Text = "×"
+    closeBtn.TextColor3 = Color3.new(1, 1, 1)
+    closeBtn.TextSize = 18
+    closeBtn.Font = Enum.Font.GothamBold
+    closeBtn.Parent = titleBar
+    
+    local btnCorner = Instance.new("UICorner")
+    btnCorner.CornerRadius = UDim.new(0, 6)
+    btnCorner.Parent = closeBtn
+    
+    closeBtn.MouseButton1Click:Connect(function()
+        self:Tween(mainFrame, {Size = UDim2.new(0, 0, 0, 0), Position = UDim2.new(0.5, 0, 0.5, 0)}, 0.3)
+        wait(0.3)
+        screenGui:Destroy()
+    end)
+    
+    -- Make draggable
+    local dragging = false
+    local dragInput, dragStart, startPos
+    
+    titleBar.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            dragStart = input.Position
+            startPos = mainFrame.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+    
+    titleBar.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement then
+            dragInput = input
+        end
+    end)
+    
+    game:GetService("UserInputService").InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            local delta = input.Position - dragStart
+            mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+    
+    local windowObj = {
+        Gui = screenGui,
+        Main = mainFrame,
+        Content = Instance.new("Frame")
+    }
+    windowObj.Content.Size = UDim2.new(1, 0, 1, -40)
+    windowObj.Content.Position = UDim2.new(0, 0, 0, 40)
+    windowObj.Content.BackgroundTransparency = 1
+    windowObj.Content.Parent = mainFrame
+    
+    self.Windows[name] = windowObj
+    return windowObj
+end
+
+function UILib:CreateSection(parent, title)
+    local section = Instance.new("Frame")
+    section.Size = UDim2.new(1, -20, 0, 0)
+    section.AutomaticSize = Enum.AutomaticSize.Y
+    section.Position = UDim2.new(0, 10, 0, 0)
+    section.BackgroundColor3 = Color3.fromRGB(35, 40, 50)
+    section.BorderSizePixel = 0
+    section.Parent = parent
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 8)
+    corner.Parent = section
+    
+    local padding = Instance.new("UIPadding")
+    padding.PaddingLeft = UDim.new(0, 10)
+    padding.PaddingRight = UDim.new(0, 10)
+    padding.PaddingTop = UDim.new(0, 10)
+    padding.PaddingBottom = UDim.new(0, 10)
+    padding.Parent = section
+    
+    local layout = Instance.new("UIListLayout")
+    layout.SortOrder = Enum.SortOrder.LayoutOrder
+    layout.Padding = UDim.new(0, 8)
+    layout.Parent = section
+    
+    if title then
+        local titleLabel = Instance.new("TextLabel")
+        titleLabel.Size = UDim2.new(1, 0, 0, 20)
+        titleLabel.BackgroundTransparency = 1
+        titleLabel.Text = title
+        titleLabel.TextColor3 = Color3.fromRGB(0, 255, 255)
+        titleLabel.TextSize = 14
+        titleLabel.Font = Enum.Font.GothamBold
+        titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+        titleLabel.LayoutOrder = 0
+        titleLabel.Parent = section
+    end
+    
+    return section
+end
+
+function UILib:CreateLabel(parent, text)
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, 0, 0, 20)
+    label.BackgroundTransparency = 1
+    label.Text = text
+    label.TextColor3 = Color3.fromRGB(220, 220, 220)
+    label.TextSize = 12
+    label.Font = Enum.Font.Gotham
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.TextWrapped = true
+    label.Parent = parent
+    return label
+end
+
+function UILib:CreateButton(parent, text, onClick)
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(1, 0, 0, 35)
+    button.BackgroundColor3 = Color3.fromRGB(45, 50, 65)
+    button.Text = text
+    button.TextColor3 = Color3.new(1, 1, 1)
+    button.TextSize = 13
+    button.Font = Enum.Font.Gotham
+    button.AutoButtonColor = false
+    button.Parent = parent
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 6)
+    corner.Parent = button
+    
+    -- Hover effects
+    button.MouseEnter:Connect(function()
+        self:Tween(button, {BackgroundColor3 = Color3.fromRGB(55, 60, 75)}, 0.2)
+    end)
+    
+    button.MouseLeave:Connect(function()
+        self:Tween(button, {BackgroundColor3 = Color3.fromRGB(45, 50, 65)}, 0.2)
+    end)
+    
+    button.MouseButton1Down:Connect(function()
+        self:Tween(button, {Size = UDim2.new(0.98, 0, 0, 33)}, 0.1)
+    end)
+    
+    button.MouseButton1Up:Connect(function()
+        self:Tween(button, {Size = UDim2.new(1, 0, 0, 35)}, 0.1)
+        if onClick then
+            onClick()
+        end
+    end)
+    
+    return button
+end
+
+function UILib:CreateRemoteItem(parent, remoteName, callCount, onClick)
+    local item = Instance.new("TextButton")
+    item.Size = UDim2.new(1, 0, 0, 50)
+    item.BackgroundColor3 = Color3.fromRGB(40, 45, 55)
+    item.Text = ""
+    item.AutoButtonColor = false
+    item.Parent = parent
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 6)
+    corner.Parent = item
+    
+    local nameLabel = Instance.new("TextLabel")
+    nameLabel.Size = UDim2.new(1, -60, 0, 25)
+    nameLabel.Position = UDim2.new(0, 10, 0, 5)
+    nameLabel.BackgroundTransparency = 1
+    nameLabel.Text = remoteName
+    nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    nameLabel.TextSize = 12
+    nameLabel.Font = Enum.Font.GothamBold
+    nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+    nameLabel.Parent = item
+    
+    local countLabel = Instance.new("TextLabel")
+    countLabel.Size = UDim2.new(0, 50, 0, 20)
+    countLabel.Position = UDim2.new(1, -55, 0, 5)
+    countLabel.BackgroundTransparency = 1
+    countLabel.Text = "📊 " .. callCount
+    countLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+    countLabel.TextSize = 10
+    countLabel.Font = Enum.Font.Gotham
+    countLabel.Parent = item
+    
+    -- Hover effects
+    item.MouseEnter:Connect(function()
+        self:Tween(item, {BackgroundColor3 = Color3.fromRGB(50, 55, 65)}, 0.2)
+    end)
+    
+    item.MouseLeave:Connect(function()
+        self:Tween(item, {BackgroundColor3 = Color3.fromRGB(40, 45, 55)}, 0.2)
+    end)
+    
+    if onClick then
+        item.MouseButton1Click:Connect(onClick)
+    end
+    
+    return item
+end
+
+function UILib:CreateScrollingFrame(parent)
+    local frame = Instance.new("ScrollingFrame")
+    frame.Size = UDim2.new(1, 0, 1, 0)
+    frame.BackgroundTransparency = 1
+    frame.ScrollBarThickness = 6
+    frame.ScrollBarImageColor3 = Color3.fromRGB(100, 100, 100)
+    frame.Parent = parent
+    
+    local list = Instance.new("UIListLayout")
+    list.SortOrder = Enum.SortOrder.LayoutOrder
+    list.Padding = UDim.new(0, 8)
+    list.Parent = frame
+    
+    local padding = Instance.new("UIPadding")
+    padding.PaddingLeft = UDim.new(0, 5)
+    padding.PaddingRight = UDim.new(0, 5)
+    padding.PaddingTop = UDim.new(0, 5)
+    padding.PaddingBottom = UDim.new(0, 5)
+    padding.Parent = frame
+    
+    return frame
+end
+
+function UILib:CreateCodeBox(parent, codeText)
+    local box = Instance.new("Frame")
+    box.Size = UDim2.new(1, 0, 0, 80)
+    box.BackgroundColor3 = Color3.fromRGB(25, 30, 35)
+    box.BorderSizePixel = 0
+    box.Parent = parent
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 6)
+    corner.Parent = box
+    
+    local codeLabel = Instance.new("TextLabel")
+    codeLabel.Size = UDim2.new(1, -20, 1, -20)
+    codeLabel.Position = UDim2.new(0, 10, 0, 10)
+    codeLabel.BackgroundTransparency = 1
+    codeLabel.Text = codeText or "-- Generated code will appear here --"
+    codeLabel.TextColor3 = Color3.fromRGB(0, 255, 200)
+    codeLabel.TextSize = 11
+    codeLabel.Font = Enum.Font.Code
+    codeLabel.TextXAlignment = Enum.TextXAlignment.Left
+    codeLabel.TextYAlignment = Enum.TextYAlignment.Top
+    codeLabel.TextWrapped = true
+    codeLabel.Parent = box
+    
+    return {Frame = box, Label = codeLabel}
+end
+
+function UILib:CreateMobileButton()
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(0, 60, 0, 60)
+    button.Position = UDim2.new(0, 20, 0, 20)
+    button.BackgroundColor3 = Color3.fromRGB(0, 255, 255)
+    button.Text = "🎯"
+    button.TextColor3 = Color3.new(1, 1, 1)
+    button.TextSize = 20
+    button.Font = Enum.Font.GothamBold
+    button.ZIndex = 100
+    button.Parent = game.CoreGui
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(1, 0)
+    corner.Parent = button
+    
+    -- Pulse animation
+    while true do
+        self:Tween(button, {Size = UDim2.new(0, 65, 0, 65)}, 1)
+        wait(1)
+        self:Tween(button, {Size = UDim2.new(0, 60, 0, 60)}, 1)
+        wait(1)
+    end
+    
+    return button
+end
+
+return UILib
