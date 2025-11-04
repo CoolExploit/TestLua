@@ -1,27 +1,21 @@
 --[[
-    PaCompat v2.5 - Universal Roblox Executor Compatibility Layer
+    PaCompat v3.0 - Universal Roblox Executor Compatibility Layer
     Provides cross-executor compatibility for various exploit functions
     GitHub: https://github.com/CoolExploit/TestLua/blob/main/pacompat
-]]
-
-local stuff = {ver="2.5",exec="Unknown",missing={},caps={}}
+	Updated and maintained by CoolExploit
+	Added saveinstance function
+	Adeded getmemoryaddress function
+	Added getobjects function
+	Added loadstring function
+	Added setreadonly/isreadonly/makereadonly/makewriteable functions
+--]]
+local stuff = {ver="3.0",exec="Unknown",missing={},caps={}}
 
 local function try(f,...)local s,r=pcall(f,...)return s and r or nil,r end
 
 local function getexec()
     if identifyexecutor then return try(identifyexecutor)end
     if getexecutorname then return try(getexecutorname)end
-    if _G.KRNL_LOADED or _G.KRNL_VERSION then return"KRNL"end
-    if _G.syn then return"Synapse X"end
-    if _G.Fluxus then return"Fluxus"end
-    if _G.PROTOSMASHER_LOADED then return"ProtoSmasher"end
-    if _G.SENTINEL_LOADED then return"Sentinel"end
-    if _G.iselectronexecutor and try(_G.iselectronexecutor)then return"Electron"end
-    if _G.SCRIPTWARE then return"ScriptWare"end
-    if _G.OXYGEN_LOADED then return"Oxygen U"end
-    if _G.CALAMARI then return"Calamari"end
-    if _G.isvm then return"JJsploit"end
-    return _G.EXECUTOR_NAME or"Generic"
 end
 stuff.exec=getexec()
 
@@ -177,14 +171,54 @@ local impl={
     isnetworkowner=isnetworkowner or function(p)
         return p and p:IsDescendantOf(plrs.LocalPlayer.Character)
     end,
-    gethiddenproperty=gethiddenproperty or function(o,p)return o[p]end,
-    sethiddenproperty=sethiddenproperty or function(o,p,v)o[p]=v end,
-    getrawmetatable=getrawmetatable or getmetatable,
-    setrawmetatable=setrawmetatable or setmetatable,
-    setreadonly=setreadonly or function(t,r)end,
-    isreadonly=isreadonly or function(t)return false end,
-    makereadonly=makereadonly or setreadonly or function(t)end,
-    makewriteable=makewriteable or function(t)end,
+    gethiddenproperty=gethiddenproperty or function(o,p)
+	if typeof(o) == "Instance" and type(p) == "string" then
+        local ok, result = pcall(function() return o[p] end)
+        if ok then
+            return result
+        end
+    end
+    return nil
+	end,
+    sethiddenproperty=sethiddenproperty or function(o,p,v)
+	if typeof(o) == "Instance" and type(p) == "string" then
+        pcall(function()
+            o[p] = v
+        end)
+      end
+	end,
+    getrawmetatable = getrawmetatable or function(o)
+    local ok, mt = pcall(getmetatable, o)
+    if ok then
+        return mt
+       end
+      return nil
+    end,
+    setrawmetatable = setrawmetatable or function(o, mt)
+    local ok = pcall(setmetatable, o, mt)
+      return ok
+    end,
+    setreadonly=setreadonly or function(t,r)
+    if type(t) == "table" then
+        rawset(t, "__readonly", r)
+      end
+	end,
+    isreadonly=isreadonly or function(t)
+	if type(t) == "table" then
+        return rawget(t, "__readonly") or false
+        end
+      return false
+	end,
+    makereadonly=makereadonly or setreadonly or function(t)
+	 if type(t) == "table" then
+        rawset(t, "__readonly", true)
+      end
+	end,
+    makewriteable=makewriteable or function(t)
+	if type(t) == "table" then
+        rawset(t, "__readonly", false)
+      end
+	end,
     Drawing=Drawing or dummy({new=function(t)return dummy({Remove=function()end,Visible=true,Color=Color3.new(1,1,1),Transparency=1,Thickness=1,From=Vector2.new(),To=Vector2.new()})end}),
     WebSocket=WebSocket or dummy({
         connect=function(u)return dummy({Send=function(d)end,Close=function()end,OnMessage=function()end,OnClose=function()end})end
@@ -197,21 +231,336 @@ local impl={
         generatekey=function()return mkguid()end,
         generatebytes=function(n)return string.rep("a",n or 32)end
     }),
-    getmemoryaddress=getmemoryaddress or function(o)return tostring(o):match("0x%x+")or"0x0"end,
-    schedule=schedule or task.schedule or task.defer or function(f,...)task.spawn(f,...)end,
-    getthreadidentity=getthreadidentity or getidentity or function()return 7 end,
-    setthreadidentity=setthreadidentity or setidentity or function(i)end,
-    getidentity=getidentity or getthreadidentity or function()return 7 end,
-    setidentity=setidentity or setthreadidentity or function(i)end,
-    getnamedhookfunction=getnamedhookfunction or function(n)return nil end,
-    getinfo=getinfo or debug.getinfo or function(f)return{}end,
-    getrenderproperty=getrenderproperty or function(o,p)return nil end,
-    setrenderproperty=setrenderproperty or function(o,p,v)end,
-    cleardrawcache=cleardrawcache or function()end,
-    isrenderobj=isrenderobj or function(o)return false end,
-    getobjects=getobjects or function(id)return game:GetObjects(id)end,
-    loadstring=loadstring or function(s,n)return nil,"not supported"end,
-    saveinstance=saveinstance or function(o)end,
+    getmemoryaddress=getmemoryaddress or function(o)
+	getmemoryaddress = getmemoryaddress or (function()
+    local cache = setmetatable({}, {__mode = "kv"})
+    local byte, sub, find, lower = string.byte, string.sub, string.find, string.lower
+    local format = string.format
+    local function isHex(s)
+        for i = 1, #s do
+            local b = byte(s, i)
+            if not ((b >= 48 and b <= 57) or (b >= 65 and b <= 70) or (b >= 97 and b <= 102)) then
+                return false
+            end
+        end
+        return true
+    end
+    
+    return function(o)
+        if o == nil then return "0x0" end
+        local result = cache[o]
+        if result then return result end
+        
+        local str = tostring(o)
+        local len = #str
+        
+        if len < 3 then
+            cache[o] = "0x0"
+            return "0x0"
+        end
+        local start, finish
+        start, finish = find(str, "0x", 1, true)
+        if start then
+            local addr = sub(str, finish + 1)
+            if #addr >= 1 and isHex(addr) then
+                result = "0x" .. lower(addr)
+                cache[o] = result
+                return result
+            end
+        end
+        start, finish = find(str, ": ", 1, true)
+        if start then
+            local remainder = sub(str, finish + 1)
+            if sub(remainder, 1, 2) == "0x" then
+                local addr = sub(remainder, 3)
+                if #addr >= 1 and isHex(addr) then
+                    result = "0x" .. lower(addr)
+                    cache[o] = result
+                    return result
+                end
+            else
+                if #remainder >= 8 and isHex(remainder) then
+                    result = "0x" .. lower(remainder)
+                    cache[o] = result
+                    return result
+                end
+            end
+        end
+        if len >= 8 and isHex(str) then
+            result = "0x" .. lower(str)
+            cache[o] = result
+            return result
+        end
+        
+        cache[o] = "0x0"
+        return "0x0"
+      end)()
+end,
+    schedule = schedule or task.schedule or task.defer or function(f,...)task.spawn(f,...)end,
+    getthreadidentity = getthreadidentity or getidentity or function()return 7 end,
+    setthreadidentity = setthreadidentity or setidentity or function(i)end,
+    getidentity = getidentity or getthreadidentity or function()return 7 end,
+    setidentity = setidentity or setthreadidentity or function(i)end,
+    getnamedhookfunction = getnamedhookfunction or function(n)return nil end,
+    getinfo = getinfo or debug.getinfo or function(f)return{}end,
+    getrenderproperty = getrenderproperty or function(o,p)return nil end,
+    setrenderproperty = setrenderproperty or function(o,p,v)end,
+    cleardrawcache = cleardrawcache or function()end,
+    isrenderobj = isrenderobj or function(o)return false end,
+    getobjects = getobjects or function(id)
+    if not id or type(id) ~= "string" then
+        return {}
+    end
+    local assetId = id
+    if not id:match("^rbxassetid://") and not id:match("^http") then
+        assetId = "rbxassetid://" .. id
+    end
+    
+    local success, result = pcall(function()
+        return game:GetObjects(assetId)
+    end)
+    
+    if success then
+        return result
+	else
+        local fallbackSuccess, fallbackResult = pcall(function()
+            local insertService = game:GetService("InsertService")
+            return {insertService:LoadAsset(tonumber(id:match("%d+") or 0))}
+        end)
+        
+        return fallbackSuccess and fallbackResult or {}
+      end
+	end,
+    loadstring = loadstring or function(s, n)
+    if type(s) ~= "string" then return nil, "bad argument #1 to 'loadstring' (string expected)" end
+    local chunkname = nil
+    local env = nil
+    if type(n) == "string" then
+        chunkname = n
+    elseif type(n) == "table" then
+        env = n
+    end
+    local fn, err = load and load(s, chunkname or "=(loadstring)") or nil, "load not available"
+    if not fn then
+            fn, err = loadstring(s, chunkname)
+        else
+            return nil, err or "no loader available"
+        end
+    end
+    if env and type(env) == "table" then
+        if setfenv then
+            pcall(setfenv, fn, env)
+        else
+            pcall(function()
+                local i = 1
+                while true do
+                    local name = debug.getupvalue(fn, i)
+                    if not name then break end
+                    if name == "_ENV" then
+                        debug.setupvalue(fn, i, env)
+                        break
+                    end
+                    i = i + 1
+                end
+            end)
+        end
+    end
+
+    return fn, nil
+end,
+    saveinstance=saveinstance or function(o)
+	if not obj or typeof(obj) ~= "Instance" then 
+        return nil, "bad argument #1 (Instance expected, got " .. typeof(obj) .. ")" 
+    end
+    local function serializeValue(v, depth)
+        depth = depth or 0
+        if depth > 10 then return "[max depth reached]" end
+        local t = typeof(v)
+        if t == "string" then
+            return ("%q"):format(v:gsub("[\0-\31]", function(c) return "\\" .. c:byte() end))
+        elseif t == "number" then
+            return tostring(v)
+        elseif t == "boolean" then
+            return tostring(v)
+        elseif t == "nil" then
+            return "nil"
+        end
+        if t == "Instance" then 
+            return {__inst = true, Class = v.ClassName, Name = v.Name, Path = v:GetFullName()}
+        end
+        if t == "Vector3" then return {__vec3 = true, x = v.X, y = v.Y, z = v.Z} end
+        if t == "Vector2" then return {__vec2 = true, x = v.X, y = v.Y} end
+        if t == "Vector3int16" then return {__vec3i16 = true, x = v.X, y = v.Y, z = v.Z} end
+        if t == "CFrame" then
+            local x, y, z, r00, r01, r02, r10, r11, r12, r20, r21, r22 = v:GetComponents()
+            return {__cframe = true, components = {x, y, z, r00, r01, r02, r10, r11, r12, r20, r21, r22}}
+        end
+        if t == "Color3" then return {__color3 = true, r = v.R, g = v.G, b = v.B} end
+        if t == "BrickColor" then return {__brickcolor = true, number = v.Number, name = v.Name} end
+        if t == "NumberRange" then return {__numrange = true, min = v.Min, max = v.Max} end
+        if t == "NumberSequence" then
+            local keypoints = {}
+            for i, k in ipairs(v.Keypoints) do
+                table.insert(keypoints, {t = k.Time, v = k.Value, nd = k.Envelope})
+            end
+            return {__numsequence = true, keypoints = keypoints}
+        end
+        if t == "ColorSequence" then
+            local keypoints = {}
+            for i, k in ipairs(v.Keypoints) do
+                table.insert(keypoints, {
+                    t = k.Time, 
+                    v = {r = k.Value.R, g = k.Value.G, b = k.Value.B}
+                })
+            end
+            return {__colorsequence = true, keypoints = keypoints}
+        end
+        if t == "UDim" then return {__udim = true, scale = v.Scale, offset = v.Offset} end
+        if t == "UDim2" then 
+            return {__udim2 = true, x = {scale = v.X.Scale, offset = v.X.Offset}, y = {scale = v.Y.Scale, offset = v.Y.Offset}}
+        end
+        if t == "Rect" then 
+            return {__rect = true, min = {x = v.Min.X, y = v.Min.Y}, max = {x = v.Max.X, y = v.Max.Y}}
+        end
+        if t == "EnumItem" then return {__enum = true, type = tostring(v.EnumType), value = v.Value} end
+        if t == "table" then
+            local serialized = {__table = true}
+            for key, value in pairs(v) do
+                serialized[key] = serializeValue(value, depth + 1)
+            end
+            return serialized
+        end
+        return {__unsupported = true, type = t, value = tostring(v)}
+    end
+
+    local function serializeInstance(node, seen)
+        seen = seen or {}
+        if seen[node] then
+            return {__duplicate = true, path = node:GetFullName()}
+        end
+        seen[node] = true
+        
+        local t = {
+            Name = node.Name,
+            ClassName = node.ClassName,
+            Path = node:GetFullName(),
+            Attributes = {},
+            Properties = {},
+            Children = {}
+        }
+        local ok, attrs = pcall(function() return node:GetAttributes() end)
+        if ok and attrs then
+            for attr, value in pairs(attrs) do
+                t.Attributes[attr] = serializeValue(value)
+			end
+		end
+        local propertyBlacklist = {
+            "Parent", "Archivable"
+        }
+        
+        local function isBlacklisted(prop)
+            for _, blackProp in ipairs(propertyBlacklist) do
+                if prop == blackProp then return true end
+            end
+            return false
+        end
+        local commonProps = {
+            "Transparency", "Locked", "CanCollide", "Anchored", "Size", "Position",
+            "CFrame", "Orientation", "BrickColor", "Color", "Text", "TextSize", 
+            "Value", "Image", "Material", "Reflectance", "Shape", "FormFactor",
+            "Backend", "Source", "LinkedSource"
+        }
+        for _, prop in ipairs(commonProps) do
+            if not isBlacklisted(prop) then
+                local okv, val = pcall(function() return node[prop] end)
+                if okv and val ~= nil then
+                    t.Properties[prop] = serializeValue(val)
+                end
+            end
+        end
+        if pcall(function() return node.GetProperties end) then
+            local success, properties = pcall(function() 
+                local props = {}
+                for _, prop in ipairs(node:GetProperties()) do
+                    if not isBlacklisted(prop.Name) then
+                        local ok, value = pcall(function() return node[prop.Name] end)
+                        if ok and value ~= nil then
+                            props[prop.Name] = serializeValue(value)
+                        end
+                    end
+                end
+                return props
+            end)
+            if success then
+                for prop, value in pairs(properties) do
+                    t.Properties[prop] = value
+                end
+            end
+        end
+        local childCount = 0
+        local maxChildren = 100000
+        for _, child in ipairs(node:GetChildren()) do
+            if childCount < maxChildren then
+                local serializedChild = serializeInstance(child, seen)
+                table.insert(t.Children, serializedChild)
+                childCount = childCount + 1
+            else
+                table.insert(t.Children, {__truncated = true, reason = "max children exceeded"})
+                break
+            end
+        end
+        
+        return t
+    end
+
+    local root = serializeInstance(obj)
+    local function generateFilename()
+        local baseName = ("saved_%s_%s"):format(
+            obj.ClassName:gsub("[^%w_]", "_"),
+            obj.Name:gsub("[^%w_]", "_")
+        )
+        
+        if http and http.GenerateGUID then
+            local ok, guid = pcall(function() return http:GenerateGUID(false) end)
+            if ok then
+                return baseName .. "_" .. guid .. ".json"
+            end
+        end
+        
+        return baseName .. "_" .. tostring(os.time()) .. ".json"
+    end
+
+    local filename = generateFilename()
+    local encoded, encodingError = nil, nil
+    if http and http.JSONEncode then
+        local success, result = pcall(function() 
+            return http:JSONEncode(root, true)
+        end)
+        if success then
+            encoded = result
+        else
+            encodingError = result
+            encoded = tostring(root)
+        end
+    else
+        encoded = tostring(root)
+    end
+    if writefile then
+        local success, err = pcall(function()
+            writefile(filename, encoded)
+        end)
+        if success then
+            _saved_instances = _saved_instances or {}
+            _saved_instances[filename] = root
+            return filename, "success"
+        else
+            return nil, "file write failed: " .. tostring(err)
+        end
+    end
+    _saved_instances = _saved_instances or {}
+    _saved_instances[filename] = root
+    return filename, "memory_only"
+	end,
     messagebox=messagebox or function(t,c,b)print(t,c)end,
     mouse1click=mouse1click or function(x,y)
         local vp=workspace.CurrentCamera.ViewportSize
