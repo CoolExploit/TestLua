@@ -1,11 +1,24 @@
 local P = {}
 
-function P.touch(p)
+function P.click(cd)
+    if not cd then return end
+
     local r = P.r()
-    if not r or not p then return end
     local o = r.CFrame
-    r.CFrame = p.CFrame * CFrame.new(0,0,-0.2)
+
+    r.CFrame = cd.Parent.CFrame * CFrame.new(0,0,-2)
     task.wait()
+
+    if fireclickdetector then
+        fireclickdetector(cd)
+    elseif firesignal then
+        firesignal(cd.MouseClick)
+    elseif getconnections then
+        for _,v in ipairs(getconnections(cd.MouseClick)) do
+            v:Fire(game.Players.LocalPlayer)
+        end
+    end
+
     r.CFrame = o
 end
 
