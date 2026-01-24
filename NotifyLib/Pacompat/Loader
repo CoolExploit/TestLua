@@ -4,6 +4,8 @@ local list = {
     "core",
     "player",
     "prompt",
+    "touch",
+    "click",
 }
 
 local api = {}
