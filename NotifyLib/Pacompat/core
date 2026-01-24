@@ -1,0 +1,12 @@
+local P = {}
+local lp = game:GetService("Players").LocalPlayer
+
+function P.c()
+    return lp.Character or lp.CharacterAdded:Wait()
+end
+
+function P.r()
+    return P.c():WaitForChild("HumanoidRootPart")
+end
+
+return P
