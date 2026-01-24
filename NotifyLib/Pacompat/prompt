@@ -1,0 +1,15 @@
+local P = {}
+
+function P.fire(p, t)
+    if not p or p.ClassName ~= "ProximityPrompt" then return end
+    local r = P.r()
+    local o = r.CFrame
+    r.CFrame = p.Parent.CFrame
+    task.wait()
+    p:InputHoldBegin()
+    task.wait(t or p.HoldDuration)
+    p:InputHoldEnd()
+    r.CFrame = o
+end
+
+return P
