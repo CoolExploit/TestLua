@@ -1,1 +1,28 @@
+--// PaCompat Loader
+local HttpService = game:GetService("HttpService")
 
+local BASE_URL = "https://github.com/CoolExploit/TestLua/edit/main/NotifyLib/Pacompat/"
+local MODULES = {
+    "Core",
+    "Prompt",
+    "Player",
+    "Loop"
+}
+
+local PaCompat = {}
+
+for _, moduleName in ipairs(MODULES) do
+    local success, module = pcall(function()
+        return loadstring(game:HttpGet(BASE_URL .. moduleName))()
+    end)
+
+    if success and type(module) == "table" then
+        for k, v in pairs(module) do
+            PaCompat[k] = v
+        end
+    else
+        warn("PaCompat failed to load:", moduleName)
+    end
+end
+
+return PaCompat
