@@ -1,0 +1,14 @@
+function P.touch(part)
+    if not part then return end
+
+    local r = P.r()
+    local o = r.CFrame
+
+    r.CFrame = part.CFrame * CFrame.new(0, 0, -0.2)
+
+    firetouchinterest(r, part, 0)
+    task.wait()
+    firetouchinterest(r, part, 1)
+
+    r.CFrame = o
+end
