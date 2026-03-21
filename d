@@ -588,9 +588,10 @@ sCard.BackgroundColor3 = Color3.fromRGB(15, 0, 0)
 sCard.BorderSizePixel = 0
 sCard.BackgroundTransparency = 1
 Instance.new("UICorner", sCard).CornerRadius = UDim.new(0, 16)
-local sCardStroke = Instance.new("UIStroke", sCard)
-sCardStroke.Color = Color3.fromRGB(155, 18, 18)
-sCardStroke.Thickness = 1.5
+local sCardStroke = nil
+pcall(function() sCardStroke = Instance.new("UIStroke", sCard) end)
+pcall(function() sCardStroke.Color = Color3.fromRGB(155, 18, 18) end)
+pcall(function() sCardStroke.Thickness = 1.5 end)
 
 -- Helper: text label on card
 local function sLbl(txt, y, h, sz, bold, col, center)
@@ -658,7 +659,8 @@ sModeBox.BackgroundColor3 = Color3.fromRGB(26, 0, 0)
 sModeBox.BorderSizePixel = 0
 sModeBox.Visible = false
 Instance.new("UICorner", sModeBox).CornerRadius = UDim.new(0, 10)
-local sModeStroke = Instance.new("UIStroke", sModeBox); sModeStroke.Thickness = 1
+local sModeStroke = nil
+pcall(function() sModeStroke = Instance.new("UIStroke", sModeBox) end); sModeStroke.Thickness = 1
 
 local sModeIcon = Instance.new("TextLabel", sModeBox)
 sModeIcon.Size = UDim2.new(0, 42, 1, 0)
@@ -730,7 +732,7 @@ local function refreshSplashMode(mode)
     sModeNameLbl.Text = mode:upper(); sModeNameLbl.TextColor3 = info.col
     sModeIcon.Text = info.icon; sModeIcon.TextColor3 = info.col
     sModeDescLbl.Text = info.desc
-    sModeStroke.Color = info.col; sCardStroke.Color = info.col
+    pcall(function() sCardStroke.Color = info.col end)
     for mname, btn in pairs(sModeButtons) do
         btn.BackgroundColor3 = (mname == mode) and Color3.fromRGB(108, 0, 0) or Color3.fromRGB(48, 0, 0)
         btn.TextColor3 = (mname == mode) and Color3.fromRGB(255, 195, 195) or Color3.fromRGB(195, 65, 65)
@@ -881,8 +883,9 @@ sConfirm.MouseButton1Click:Connect(function()
     MF.Active = true
     MF.ClipsDescendants = true
     Instance.new("UICorner", MF).CornerRadius = UDim.new(0, 12)
-    local mfStroke = Instance.new("UIStroke", MF)
-    mfStroke.Color = MINFO[chosenMode].col; mfStroke.Thickness = 1.2
+    local mfStroke = nil
+    pcall(function() mfStroke = Instance.new("UIStroke", MF) end)
+    pcall(function() mfStroke.Color = MINFO[chosenMode].col; mfStroke.Thickness = 1.2 end)
     MF.BackgroundTransparency = 1
     tw(MF, TweenInfo.new(0.42, Enum.EasingStyle.Quint), {BackgroundTransparency = 0})
 
@@ -1069,7 +1072,7 @@ sConfirm.MouseButton1Click:Connect(function()
         f.BackgroundColor3 = Color3.fromRGB(11, 0, 0)
         f.BorderSizePixel = 0; f.CanvasSize = UDim2.new(0,0,0,0)
         f.ScrollBarThickness = 3; f.ScrollBarImageColor3 = Color3.fromRGB(145, 25, 25)
-        f.AutomaticCanvasSize = Enum.AutomaticSize.Y; f.Visible = false
+        pcall(function() f.AutomaticCanvasSize = Enum.AutomaticSize.Y end); f.Visible = false
         Instance.new("UICorner", f).CornerRadius = UDim.new(0, 6)
         local ll = Instance.new("UIListLayout", f); ll.Padding = UDim.new(0, 3)
         Instance.new("UIPadding", f).PaddingTop = UDim.new(0, 4)
@@ -1192,8 +1195,9 @@ sConfirm.MouseButton1Click:Connect(function()
     Popup.BackgroundColor3 = Color3.fromRGB(17, 0, 0)
     Popup.Visible = false; Popup.Active = true; Popup.BorderSizePixel = 0
     Instance.new("UICorner", Popup).CornerRadius = UDim.new(0, 10)
-    local popStroke = Instance.new("UIStroke", Popup)
-    popStroke.Color = Color3.fromRGB(130, 16, 16); popStroke.Thickness = 1
+    local popStroke = nil
+    pcall(function() popStroke = Instance.new("UIStroke", Popup) end)
+    pcall(function() popStroke.Color = Color3.fromRGB(130, 16, 16); popStroke.Thickness = 1 end)
     makeDraggable(Popup)
 
     -- Popup element helpers
@@ -1224,7 +1228,7 @@ sConfirm.MouseButton1Click:Connect(function()
     local ArgBox = Instance.new("TextBox", Popup)
     ArgBox.Size = UDim2.new(1, -20, 0, 52); ArgBox.Position = UDim2.new(0, 10, 0, 48)
     ArgBox.Text = "{}"; ArgBox.TextXAlignment = Enum.TextXAlignment.Left
-    ArgBox.Font = Enum.Font.Code; ArgBox.TextSize = 12; ArgBox.ClearTextOnFocus = false
+    pcall(function() ArgBox.Font = Enum.Font.Code end); ArgBox.TextSize = 12; ArgBox.ClearTextOnFocus = false
     ArgBox.BackgroundColor3 = Color3.fromRGB(26, 0, 0); ArgBox.BackgroundTransparency = 0.08
     ArgBox.TextColor3 = Color3.fromRGB(255, 202, 202); ArgBox.MultiLine = true
     ArgBox.BorderSizePixel = 0
@@ -1293,7 +1297,7 @@ sConfirm.MouseButton1Click:Connect(function()
     pRepeat.TextSize = 10
     local pInterval = Instance.new("TextBox", Popup)
     pInterval.Size = UDim2.new(0, HALF, 0, 24); pInterval.Position = UDim2.new(0, 14+HALF, 0, 222)
-    pInterval.Text = "1.0"; pInterval.Font = Enum.Font.Code; pInterval.TextSize = 11
+    pInterval.Text = "1.0"; pcall(function() pInterval.Font = Enum.Font.Code end); pInterval.TextSize = 11
     pInterval.BackgroundColor3 = Color3.fromRGB(26, 0, 0); pInterval.BackgroundTransparency = 0.08
     pInterval.TextColor3 = Color3.fromRGB(212, 170, 170); pInterval.ClearTextOnFocus = false
     pInterval.BorderSizePixel = 0
@@ -1349,7 +1353,7 @@ sConfirm.MouseButton1Click:Connect(function()
         local key = instPath(remote)
         pTitle.Text    = remote.Name
         pTypeLbl.Text  = remote.ClassName .. "  .  " .. path
-        popStroke.Color = remote:IsA("RemoteEvent")
+        pcall(function() popStroke.Color = remote:IsA("RemoteEvent") end)
             and Color3.fromRGB(148, 16, 16) or Color3.fromRGB(130, 72, 0)
         pFire.Text = remote:IsA("RemoteEvent") and ">  Fire Event" or ">  Call Function"
         ArgBox.Text = "{}"
@@ -1659,7 +1663,7 @@ sConfirm.MouseButton1Click:Connect(function()
         -- Args with type tags
         local aLbl = Instance.new("TextLabel", row)
         aLbl.Size = UDim2.new(1,-8,0,14); aLbl.Position = UDim2.new(0,4,0,37)
-        aLbl.BackgroundTransparency = 1; aLbl.Font = Enum.Font.Code; aLbl.TextSize = 9
+        aLbl.BackgroundTransparency = 1; pcall(function() aLbl.Font = Enum.Font.Code end); aLbl.TextSize = 9
         aLbl.TextXAlignment = Enum.TextXAlignment.Left; aLbl.TextWrapped = false
         aLbl.TextColor3 = Color3.fromRGB(182,182,182)
         local argParts = {}
@@ -1672,7 +1676,7 @@ sConfirm.MouseButton1Click:Connect(function()
         if entry.retval ~= nil then
             local rLbl = Instance.new("TextLabel", row)
             rLbl.Size = UDim2.new(1,-8,0,12); rLbl.Position = UDim2.new(0,4,0,52)
-            rLbl.BackgroundTransparency = 1; rLbl.Font = Enum.Font.Code; rLbl.TextSize = 9
+            rLbl.BackgroundTransparency = 1; pcall(function() rLbl.Font = Enum.Font.Code end); rLbl.TextSize = 9
             rLbl.TextXAlignment = Enum.TextXAlignment.Left; rLbl.TextWrapped = false
             rLbl.TextColor3 = Color3.fromRGB(195,75,75)
             rLbl.Text = "  -> " .. tostring(entry.retval):sub(1,80)
