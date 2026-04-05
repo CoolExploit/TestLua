@@ -1,0 +1,153 @@
+-- GTA Style UI Library for Roblox
+-- Simple, clean, reusable
+
+local UILib = {}
+
+local TweenService = game:GetService("TweenService")
+local UIS = game:GetService("UserInputService")
+
+function UILib:CreateWindow(title)
+    local ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+
+    local Main = Instance.new("Frame", ScreenGui)
+    Main.Size = UDim2.new(0, 650, 0, 420)
+    Main.Position = UDim2.new(0.5, -325, 0.5, -210)
+    Main.BackgroundColor3 = Color3.fromRGB(15,15,15)
+    Main.Active = true
+    Main.Draggable = true
+
+    local TopBar = Instance.new("TextLabel", Main)
+    TopBar.Size = UDim2.new(1,0,0,30)
+    TopBar.BackgroundColor3 = Color3.fromRGB(25,25,25)
+    TopBar.Text = title or "GTA Menu"
+    TopBar.TextColor3 = Color3.new(1,1,1)
+
+    local Sidebar = Instance.new("Frame", Main)
+    Sidebar.Size = UDim2.new(0, 150, 1, -30)
+    Sidebar.Position = UDim2.new(0,0,0,30)
+    Sidebar.BackgroundColor3 = Color3.fromRGB(20,20,20)
+
+    local Content = Instance.new("Frame", Main)
+    Content.Position = UDim2.new(0,150,0,30)
+    Content.Size = UDim2.new(1,-150,1,-30)
+    Content.BackgroundColor3 = Color3.fromRGB(18,18,18)
+
+    local UIList = Instance.new("UIListLayout", Sidebar)
+
+    local Tabs = {}
+    local CurrentTab = nil
+
+    function Tabs:CreateTab(name)
+        local Button = Instance.new("TextButton", Sidebar)
+        Button.Size = UDim2.new(1,0,0,40)
+        Button.Text = name
+        Button.BackgroundColor3 = Color3.fromRGB(30,30,30)
+        Button.TextColor3 = Color3.new(1,1,1)
+
+        local Frame = Instance.new("ScrollingFrame", Content)
+        Frame.Size = UDim2.new(1,0,1,0)
+        Frame.CanvasSize = UDim2.new(0,0,0,0)
+        Frame.Visible = false
+        Frame.BackgroundTransparency = 1
+
+        local Layout = Instance.new("UIListLayout", Frame)
+        Layout.Padding = UDim.new(0,5)
+
+        Button.MouseButton1Click:Connect(function()
+            if CurrentTab then
+                CurrentTab.Visible = false
+            end
+            Frame.Visible = true
+            CurrentTab = Frame
+        end)
+
+        local Elements = {}
+
+        function Elements:AddButton(text, callback)
+            local Btn = Instance.new("TextButton", Frame)
+            Btn.Size = UDim2.new(1,-10,0,35)
+            Btn.Text = text
+            Btn.BackgroundColor3 = Color3.fromRGB(35,35,35)
+            Btn.TextColor3 = Color3.new(1,1,1)
+
+            Btn.MouseButton1Click:Connect(function()
+                if callback then callback() end
+            end)
+        end
+
+        function Elements:AddToggle(text, default, callback)
+            local state = default or false
+
+            local Btn = Instance.new("TextButton", Frame)
+            Btn.Size = UDim2.new(1,-10,0,35)
+            Btn.Text = text .. " : " .. (state and "ON" or "OFF")
+            Btn.BackgroundColor3 = Color3.fromRGB(35,35,35)
+            Btn.TextColor3 = Color3.new(1,1,1)
+
+            Btn.MouseButton1Click:Connect(function()
+                state = not state
+                Btn.Text = text .. " : " .. (state and "ON" or "OFF")
+                if callback then callback(state) end
+            end)
+        end
+
+        function Elements:AddSlider(text, min, max, callback)
+            local value = min
+
+            local FrameSlider = Instance.new("Frame", Frame)
+            FrameSlider.Size = UDim2.new(1,-10,0,50)
+            FrameSlider.BackgroundColor3 = Color3.fromRGB(35,35,35)
+
+            local Label = Instance.new("TextLabel", FrameSlider)
+            Label.Size = UDim2.new(1,0,0,20)
+            Label.Text = text .. ": " .. value
+            Label.BackgroundTransparency = 1
+            Label.TextColor3 = Color3.new(1,1,1)
+
+            local Bar = Instance.new("Frame", FrameSlider)
+            Bar.Position = UDim2.new(0,5,0,30)
+            Bar.Size = UDim2.new(1,-10,0,10)
+            Bar.BackgroundColor3 = Color3.fromRGB(50,50,50)
+
+            local Fill = Instance.new("Frame", Bar)
+            Fill.Size = UDim2.new(0,0,1,0)
+            Fill.BackgroundColor3 = Color3.fromRGB(255,60,60)
+
+            Bar.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    local move
+                    move = UIS.InputChanged:Connect(function(i)
+                        if i.UserInputType == Enum.UserInputType.MouseMovement then
+                            local percent = math.clamp((i.Position.X - Bar.AbsolutePosition.X) / Bar.AbsoluteSize.X,0,1)
+                            value = math.floor(min + (max-min)*percent)
+                            Fill.Size = UDim2.new(percent,0,1,0)
+                            Label.Text = text .. ": " .. value
+                            if callback then callback(value) end
+                        end
+                    end)
+
+                    UIS.InputEnded:Connect(function(i)
+                        if i.UserInputType == Enum.UserInputType.MouseButton1 then
+                            move:Disconnect()
+                        end
+                    end)
+                end
+            end)
+        end
+
+        return Elements
+    end
+
+    return Tabs
+end
+
+return UILib
+
+-- USAGE:
+-- local lib = loadstring(... )()
+-- local window = lib:CreateWindow("My Menu")
+-- local tab = window:CreateTab("Player")
+-- tab:AddButton("Click Me", function() print("clicked") end)
+-- tab:AddToggle("God Mode", false, function(v) print(v) end)
+-- tab:AddSlider("Speed", 0, 100, function(v) print(v) end)
