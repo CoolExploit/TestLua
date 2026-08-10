@@ -1,7 +1,0 @@
-local P = {}
-
-function P.tp(cf)
-    P.r().CFrame = cf
-end
-
-return P
